@@ -19,23 +19,27 @@
         <common-bom.version>1.21.0</common-bom.version>
         <utilities.version>1.10.0</utilities.version>
         <test-utils.version>1.13.1</test-utils.version>
-        <!-- <wildfly.swarm.version>2016.10.0</wildfly.swarm.version> -->
+        <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
+        <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>
     </properties>
 
     <modules>
         <module>stream-transformation-tool-api</module>
         <module>stream-transformation-tool-service</module>
+        <module>stream-transformation-tool-fraction</module>
+        <module>stream-transformation-test</module>
+        <module>event-tool</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
-            <!-- <dependency>
+            <dependency>
                 <groupId>org.wildfly.swarm</groupId>
                 <artifactId>bom-all</artifactId>
                 <version>${wildfly.swarm.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
-            </dependency> -->
+            </dependency>
             <dependency>
                 <groupId>uk.gov.justice</groupId>
                 <artifactId>maven-common-bom</artifactId>
@@ -54,6 +58,11 @@
                 <groupId>uk.gov.justice.utils</groupId>
                 <artifactId>utilities-core</artifactId>
                 <version>${utilities.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>uk.gov.justice.utils</groupId>
+                <artifactId>test-utils-core</artifactId>
+                <version>${test-utils.version}</version>
             </dependency>
             <dependency>
                 <groupId>uk.gov.justice.utils</groupId>
