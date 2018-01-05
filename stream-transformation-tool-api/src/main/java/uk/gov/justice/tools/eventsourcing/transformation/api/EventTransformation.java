@@ -1,5 +1,6 @@
 package uk.gov.justice.tools.eventsourcing.transformation.api;
 
+import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 
 import java.util.stream.Stream;
@@ -25,4 +26,6 @@ public interface EventTransformation {
      * @return a stream of transformed events.
      */
     Stream<JsonEnvelope> apply(final JsonEnvelope event);
+
+    void setEnveloper(Enveloper enveloper);
 }

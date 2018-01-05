@@ -2,7 +2,7 @@ package uk.gov.justice.tools.eventsourcing.transformation;
 
 
 import static java.lang.String.format;
-import static uk.gov.justice.services.eventsourcing.source.core.PublishingEventAppender.INITIAL_STREAM_EVENT;
+import static uk.gov.justice.services.eventsourcing.source.core.EventSourceConstants.INITIAL_STREAM_EVENT;
 
 import uk.gov.justice.services.eventsourcing.repository.jdbc.EventRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
