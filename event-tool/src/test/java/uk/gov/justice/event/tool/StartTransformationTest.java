@@ -47,7 +47,7 @@ public class StartTransformationTest {
 
     @Before
     public void setup() {
-        when(jdbcEventRepository.getStreamOfAllEventStreams()).thenReturn(Stream.of(Stream.of(event), Stream.of(event2)));
+        when(jdbcEventRepository.getStreamOfAllActiveEventStreams()).thenReturn(Stream.of(Stream.of(event), Stream.of(event2)));
     }
 
     @Test
