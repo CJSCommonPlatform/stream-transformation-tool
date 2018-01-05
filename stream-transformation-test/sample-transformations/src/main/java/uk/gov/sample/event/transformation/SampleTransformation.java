@@ -14,7 +14,7 @@ public class SampleTransformation implements EventTransformation {
 
     @Override
     public boolean isApplicable(JsonEnvelope event) {
-        return event.metadata().name().equalsIgnoreCase("people.events.person-gender-updated");
+        return event.metadata().name().equalsIgnoreCase("sample.events.name");
     }
 
     @Override
