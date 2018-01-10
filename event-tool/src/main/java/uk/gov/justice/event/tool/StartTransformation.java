@@ -32,7 +32,7 @@ public class StartTransformation implements ManagedTaskListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StartTransformation.class);
 
-    @Resource // (name = "event-tool")
+    @Resource(name = "event-tool")
     private ManagedExecutorService executorService;
 
     @Inject
@@ -59,9 +59,7 @@ public class StartTransformation implements ManagedTaskListener {
 
         allTasksCreated = true;
 
-        if (outstandingTasks.isEmpty()) {
-            shutdown();
-        }
+        shutdownIfFinished();
         LOGGER.info("-------------- Invocation of Event Streams Transformation Completed --------------");
     }
 

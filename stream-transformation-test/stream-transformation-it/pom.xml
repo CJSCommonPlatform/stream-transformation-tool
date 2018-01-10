@@ -12,4 +12,143 @@
 
     <artifactId>stream-transformation-it</artifactId>
 
+    <dependencies>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>uk.gov.justice.utils</groupId>
+            <artifactId>test-utils-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>uk.gov.justice.services</groupId>
+            <artifactId>test-utils-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>uk.gov.justice.services</groupId>
+            <artifactId>event-repository-liquibase</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>uk.gov.justice.services</groupId>
+            <artifactId>aggregate-snapshot-repository-liquibase</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>uk.gov.justice.services</groupId>
+            <artifactId>event-buffer-liquibase</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>uk.gov.justice.services</groupId>
+            <artifactId>event-repository-jdbc</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>uk.gov.justice.utils</groupId>
+            <artifactId>test-utils-logging-simple</artifactId>
+            <type>pom</type>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.edugility</groupId>
+                <artifactId>h2-maven-plugin</artifactId>
+                <configuration>
+                    <port>8092</port>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>Spawn a new H2 TCP server</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>spawn</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>Stop a spawned H2 TCP server</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.h2database</groupId>
+                        <artifactId>h2</artifactId>
+                        <version>${com.h2database.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <artifactItems>
+                        <artifactItem>
+                            <groupId>uk.gov.justice</groupId>
+                            <artifactId>stream-transformations</artifactId>
+                            <version>${project.version}</version>
+                            <type>jar</type>
+                            <overWrite>true</overWrite>
+                            <outputDirectory>${project.basedir}/target/test-classes
+                            </outputDirectory>
+                        </artifactItem>
+                        <artifactItem>
+                            <artifactId>event-tool</artifactId>
+                            <groupId>uk.gov.justice</groupId>
+                            <version>${project.version}</version>
+                            <type>jar</type>
+                            <classifier>swarm</classifier>
+                            <overWrite>true</overWrite>
+                            <outputDirectory>${project.basedir}/target/test-classes
+                            </outputDirectory>
+                        </artifactItem>
+                    </artifactItems>
+                    <overWriteReleases>false</overWriteReleases>
+                    <overWriteSnapshots>true</overWriteSnapshots>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+
 </project>

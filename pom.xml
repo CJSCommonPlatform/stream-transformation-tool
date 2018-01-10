@@ -18,9 +18,12 @@
         <framework.version>3.0.0-SNAPSHOT</framework.version>
         <common-bom.version>1.21.0</common-bom.version>
         <utilities.version>1.10.0</utilities.version>
-        <test-utils.version>1.13.1</test-utils.version>
+        <test-utils.version>1.15.0</test-utils.version>
         <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
         <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>
+        <test.utils.core.version>1.15.0</test.utils.core.version>
+        <uk.gov.justice.utils.version>1.5.0</uk.gov.justice.utils.version>
+        <com.h2database.version>1.4.187</com.h2database.version>
     </properties>
 
     <modules>
@@ -33,6 +36,37 @@
 
     <dependencyManagement>
         <dependencies>
+
+            <dependency>
+                <groupId>uk.gov.justice.utils</groupId>
+                <artifactId>test-utils-core</artifactId>
+                <version>${test.utils.core.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.h2database</groupId>
+                        <artifactId>h2</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>uk.gov.justice.services</groupId>
+                <artifactId>test-utils-core</artifactId>
+                <version>${framework.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jboss.logging</groupId>
+                        <artifactId>jboss-logging</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.h2database</groupId>
+                        <artifactId>h2</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
             <dependency>
                 <groupId>org.wildfly.swarm</groupId>
                 <artifactId>bom-all</artifactId>
@@ -61,20 +95,36 @@
             </dependency>
             <dependency>
                 <groupId>uk.gov.justice.utils</groupId>
-                <artifactId>test-utils-core</artifactId>
+                <artifactId>test-utils-logging-log4j</artifactId>
                 <version>${test-utils.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>uk.gov.justice.services</groupId>
+                <artifactId>event-repository-liquibase</artifactId>
+                <version>${framework.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>uk.gov.justice.services</groupId>
+                <artifactId>aggregate-snapshot-repository-liquibase</artifactId>
+                <version>${framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>uk.gov.justice.services</groupId>
+                <artifactId>event-buffer-liquibase</artifactId>
+                <version>${framework.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>uk.gov.justice.services</groupId>
+                <artifactId>event-repository-jdbc</artifactId>
+                <version>${framework.version}</version>
             </dependency>
             <dependency>
                 <groupId>uk.gov.justice.utils</groupId>
                 <artifactId>test-utils-logging-simple</artifactId>
-                <version>${test-utils.version}</version>
                 <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>uk.gov.justice.utils</groupId>
-                <artifactId>test-utils-logging-log4j</artifactId>
-                <version>${test-utils.version}</version>
-                <type>pom</type>
+                <version>${uk.gov.justice.utils.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

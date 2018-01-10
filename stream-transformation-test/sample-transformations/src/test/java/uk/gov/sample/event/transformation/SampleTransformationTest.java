@@ -31,7 +31,7 @@ public class SampleTransformationTest {
         Metadata metadata = mock(Metadata.class);
 
         when(event.metadata()).thenReturn(metadata);
-        when(event.metadata().name()).thenReturn("people.events.person-gender-updated");
+        when(event.metadata().name()).thenReturn("sample.events.name");
 
         assertTrue(sampleTransformation.isApplicable(event));
     }

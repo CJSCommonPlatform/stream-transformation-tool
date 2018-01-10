@@ -1,7 +1,5 @@
 package uk.gov.justice.tools.eventsourcing.transformation.service;
 
-import static java.lang.String.format;
-import static java.util.Collections.emptySet;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static javax.json.Json.createObjectBuilder;
@@ -25,7 +23,6 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation
 import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transformation;
 import uk.gov.justice.tools.eventsourcing.transformation.api.extension.EventTransformationFoundEvent;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
