@@ -16,6 +16,7 @@
     <modules>
         <module>sample-transformations</module>
         <module>stream-transformation-it</module>
+        <module>stream-transformation-performance-test</module>
     </modules>
 
 </project>

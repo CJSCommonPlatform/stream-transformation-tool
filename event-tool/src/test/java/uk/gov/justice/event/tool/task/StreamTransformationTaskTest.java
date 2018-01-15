@@ -5,10 +5,9 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.verify;
 
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
-import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
 
-import java.util.stream.Stream;
+import java.util.UUID;
 
 import javax.enterprise.concurrent.ManagedTaskListener;
 
@@ -22,8 +21,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class StreamTransformationTaskTest {
 
-    @Mock
-    private Stream<JsonEnvelope> stream;
+    private static final UUID STREAM_ID = UUID.randomUUID();
 
     @Mock
     private EventStreamTransformationService eventStreamTransformationService;
@@ -36,13 +34,13 @@ public class StreamTransformationTaskTest {
 
     @Before
     public void setup() {
-        streamTransformationTask = new StreamTransformationTask(stream, eventStreamTransformationService, transformationListener);
+        streamTransformationTask = new StreamTransformationTask(STREAM_ID, eventStreamTransformationService, transformationListener);
     }
 
     @Test
     public void shouldTransformAnEvent() throws EventStreamException {
         streamTransformationTask.call();
-        verify(eventStreamTransformationService).transformEventStream(stream);
+        verify(eventStreamTransformationService).transformEventStream(STREAM_ID);
     }
 
     @Test

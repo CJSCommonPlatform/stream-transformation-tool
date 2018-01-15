@@ -1,4 +1,4 @@
-package uk.gov.justice.framework.tools.replay;
+package uk.gov.justice.framework.tools.transformation;
 
 import static uk.gov.justice.services.test.utils.common.reflection.ReflectionUtils.setField;
 
@@ -9,16 +9,16 @@ import javax.sql.DataSource;
 
 public class TestEventStreamJdbcRepository extends EventStreamJdbcRepository {
 
-    private final DataSource datasource;
+    private final DataSource dbsource;
 
     public TestEventStreamJdbcRepository(DataSource dataSource) {
-        this.datasource = dataSource;
-        setField(this, "dataSource", datasource);
+        this.dbsource = dataSource;
+        setField(this, "dataSource", dbsource);
         setField(this, "eventStreamJdbcRepositoryHelper", new JdbcRepositoryHelper());
 
     }
 
     public DataSource getDatasource() {
-        return datasource;
+        return dbsource;
     }
 }

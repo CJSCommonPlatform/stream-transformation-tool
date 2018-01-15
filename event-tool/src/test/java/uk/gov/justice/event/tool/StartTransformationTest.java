@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 
 import uk.gov.justice.event.tool.task.StreamTransformationTask;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.JdbcEventRepository;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
 
@@ -34,20 +36,23 @@ public class StartTransformationTest {
     private JdbcEventRepository jdbcEventRepository;
 
     @Mock
+    private EventStreamJdbcRepository eventStreamJdbcRepository;
+
+    @Mock
     private EventStreamTransformationService eventStreamTransformationService;
 
     @InjectMocks
     private StartTransformation startTransformation;
 
     @Mock
-    private JsonEnvelope event;
+    private EventStream eventStream;
 
     @Mock
-    private JsonEnvelope event2;
+    private EventStream eventStream2;
 
     @Before
     public void setup() {
-        when(jdbcEventRepository.getStreamOfAllActiveEventStreams()).thenReturn(Stream.of(Stream.of(event), Stream.of(event2)));
+        when(eventStreamJdbcRepository.findActive()).thenReturn(Stream.of(eventStream, eventStream2));
     }
 
     @Test

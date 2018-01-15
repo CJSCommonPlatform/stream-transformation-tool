@@ -49,38 +49,44 @@ public class EventStreamTransformationService {
      * @param event identified by the framework to be registered into the event map.
      */
     public void register(@Observes final EventTransformationFoundEvent event) throws IllegalAccessException, InstantiationException {
-        logger.info(format("Loading Event Transformation %s", event.getClazz().getSimpleName()));
+        if (logger.isDebugEnabled()) {
+            logger.debug(format("Loading Event Transformation %s", event.getClazz().getSimpleName()));
+        }
+
         final EventTransformation et = (EventTransformation) event.getClazz().newInstance();
         et.setEnveloper(enveloper);
         transformations.add(et);
     }
 
     @Transactional(REQUIRES_NEW)
-    public UUID transformEventStream(final Stream<JsonEnvelope> eventStream) throws EventStreamException {
-        final Optional<UUID> streamId = requiresTransformation(eventStream);
+    public UUID transformEventStream(final UUID streamId) throws EventStreamException {
+        final Stream<JsonEnvelope> eventStream = eventSource.getStreamById(streamId).read();
 
-        if (streamId.isPresent()) {
-            final UUID eventStreamId = streamId.get();
+        if (requiresTransformation(eventStream)) {
             try {
-                final UUID clonedStreamId = eventSource.cloneStream(eventStreamId);
+                final UUID clonedStreamId = eventSource.cloneStream(streamId);
 
-                logger.info(format("New clone id is: %s, from originating stream id: %s", clonedStreamId, eventStreamId));
+                if (logger.isDebugEnabled()) {
+                    logger.debug(format("Cloned stream '%s' from stream '%s'", clonedStreamId, streamId));
+                }
 
-                final EventStream stream = eventSource.getStreamById(eventStreamId);
+                final EventStream stream = eventSource.getStreamById(streamId);
                 final Stream<JsonEnvelope> events = stream.read();
 
-                eventSource.clearStream(eventStreamId);
+                eventSource.clearStream(streamId);
 
                 final Stream<JsonEnvelope> transformedEventStream = transform(events);
 
                 stream.append(transformedEventStream.map(this::clearEventVersion));
+                events.close();
             } catch (Exception e) {
                 logger.error("Failed to clone stream", e);
             }
-
-            return eventStreamId;
+            eventStream.close();
+            return streamId;
         } else {
             logger.info("Stream did not require transformation");
+            eventStream.close();
             return null;
         }
     }
@@ -97,11 +103,8 @@ public class EventStreamTransformationService {
         ).flatMap(identity());
     }
 
-    private Optional<UUID> requiresTransformation(final Stream<JsonEnvelope> eventStream) {
-        return eventStream
-                .filter(this::checkTransformations)
-                .map(e -> e.metadata().streamId().get())
-                .findFirst();
+    private boolean requiresTransformation(final Stream<JsonEnvelope> eventStream) {
+        return eventStream.filter(this::checkTransformations).count() > 0;
     }
 
     private Optional<EventTransformation> hasTransformer(final JsonEnvelope event) {
@@ -109,7 +112,6 @@ public class EventStreamTransformationService {
     }
 
     private boolean checkTransformations(final JsonEnvelope event) {
-        final boolean matching = transformations.stream().anyMatch(t -> t.isApplicable(event));
-        return matching;
+        return transformations.stream().anyMatch(t -> t.isApplicable(event));
     }
 }
