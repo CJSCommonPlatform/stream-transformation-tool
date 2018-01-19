@@ -15,10 +15,10 @@
     <version>0.0.1-SNAPSHOT</version>
 
     <properties>
-        <framework.version>3.0.0-alpha-1</framework.version>
-        <common-bom.version>1.21.0</common-bom.version>
-        <utilities.version>1.10.0</utilities.version>
-        <test-utils.version>1.15.0</test-utils.version>
+        <framework.version>3.0.0</framework.version>
+        <common-bom.version>1.22.0</common-bom.version>
+        <utilities.version>1.11.0</utilities.version>
+        <test-utils.version>1.16.0</test-utils.version>
         <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
         <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>
         <test.utils.core.version>1.15.0</test.utils.core.version>
