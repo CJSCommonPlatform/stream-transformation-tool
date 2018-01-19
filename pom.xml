@@ -19,10 +19,9 @@
         <common-bom.version>1.22.0</common-bom.version>
         <utilities.version>1.11.0</utilities.version>
         <test-utils.version>1.16.0</test-utils.version>
+
         <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
         <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>
-        <test.utils.core.version>1.15.0</test.utils.core.version>
-        <uk.gov.justice.utils.version>1.5.0</uk.gov.justice.utils.version>
         <com.h2database.version>1.4.187</com.h2database.version>
     </properties>
 
@@ -39,7 +38,7 @@
             <dependency>
                 <groupId>uk.gov.justice.utils</groupId>
                 <artifactId>test-utils-core</artifactId>
-                <version>${test.utils.core.version}</version>
+                <version>${test-utils.version}</version>
                 <scope>test</scope>
                 <exclusions>
                     <exclusion>
@@ -104,7 +103,7 @@
                 <groupId>uk.gov.justice.utils</groupId>
                 <artifactId>test-utils-logging-simple</artifactId>
                 <type>pom</type>
-                <version>${uk.gov.justice.utils.version}</version>
+                <version>${test-utils.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
