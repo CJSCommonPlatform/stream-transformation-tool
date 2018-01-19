@@ -75,6 +75,7 @@ public class EventStreamTransformationService {
 
                 eventSource.clearStream(streamId);
 
+                logger.info("transforming events on stream {}", streamId);
                 final Stream<JsonEnvelope> transformedEventStream = transform(events);
 
                 stream.append(transformedEventStream.map(this::clearEventVersion));
@@ -85,7 +86,7 @@ public class EventStreamTransformationService {
             eventStream.close();
             return streamId;
         } else {
-            logger.info("Stream did not require transformation");
+            logger.debug("Stream {} did not require transformation", streamId);
             eventStream.close();
             return null;
         }
