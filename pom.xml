@@ -12,7 +12,7 @@
 
     <artifactId>stream-transformation-tool</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <properties>
         <framework.version>3.0.0</framework.version>
