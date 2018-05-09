@@ -7,6 +7,7 @@ import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
+import uk.gov.justice.services.eventsourcing.source.core.EventStreamManager;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
@@ -33,6 +34,9 @@ public class EventStreamTransformationService {
 
     @Inject
     Logger logger;
+
+    @Inject
+    EventStreamManager eventStreamManager;
 
     @Inject
     EventSource eventSource;
@@ -64,7 +68,7 @@ public class EventStreamTransformationService {
 
         if (requiresTransformation(eventStream)) {
             try {
-                final UUID clonedStreamId = eventSource.cloneStream(streamId);
+                final UUID clonedStreamId = eventStreamManager.cloneAsAncestor(streamId);
 
                 if (logger.isDebugEnabled()) {
                     logger.debug(format("Cloned stream '%s' from stream '%s'", clonedStreamId, streamId));
@@ -73,7 +77,7 @@ public class EventStreamTransformationService {
                 final EventStream stream = eventSource.getStreamById(streamId);
                 final Stream<JsonEnvelope> events = stream.read();
 
-                eventSource.clearStream(streamId);
+                eventStreamManager.clear(streamId);
 
                 logger.info("transforming events on stream {}", streamId);
                 final Stream<JsonEnvelope> transformedEventStream = transform(events);

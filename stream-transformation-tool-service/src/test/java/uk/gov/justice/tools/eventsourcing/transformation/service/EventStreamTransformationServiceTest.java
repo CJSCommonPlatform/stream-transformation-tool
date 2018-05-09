@@ -13,6 +13,7 @@ import static uk.gov.justice.services.messaging.spi.DefaultJsonMetadata.metadata
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
+import uk.gov.justice.services.eventsourcing.source.core.EventStreamManager;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.services.messaging.spi.DefaultJsonEnvelopeProvider;
@@ -61,6 +62,9 @@ public class EventStreamTransformationServiceTest {
     @Mock
     private Logger logger;
 
+    @Mock
+    private EventStreamManager eventStreamManager;
+
     @InjectMocks
     private EventStreamTransformationService service;
 
@@ -90,8 +94,8 @@ public class EventStreamTransformationServiceTest {
 
         service.transformEventStream(STREAM_ID);
 
-        verify(eventSource).cloneStream(STREAM_ID);
-        verify(eventSource).clearStream(STREAM_ID);
+        verify(eventStreamManager).cloneAsAncestor(STREAM_ID);
+        verify(eventStreamManager).clear(STREAM_ID);
         verify(eventStream).append(streamCaptor.capture());
         verify(eventStream).append(any());
     }
@@ -106,7 +110,7 @@ public class EventStreamTransformationServiceTest {
 
         service.transformEventStream(STREAM_ID);
 
-        verify(eventSource).clearStream(STREAM_ID);
+        verify(eventStreamManager).clear(STREAM_ID);
         verify(eventStream).append(any());
     }
 
