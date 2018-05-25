@@ -24,7 +24,7 @@ import org.junit.Test;
 
 public class StreamTransformationIT {
 
-    private static final UUID STREAM_ID = randomUUID();
+    private UUID STREAM_ID;
 
     private static TestEventLogJdbcRepository EVENT_LOG_JDBC_REPOSITORY;
 
@@ -38,6 +38,7 @@ public class StreamTransformationIT {
 
     @Before
     public void setUpDB() throws Exception {
+        STREAM_ID = randomUUID();
         dataSource = liquibaseUtil.initEventStoreDb();
         EVENT_LOG_JDBC_REPOSITORY = new TestEventLogJdbcRepository(dataSource);
         EVENT_STREAM_JDBC_REPOSITORY = new TestEventStreamJdbcRepository(dataSource);
@@ -56,13 +57,22 @@ public class StreamTransformationIT {
 
     @Test
     public void shouldTransformEventInEventStore() throws Exception {
-        insertEventLogData();
+        insertEventLogData("sample.events.name", 1L);
+        insertEventLogData("sample.v2.events.name", 2L);
 
         swarmStarterUtil.runCommand();
 
         assertTrue(eventStoreTransformedEventPresent());
         assertTrue(originalEventStreamIsActive());
         assertFalse(clonedStreamIsActive());
+    }
+
+    @Test
+    public void shouldArchiveStreamInEventStore() throws Exception {
+        insertEventLogData("sample.archive.events.name", 1L);
+
+        swarmStarterUtil.runCommand();
+        assertFalse(originalEventStreamIsActive());
     }
 
     private boolean clonedStreamIsActive() {
@@ -96,8 +106,8 @@ public class StreamTransformationIT {
         return event.isPresent() && event.get().getName().equals("sample.events.transformedName");
     }
 
-    private void insertEventLogData() throws SQLException, InvalidSequenceIdException {
-        EVENT_LOG_JDBC_REPOSITORY.insert(eventLogFrom("sample.events.name", 1L, STREAM_ID));
+    private void insertEventLogData(String eventName, long sequenceId) throws SQLException, InvalidSequenceIdException {
+        EVENT_LOG_JDBC_REPOSITORY.insert(eventLogFrom(eventName, sequenceId, STREAM_ID));
         EVENT_STREAM_JDBC_REPOSITORY.insert(STREAM_ID);
     }
 }
