@@ -8,6 +8,7 @@ import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAct
 import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM_EVENT;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
@@ -45,6 +46,9 @@ public class EventStreamTransformationService {
 
     @Inject
     Enveloper enveloper;
+
+    @Inject
+    EventStreamJdbcRepository eventStreamJdbcRepository;
 
     Set<EventTransformation> transformations = new HashSet<>();
 
@@ -107,7 +111,7 @@ public class EventStreamTransformationService {
     }
 
     private UUID archiveStream(final UUID streamId, final Stream<JsonEnvelope> eventStream) throws EventStreamException {
-        eventSource.clearStream(streamId);
+        eventStreamJdbcRepository.markActive(streamId,false);
         eventStream.close();
         return streamId;
 

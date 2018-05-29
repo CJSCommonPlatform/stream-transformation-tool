@@ -14,6 +14,7 @@ import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAct
 import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM_EVENT;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
@@ -64,6 +65,9 @@ public class EventStreamTransformationServiceTest {
     @Mock
     private Logger logger;
 
+    @Mock
+    private EventStreamJdbcRepository eventStreamJdbcRepository;
+
     @InjectMocks
     private EventStreamTransformationService service;
 
@@ -107,7 +111,7 @@ public class EventStreamTransformationServiceTest {
         when(eventStream.read()).thenReturn(Stream.of(event)).thenReturn(Stream.of(event));
 
         service.transformEventStream(STREAM_ID);
-        verify(eventSource).clearStream(STREAM_ID);
+        verify(eventStreamJdbcRepository).markActive(STREAM_ID,false);
     }
 
     @Test
@@ -136,7 +140,7 @@ public class EventStreamTransformationServiceTest {
 
         service.transformEventStream(STREAM_ID);
 
-        verify(eventSource).clearStream(STREAM_ID);
+        verify(eventStreamJdbcRepository).markActive(STREAM_ID,false);
     }
 
 
