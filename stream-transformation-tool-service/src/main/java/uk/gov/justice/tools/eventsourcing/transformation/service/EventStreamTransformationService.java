@@ -5,7 +5,7 @@ import static java.util.function.Function.identity;
 import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.ARCHIVE;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.NO_ACTION;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM_EVENT;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
@@ -73,7 +73,7 @@ public class EventStreamTransformationService {
         final Stream<JsonEnvelope> eventStream = eventSource.getStreamById(streamId).read();
 
         switch (requiresTransformation(eventStream, streamId)) {
-            case TRANSFORM_EVENT:
+            case TRANSFORM:
                 return transformEvent(streamId, eventStream);
             case NO_ACTION:
                 return null;
@@ -103,7 +103,7 @@ public class EventStreamTransformationService {
             stream.append(transformedEventStream.map(this::clearEventVersion));
             events.close();
         } catch (Exception e) {
-            logger.error("Failed to clone stream", e);
+            logger.error("Failed to clone stream {}", streamId, e);
         }
         eventStream.close();
         return streamId;
@@ -111,7 +111,7 @@ public class EventStreamTransformationService {
     }
 
     private UUID archiveStream(final UUID streamId, final Stream<JsonEnvelope> eventStream) throws EventStreamException {
-        eventStreamJdbcRepository.markActive(streamId,false);
+        eventStreamJdbcRepository.markActive(streamId, false);
         eventStream.close();
         return streamId;
 
@@ -129,39 +129,39 @@ public class EventStreamTransformationService {
         ).flatMap(identity());
     }
 
-    private TransformAction requiresTransformation(final Stream<JsonEnvelope> eventStream, UUID streamId) {
+    private TransformAction requiresTransformation(final Stream<JsonEnvelope> eventStream, final UUID streamId) {
 
         List<TransformAction> eventTransformationList = eventStream.map(t -> checkTransformations(t))
                 .flatMap(List::stream)
                 .distinct()
                 .collect(Collectors.toList());
 
-        if (eventTransformationList.size() == 0) {
-            return noAction(eventStream, streamId, "Stream {} did not require transformation stream ");
+        if (eventTransformationList.isEmpty()) {
+            return noAction(eventStream, streamId, "Stream {} did not require transformation stream ", eventTransformationList);
         }
         if (eventTransformationList.size() > 1) {
-            return noAction(eventStream, streamId, "Stream {} can not have multiple actions ");
+            return noAction(eventStream, streamId, "Stream {} can not have multiple actions {} ", eventTransformationList);
         }
 
         return eventTransformationList.get(0);
 
     }
 
-    private TransformAction noAction(Stream<JsonEnvelope> eventStream, UUID streamId, String errorMessage) {
-        logger.debug(errorMessage, streamId);
+    private TransformAction noAction(final Stream<JsonEnvelope> eventStream, final UUID streamId, final String errorMessage, final List<TransformAction> eventTransformationList) {
+        logger.debug(errorMessage, streamId, eventTransformationList.toString());
         eventStream.close();
         return NO_ACTION;
     }
 
     private Optional<EventTransformation> hasTransformer(final JsonEnvelope event) {
-        return transformations.stream().filter(t -> t.action(event) == TRANSFORM_EVENT).findFirst();
+        return transformations.stream().filter(t -> t.actionFor(event) == TRANSFORM).findFirst();
     }
 
     private List<TransformAction> checkTransformations(final JsonEnvelope event) {
 
         return transformations.stream()
-                .map(t -> t.action(event))
-                .filter(t -> t == TRANSFORM_EVENT || t == ARCHIVE)
+                .map(t -> t.actionFor(event))
+                .filter(t -> t == TRANSFORM || t == ARCHIVE)
                 .collect(Collectors.toList());
     }
 }

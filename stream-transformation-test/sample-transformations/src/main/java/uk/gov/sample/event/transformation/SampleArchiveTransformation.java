@@ -17,7 +17,7 @@ public class SampleArchiveTransformation implements EventTransformation {
     private Enveloper enveloper;
 
     @Override
-    public TransformAction action(final JsonEnvelope event) {
+    public TransformAction actionFor(final JsonEnvelope event) {
         if (event.metadata().name().equalsIgnoreCase("sample.archive.events.name")) {
             return ARCHIVE;
         }

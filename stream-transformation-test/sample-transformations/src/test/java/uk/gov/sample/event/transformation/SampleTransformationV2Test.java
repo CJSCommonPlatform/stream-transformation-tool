@@ -3,12 +3,12 @@ package uk.gov.sample.event.transformation;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM_EVENT;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.NO_ACTION;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM;
 
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.services.messaging.Metadata;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
-import uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction;
 
 import java.util.stream.Stream;
 
@@ -28,14 +28,25 @@ public class SampleTransformationV2Test {
     }
 
     @Test
-    public void shouldSetIsApplicable() {
+    public void shouldSetTransformAction() {
         JsonEnvelope event = mock(JsonEnvelope.class);
         Metadata metadata = mock(Metadata.class);
 
         when(event.metadata()).thenReturn(metadata);
         when(event.metadata().name()).thenReturn("sample.v2.events.name");
 
-        assertTrue(sampleTransformation.action(event)== TRANSFORM_EVENT);
+        assertTrue(sampleTransformation.actionFor(event)== TRANSFORM);
+    }
+
+    @Test
+    public void shouldSetNoAction() {
+        JsonEnvelope event = mock(JsonEnvelope.class);
+        Metadata metadata = mock(Metadata.class);
+
+        when(event.metadata()).thenReturn(metadata);
+        when(event.metadata().name()).thenReturn("dummy.sample.v2.events.name");
+
+        assertTrue(sampleTransformation.actionFor(event) == NO_ACTION);
     }
 
 

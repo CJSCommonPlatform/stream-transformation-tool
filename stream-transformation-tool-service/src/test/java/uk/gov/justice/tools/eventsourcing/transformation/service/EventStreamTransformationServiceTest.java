@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.justice.services.messaging.spi.DefaultJsonMetadata.metadataBuilder;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.ARCHIVE;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.NO_ACTION;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM_EVENT;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
@@ -93,7 +93,7 @@ public class EventStreamTransformationServiceTest {
     @Test
     public void shouldTransformStreamOfSingleEvent() throws EventStreamException {
         final JsonEnvelope event = buildEnvelope("test.event.name");
-        when(eventTransformation.action(any())).thenReturn(TRANSFORM_EVENT);
+        when(eventTransformation.actionFor(any())).thenReturn(TRANSFORM);
         when(eventStream.read()).thenReturn(Stream.of(event)).thenReturn(Stream.of(event));
 
         service.transformEventStream(STREAM_ID);
@@ -107,7 +107,7 @@ public class EventStreamTransformationServiceTest {
     @Test
     public void shouldArchiveStreamOfSingleEvent() throws EventStreamException {
         final JsonEnvelope event = buildEnvelope("test.event.name");
-        when(eventTransformation.action(any())).thenReturn(ARCHIVE);
+        when(eventTransformation.actionFor(any())).thenReturn(ARCHIVE);
         when(eventStream.read()).thenReturn(Stream.of(event)).thenReturn(Stream.of(event));
 
         service.transformEventStream(STREAM_ID);
@@ -121,7 +121,7 @@ public class EventStreamTransformationServiceTest {
         final JsonEnvelope event = buildEnvelope("test.event.name");
         final JsonEnvelope event2 = buildEnvelope("test.event.name2");
         when(eventStream.read()).thenReturn(Stream.of(event, event2)).thenReturn(Stream.of(event, event2));
-        when(eventTransformation.action(any())).thenReturn(TRANSFORM_EVENT);
+        when(eventTransformation.actionFor(any())).thenReturn(TRANSFORM);
 
         service.transformEventStream(STREAM_ID);
 
@@ -136,7 +136,7 @@ public class EventStreamTransformationServiceTest {
         final JsonEnvelope event = buildEnvelope("test.event.name");
         final JsonEnvelope event2 = buildEnvelope("test.event.name2");
         when(eventStream.read()).thenReturn(Stream.of(event, event2)).thenReturn(Stream.of(event, event2));
-        when(eventTransformation.action(any())).thenReturn(ARCHIVE);
+        when(eventTransformation.actionFor(any())).thenReturn(ARCHIVE);
 
         service.transformEventStream(STREAM_ID);
 
@@ -161,7 +161,7 @@ public class EventStreamTransformationServiceTest {
     public void shouldNotPerformArchiveIfNotRequired() throws EventStreamException {
         final JsonEnvelope event = buildEnvelope("test.event.name");
         when(eventStream.read()).thenReturn(Stream.of(event));
-        when(eventTransformation.action(any())).thenReturn(NO_ACTION);
+        when(eventTransformation.actionFor(any())).thenReturn(NO_ACTION);
 
         service.transformEventStream(STREAM_ID);
 
@@ -174,7 +174,7 @@ public class EventStreamTransformationServiceTest {
     public void shouldNotPerformArchiveIfNullAction() throws EventStreamException {
         final JsonEnvelope event = buildEnvelope("test.event.name");
         when(eventStream.read()).thenReturn(Stream.of(event));
-        when(eventTransformation.action(any())).thenReturn(null);
+        when(eventTransformation.actionFor(any())).thenReturn(null);
 
         service.transformEventStream(STREAM_ID);
 
@@ -190,8 +190,8 @@ public class EventStreamTransformationServiceTest {
         final JsonEnvelope event = buildEnvelope("test.event.name");
         final JsonEnvelope event2 = buildEnvelope("test.event.name2");
         when(eventStream.read()).thenReturn(Stream.of(event, event2)).thenReturn(Stream.of(event, event2));
-        when(eventTransformation.action(event)).thenReturn(ARCHIVE);
-        when(eventTransformation.action(event2)).thenReturn(TRANSFORM_EVENT);
+        when(eventTransformation.actionFor(event)).thenReturn(ARCHIVE);
+        when(eventTransformation.actionFor(event2)).thenReturn(TRANSFORM);
 
         service.transformEventStream(STREAM_ID);
 

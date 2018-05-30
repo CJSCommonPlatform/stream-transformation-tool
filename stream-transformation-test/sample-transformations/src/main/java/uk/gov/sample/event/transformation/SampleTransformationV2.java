@@ -1,8 +1,7 @@
 package uk.gov.sample.event.transformation;
 
-import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.ARCHIVE;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.NO_ACTION;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM_EVENT;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
@@ -18,9 +17,9 @@ public class SampleTransformationV2 implements EventTransformation {
     private Enveloper enveloper;
 
     @Override
-    public TransformAction action(JsonEnvelope event) {
+    public TransformAction actionFor(JsonEnvelope event) {
         if (event.metadata().name().equalsIgnoreCase("sample.v2.events.name")){
-            return TRANSFORM_EVENT;
+            return TRANSFORM;
         }
         return NO_ACTION;
     }

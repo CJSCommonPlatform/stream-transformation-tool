@@ -57,7 +57,8 @@ public class StreamTransformationIT {
 
     @Test
     public void shouldTransformEventInEventStore() throws Exception {
-        insertEventLogData();
+        insertEventLogData("sample.events.name", 1L);
+        insertEventLogData("sample.v2.events.name", 2L);
 
         swarmStarterUtil.runCommand();
 
@@ -68,7 +69,7 @@ public class StreamTransformationIT {
 
     @Test
     public void shouldArchiveStreamInEventStore() throws Exception {
-        insertEventLogDataForArchiveTest();
+        insertEventLogData("sample.archive.events.name", 1L);
 
         swarmStarterUtil.runCommand();
         assertFalse(originalEventStreamIsActive());
@@ -105,14 +106,8 @@ public class StreamTransformationIT {
         return event.isPresent() && event.get().getName().equals("sample.events.transformedName");
     }
 
-    private void insertEventLogData() throws SQLException, InvalidSequenceIdException {
-        EVENT_LOG_JDBC_REPOSITORY.insert(eventLogFrom("sample.events.name", 1L, STREAM_ID));
-        EVENT_LOG_JDBC_REPOSITORY.insert(eventLogFrom("sample.v2.events.name", 2L, STREAM_ID));
-        EVENT_STREAM_JDBC_REPOSITORY.insert(STREAM_ID);
-    }
-
-    private void insertEventLogDataForArchiveTest() throws SQLException, InvalidSequenceIdException {
-        EVENT_LOG_JDBC_REPOSITORY.insert(eventLogFrom("sample.archive.events.name", 1L, STREAM_ID));
+    private void insertEventLogData(String eventName, long sequenceId) throws SQLException, InvalidSequenceIdException {
+        EVENT_LOG_JDBC_REPOSITORY.insert(eventLogFrom(eventName, sequenceId, STREAM_ID));
         EVENT_STREAM_JDBC_REPOSITORY.insert(STREAM_ID);
     }
 }
