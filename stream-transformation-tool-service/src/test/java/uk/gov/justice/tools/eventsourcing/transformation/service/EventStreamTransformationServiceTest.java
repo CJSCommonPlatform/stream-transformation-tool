@@ -84,6 +84,7 @@ public class EventStreamTransformationServiceTest {
         service.enveloper = enveloper;
 
         mockTransformationMatcher();
+        when(logger.isDebugEnabled()).thenReturn(true);
 
         when(eventSource.cloneStream(STREAM_ID)).thenReturn(CLONED_STREAM_ID);
         when(eventSource.getStreamById(CLONED_STREAM_ID)).thenReturn(clonedEventStream);

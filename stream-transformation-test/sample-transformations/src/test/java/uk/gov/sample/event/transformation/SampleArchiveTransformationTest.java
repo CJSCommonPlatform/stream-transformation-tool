@@ -45,7 +45,6 @@ public class SampleArchiveTransformationTest {
 
         when(event.metadata()).thenReturn(metadata);
         when(event.metadata().name()).thenReturn("dummy.archive.events.name");
-
         assertTrue(sampleTransformation.actionFor(event) == NO_ACTION);
     }
 
