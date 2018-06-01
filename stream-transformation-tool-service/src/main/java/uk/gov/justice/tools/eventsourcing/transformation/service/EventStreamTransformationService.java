@@ -110,7 +110,7 @@ public class EventStreamTransformationService {
 
     }
 
-    private UUID archiveStream(final UUID streamId, final Stream<JsonEnvelope> eventStream) throws EventStreamException {
+    private UUID archiveStream(final UUID streamId, final Stream<JsonEnvelope> eventStream) {
         eventStreamJdbcRepository.markActive(streamId, false);
         eventStream.close();
         return streamId;
@@ -131,7 +131,7 @@ public class EventStreamTransformationService {
 
     private TransformAction requiresTransformation(final Stream<JsonEnvelope> eventStream, final UUID streamId) {
 
-        List<TransformAction> eventTransformationList = eventStream.map(t -> checkTransformations(t))
+        List<TransformAction> eventTransformationList = eventStream.map(this::checkTransformations)
                 .flatMap(List::stream)
                 .distinct()
                 .collect(Collectors.toList());
@@ -148,7 +148,9 @@ public class EventStreamTransformationService {
     }
 
     private TransformAction noAction(final Stream<JsonEnvelope> eventStream, final UUID streamId, final String errorMessage, final List<TransformAction> eventTransformationList) {
-        logger.debug(errorMessage, streamId, eventTransformationList.toString());
+        if (logger.isDebugEnabled()) {
+            logger.debug(errorMessage, streamId, eventTransformationList.toString());
+        }
         eventStream.close();
         return NO_ACTION;
     }

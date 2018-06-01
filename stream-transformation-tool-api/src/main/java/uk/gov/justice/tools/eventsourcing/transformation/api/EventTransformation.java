@@ -21,6 +21,7 @@ public interface EventTransformation {
      *
      * @param event - the event to check
      * @return TRUE if the event is eligible to have the transformation applied to it.
+     * @deprecated
      * The default implementation is false
      */
     @Deprecated

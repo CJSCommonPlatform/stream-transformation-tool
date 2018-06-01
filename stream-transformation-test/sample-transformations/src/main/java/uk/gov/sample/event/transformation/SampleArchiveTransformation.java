@@ -9,12 +9,9 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation
 import uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction;
 import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transformation;
 
-import java.util.stream.Stream;
 
 @Transformation
 public class SampleArchiveTransformation implements EventTransformation {
-
-    private Enveloper enveloper;
 
     @Override
     public TransformAction actionFor(final JsonEnvelope event) {
@@ -24,9 +21,9 @@ public class SampleArchiveTransformation implements EventTransformation {
         return NO_ACTION;
     }
 
-
     @Override
     public void setEnveloper(Enveloper enveloper) {
-        this.enveloper = enveloper;
+
     }
+
 }
