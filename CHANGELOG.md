@@ -5,6 +5,16 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+## [1.1.0] - 2018-06-01
+
+### Added
+- Support for archiving streams without transformations or cloning
+
+## [1.0.1] - 2018-02-07
+
+### Changed
+- No functional changes; POM fixed for artefact deployment to Bintray
+
 ## [1.0.0] - 2018-01-19
 
 ### Added
@@ -21,3 +31,8 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ### Fixed
 - Database connection exhaustion error
+
+[Unreleased]: https://github.com/CJSCommonPlatform/stream-transformation-tool/compare/release-1.1.0...HEAD
+[1.1.0]: https://github.com/CJSCommonPlatform/istream-transformation-tool/compare/release-1.0.1...release-1.1.0
+[1.0.1]: https://github.com/CJSCommonPlatform/stream-transformation-tool/compare/release-1.0.0...release-1.0.1
+[1.0.0]: https://github.com/CJSCommonPlatform/stream-transformation-tool/commits/release-1.0.0
