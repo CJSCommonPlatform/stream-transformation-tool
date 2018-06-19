@@ -1,12 +1,12 @@
 package uk.gov.justice.framework.tools.transformation;
 
-
 import static java.util.UUID.randomUUID;
-import static junit.framework.TestCase.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static uk.gov.justice.framework.tools.transformation.EventLogBuilder.eventLogFrom;
 
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.Event;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidSequenceIdException;
 
 import java.sql.PreparedStatement;
@@ -21,16 +21,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-
 public class StreamTransformationIT {
 
-    private UUID STREAM_ID;
-
     private static TestEventLogJdbcRepository EVENT_LOG_JDBC_REPOSITORY;
-
     private static TestEventStreamJdbcRepository EVENT_STREAM_JDBC_REPOSITORY;
 
-    private DataSource dataSource;
+    private UUID STREAM_ID;
 
     private SwarmStarterUtil swarmStarterUtil = new SwarmStarterUtil();
 
@@ -39,7 +35,7 @@ public class StreamTransformationIT {
     @Before
     public void setUpDB() throws Exception {
         STREAM_ID = randomUUID();
-        dataSource = liquibaseUtil.initEventStoreDb();
+        final DataSource dataSource = liquibaseUtil.initEventStoreDb();
         EVENT_LOG_JDBC_REPOSITORY = new TestEventLogJdbcRepository(dataSource);
         EVENT_STREAM_JDBC_REPOSITORY = new TestEventStreamJdbcRepository(dataSource);
     }
@@ -62,51 +58,58 @@ public class StreamTransformationIT {
 
         swarmStarterUtil.runCommand();
 
-        assertTrue(eventStoreTransformedEventPresent());
-        assertTrue(originalEventStreamIsActive());
-        assertFalse(clonedStreamIsActive());
+        assertThat(eventStoreTransformedEventPresent("sample.events.transformedName"), is(true));
+        assertThat(originalEventStreamIsActive(), is(true));
+        assertThat(clonedStreamAvailableAndActive(), is(false));
     }
 
     @Test
-    public void shouldArchiveStreamInEventStore() throws Exception {
-        insertEventLogData("sample.archive.events.name", 1L);
+    public void shouldDeactivateStreamInEventStore() throws Exception {
+        insertEventLogData("sample.deactivate.events.name", 1L);
 
         swarmStarterUtil.runCommand();
-        assertFalse(originalEventStreamIsActive());
+
+        assertThat(originalEventStreamIsActive(), is(false));
     }
 
-    private boolean clonedStreamIsActive() {
-        final UUID clonedStreamId = EVENT_LOG_JDBC_REPOSITORY.findAll()
+    @Test
+    public void shouldPerformCustomActionOnStreamInEventStore() throws Exception {
+        insertEventLogData("sample.event.name.archived.old.release", 1L);
+
+        swarmStarterUtil.runCommand();
+
+        assertThat(eventStoreTransformedEventPresent("sample.event.name"), is(true));
+        assertThat(streamAvailableAndActive(STREAM_ID), is(false));
+        assertThat(clonedStreamAvailableAndActive(), is(false));
+    }
+
+    private boolean clonedStreamAvailableAndActive() {
+        final Optional<Event> matchingClonedEvent = EVENT_LOG_JDBC_REPOSITORY.findAll()
                 .filter(event -> event.getName().equals("system.events.cloned"))
-                .findFirst().get()
-                .getStreamId();
-
-        final boolean isActive = getStreamIsActiveStreamById(clonedStreamId);
-
-        return isActive;
+                .findFirst();
+        return matchingClonedEvent.isPresent() 
+                && streamAvailableAndActive(matchingClonedEvent.get().getStreamId());
     }
 
     private boolean originalEventStreamIsActive() {
-        final boolean isActive = getStreamIsActiveStreamById(STREAM_ID);
-        return isActive;
+        return streamAvailableAndActive(STREAM_ID);
     }
 
-    private boolean getStreamIsActiveStreamById(UUID streamId) {
-        final boolean isActive = EVENT_STREAM_JDBC_REPOSITORY.findAll()
+    private boolean streamAvailableAndActive(final UUID streamId) {
+        final Optional<EventStream> matchingEvent = EVENT_STREAM_JDBC_REPOSITORY.findAll()
                 .filter(eventStream -> eventStream.getStreamId().equals(streamId))
-                .findFirst().get().isActive();
-
-        return isActive;
+                .findFirst();
+        return matchingEvent.isPresent() && matchingEvent.get().isActive();
     }
 
-    private boolean eventStoreTransformedEventPresent() throws SQLException {
+    private boolean eventStoreTransformedEventPresent(final String transformedEventName) {
         final Stream<Event> eventLogs = EVENT_LOG_JDBC_REPOSITORY.findAll();
         final Optional<Event> event = eventLogs.filter(item -> item.getStreamId().equals(STREAM_ID)).findFirst();
 
-        return event.isPresent() && event.get().getName().equals("sample.events.transformedName");
+        return event.isPresent() && event.get().getName().equals(transformedEventName);
     }
 
-    private void insertEventLogData(String eventName, long sequenceId) throws SQLException, InvalidSequenceIdException {
+    private void insertEventLogData(String eventName, long sequenceId) throws InvalidSequenceIdException {
         EVENT_LOG_JDBC_REPOSITORY.insert(eventLogFrom(eventName, sequenceId, STREAM_ID));
         EVENT_STREAM_JDBC_REPOSITORY.insert(STREAM_ID);
     }

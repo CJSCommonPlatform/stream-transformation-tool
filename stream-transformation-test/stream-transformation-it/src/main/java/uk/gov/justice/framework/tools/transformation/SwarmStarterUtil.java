@@ -24,7 +24,7 @@ public class SwarmStarterUtil {
         final BufferedReader reader =
                 new BufferedReader(new InputStreamReader(exec.getInputStream()));
 
-        String line = "";
+        String line;
         while ((line = reader.readLine()) != null) {
             LOGGER.info(line);
         }

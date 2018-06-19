@@ -18,6 +18,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Alternative;
 import javax.inject.Inject;
 
+@SuppressWarnings("WeakerAccess")
 @ApplicationScoped
 @Alternative
 @Priority(2)
