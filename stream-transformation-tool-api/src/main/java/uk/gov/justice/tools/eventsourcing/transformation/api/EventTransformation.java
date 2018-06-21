@@ -1,8 +1,8 @@
 package uk.gov.justice.tools.eventsourcing.transformation.api;
 
 import static java.util.stream.Stream.of;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.NO_ACTION;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
@@ -31,12 +31,12 @@ public interface EventTransformation {
 
 
     /**
-     * Checks which actionFor to perform for a given event.
+     * Checks which transform action to perform for a given event.
      *
      * @param event - the event to check
-     * @return TransformAction if the event is eligible to have the transformation applied to it.
+     * @return Action if the event is eligible to have the transformation applied to it.
      */
-    default TransformAction actionFor(final JsonEnvelope event) {
+    default Action actionFor(final JsonEnvelope event) {
         return isApplicable(event) ? TRANSFORM : NO_ACTION;
     }
 

@@ -5,6 +5,11 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+## [2.0.0] - 2018-06-21
+
+### Added
+- feature to specify actions on a stream like transformation, deactivation or backup to be retained
+
 ## [1.1.0] - 2018-06-01
 
 ### Added

@@ -10,11 +10,12 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.spi.DefaultJsonMetadata.metadataBuilder;
 import static uk.gov.justice.services.test.utils.core.enveloper.EnveloperFactory.createEnveloper;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.DEACTIVATE;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
+import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 
 import java.util.List;
@@ -23,50 +24,53 @@ import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SampleTransformationV2Test {
+public class SampleCustomActionOnTransformationTest {
 
-    private static final String SOURCE_EVENT_NAME = "sample.events.name";
-    private static final String TRANSFORMED_EVENT_NAME = "sample.events.transformedName";
-
-    private SampleTransformationV2 sampleTransformation = new SampleTransformationV2();
+    private SampleCustomActionOnTransformation underTest = new SampleCustomActionOnTransformation();
 
     private Enveloper enveloper = createEnveloper();
 
     @Before
     public void setup() {
-        sampleTransformation.setEnveloper(enveloper);
+        underTest.setEnveloper(enveloper);
     }
 
     @Test
     public void shouldCreateInstanceOfEventTransformation() {
-        assertThat(sampleTransformation, is(instanceOf(EventTransformation.class)));
+        assertThat(underTest, is(instanceOf(EventTransformation.class)));
     }
 
     @Test
-    public void shouldSetTransformAction() {
-        final JsonEnvelope event = buildEnvelope("sample.v2.events.name");
+    public void shouldSetCustomActionForEventsThatMatch() {
+        final JsonEnvelope event = buildEnvelope("sample.event.name.archived.old.release");
 
-        assertThat(sampleTransformation.actionFor(event), is(TRANSFORM));
+        assertThat(underTest.actionFor(event), is(new Action(true, true, false)));
     }
 
     @Test
-    public void shouldSetNoAction() {
-        final JsonEnvelope event = buildEnvelope("dummy.sample.v2.events.name");
+    public void shouldSetDeactivateActionForEventsThatMatch() {
+        final JsonEnvelope event = buildEnvelope("sample.event.to.deactivate");
 
-        assertThat(sampleTransformation.actionFor(event), is(NO_ACTION));
+        assertThat(underTest.actionFor(event), is(DEACTIVATE));
+    }
+
+    @Test
+    public void shouldSetNoActionForEventsThatDoNotMatch() {
+        final JsonEnvelope event = buildEnvelope("dummy.sample.event.name");
+
+        assertThat(underTest.actionFor(event), is(NO_ACTION));
     }
 
     @Test
     public void shouldCreateTransformation() {
-        final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
+        final JsonEnvelope event = buildEnvelope("sample.event.name.archived.old.release");
 
-        final Stream<JsonEnvelope> transformedStream = sampleTransformation.apply(event);
+        final Stream<JsonEnvelope> transformedStream = underTest.apply(event);
 
         final List<JsonEnvelope> transformedEvents = transformedStream.collect(toList());
         assertThat(transformedEvents, hasSize(1));
-        assertThat(transformedEvents.get(0).metadata().name(), is(TRANSFORMED_EVENT_NAME));
-        
-        assertThat(transformedEvents.get(0).payloadAsJsonObject().getString("field"), 
+        assertThat(transformedEvents.get(0).metadata().name(), is("sample.event.name"));
+        assertThat(transformedEvents.get(0).payloadAsJsonObject().getString("field"),
                 is(event.payloadAsJsonObject().getString("field")));
     }
 
@@ -75,5 +79,5 @@ public class SampleTransformationV2Test {
                 metadataBuilder().withId(randomUUID()).withName(eventName),
                 createObjectBuilder().add("field", "value").build());
     }
-
+    
 }

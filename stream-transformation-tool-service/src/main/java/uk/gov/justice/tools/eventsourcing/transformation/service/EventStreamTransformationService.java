@@ -1,28 +1,24 @@
 package uk.gov.justice.tools.eventsourcing.transformation.service;
 
 import static java.lang.String.format;
-import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
 import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.ARCHIVE;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.NO_ACTION;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction.TRANSFORM;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
-import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
-import uk.gov.justice.services.eventsourcing.source.core.EventStream;
-import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
+import uk.gov.justice.tools.eventsourcing.transformation.repository.StreamRepository;
+import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
-import uk.gov.justice.tools.eventsourcing.transformation.api.TransformAction;
 import uk.gov.justice.tools.eventsourcing.transformation.api.extension.EventTransformationFoundEvent;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -39,16 +35,19 @@ import org.slf4j.Logger;
 public class EventStreamTransformationService {
 
     @Inject
-    Logger logger;
+    private Logger logger;
 
     @Inject
-    EventSource eventSource;
+    private EventSource eventSource;
 
     @Inject
-    Enveloper enveloper;
+    private Enveloper enveloper;
 
     @Inject
-    EventStreamJdbcRepository eventStreamJdbcRepository;
+    private StreamTransformer streamTransformer;
+
+    @Inject
+    private StreamRepository streamRepository;
 
     Set<EventTransformation> transformations = new HashSet<>();
 
@@ -63,107 +62,69 @@ public class EventStreamTransformationService {
             logger.debug(format("Loading Event Transformation %s", event.getClazz().getSimpleName()));
         }
 
-        final EventTransformation et = (EventTransformation) event.getClazz().newInstance();
-        et.setEnveloper(enveloper);
-        transformations.add(et);
+        final EventTransformation eventTransformation = (EventTransformation) event.getClazz().newInstance();
+        eventTransformation.setEnveloper(enveloper);
+        transformations.add(eventTransformation);
     }
 
     @Transactional(REQUIRES_NEW)
     public UUID transformEventStream(final UUID streamId) {
         final Stream<JsonEnvelope> eventStream = eventSource.getStreamById(streamId).read();
+        final Action action = requiresTransformation(eventStream, streamId);
 
-        switch (requiresTransformation(eventStream, streamId)) {
-            case TRANSFORM:
-                return transformEvent(streamId, eventStream);
-            case NO_ACTION:
-                return null;
-            case ARCHIVE:
-                return archiveStream(streamId, eventStream);
-        }
-        return null;
-    }
+        Optional<UUID> backupStreamId;
 
+        if (action.isTransform()) {
+            backupStreamId = streamTransformer.transformAndBackupStream(streamId, transformations);
 
-    private UUID transformEvent(UUID streamId, Stream<JsonEnvelope> eventStream) {
-        try {
-            final UUID clonedStreamId = eventSource.cloneStream(streamId);
-
-            if (logger.isDebugEnabled()) {
-                logger.debug(format("Cloned stream '%s' from stream '%s'", clonedStreamId, streamId));
-            }
-
-            final EventStream stream = eventSource.getStreamById(streamId);
-            final Stream<JsonEnvelope> events = stream.read();
-
-            eventSource.clearStream(streamId);
-
-            logger.info("transforming events on stream {}", streamId);
-            final Stream<JsonEnvelope> transformedEventStream = transform(events);
-
-            stream.append(transformedEventStream.map(this::clearEventVersion));
-            events.close();
-        } catch (Exception e) {
-            logger.error("Failed to clone stream {}", streamId, e);
-        }
-        eventStream.close();
-        return streamId;
-
-    }
-
-    private UUID archiveStream(final UUID streamId, final Stream<JsonEnvelope> eventStream) {
-        eventStreamJdbcRepository.markActive(streamId, false);
-        eventStream.close();
-        return streamId;
-
-    }
-
-    private JsonEnvelope clearEventVersion(final JsonEnvelope event) {
-        return enveloper.withMetadataFrom(event, event.metadata().name()).apply(event.payload());
-    }
-
-    private Stream<JsonEnvelope> transform(final Stream<JsonEnvelope> eventStream) {
-        return eventStream.map(e -> {
-                    final Optional<EventTransformation> transformer = hasTransformer(e);
-                    return transformer.isPresent() ? transformer.get().apply(e) : Stream.of(e);
+            if (!action.isKeepBackup()) {
+                if (backupStreamId.isPresent()) {
+                    streamRepository.deleteStream(backupStreamId.get());
+                } else {
+                    if (logger.isWarnEnabled()) {
+                        logger.warn(format("cannot delete backup stream. No backup stream was created for stream '%s'", streamId));
+                    }
                 }
-        ).flatMap(identity());
+            }
+        }
+
+        if (action.isDeactivate()) {
+            streamRepository.deactivateStream(streamId);
+        }
+
+        eventStream.close();
+        return streamId;
     }
 
-    private TransformAction requiresTransformation(final Stream<JsonEnvelope> eventStream, final UUID streamId) {
-
-        List<TransformAction> eventTransformationList = eventStream.map(this::checkTransformations)
+    private Action requiresTransformation(final Stream<JsonEnvelope> eventStream, final UUID streamId) {
+        final List<Action> eventTransformationList = eventStream.map(this::checkTransformations)
                 .flatMap(List::stream)
                 .distinct()
-                .collect(Collectors.toList());
+                .collect(toList());
 
         if (eventTransformationList.isEmpty()) {
-            return noAction(eventStream, streamId, "Stream {} did not require transformation stream ", eventTransformationList);
+            return noAction(streamId, "Stream {} did not require transformation stream ", eventTransformationList);
         }
         if (eventTransformationList.size() > 1) {
-            return noAction(eventStream, streamId, "Stream {} can not have multiple actions {} ", eventTransformationList);
+            return noAction(streamId, "Stream {} can not have multiple actions {} ", eventTransformationList);
         }
 
         return eventTransformationList.get(0);
-
     }
 
-    private TransformAction noAction(final Stream<JsonEnvelope> eventStream, final UUID streamId, final String errorMessage, final List<TransformAction> eventTransformationList) {
+    private Action noAction(final UUID streamId, final String errorMessage,
+                            final List<Action> eventTransformationList) {
         if (logger.isDebugEnabled()) {
             logger.debug(errorMessage, streamId, eventTransformationList.toString());
         }
-        eventStream.close();
         return NO_ACTION;
     }
 
-    private Optional<EventTransformation> hasTransformer(final JsonEnvelope event) {
-        return transformations.stream().filter(t -> t.actionFor(event) == TRANSFORM).findFirst();
-    }
-
-    private List<TransformAction> checkTransformations(final JsonEnvelope event) {
-
+    private List<Action> checkTransformations(final JsonEnvelope event) {
         return transformations.stream()
                 .map(t -> t.actionFor(event))
-                .filter(t -> t == TRANSFORM || t == ARCHIVE)
-                .collect(Collectors.toList());
+                .filter(Objects::nonNull)
+                .filter(t -> !t.equals(NO_ACTION))
+                .collect(toList());
     }
 }
