@@ -5,6 +5,11 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+## [2.1.0] - 2018-07-17
+
+### Changed
+- fix to remove the backup events from event log when backup is not to be retained
+
 ## [2.0.0] - 2018-06-21
 
 ### Added

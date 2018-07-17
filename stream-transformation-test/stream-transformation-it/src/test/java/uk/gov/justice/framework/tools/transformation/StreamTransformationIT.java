@@ -79,6 +79,7 @@ public class StreamTransformationIT {
         swarmStarterUtil.runCommand();
 
         assertThat(eventStoreTransformedEventPresent("sample.event.name"), is(true));
+        assertThat(eventStoreOriginalEventIsPresent("sample.event.name.archived.old.release"), is(false));
         assertThat(streamAvailableAndActive(STREAM_ID), is(false));
         assertThat(clonedStreamAvailableAndActive(), is(false));
     }
@@ -107,6 +108,13 @@ public class StreamTransformationIT {
         final Optional<Event> event = eventLogs.filter(item -> item.getStreamId().equals(STREAM_ID)).findFirst();
 
         return event.isPresent() && event.get().getName().equals(transformedEventName);
+    }
+
+    private boolean eventStoreOriginalEventIsPresent(final String originalEventName) {
+        final Stream<Event> eventLogs = EVENT_LOG_JDBC_REPOSITORY.findAll();
+        final Optional<Event> event = eventLogs.filter(item -> item.getName().equals(originalEventName)).findFirst();
+
+        return event.isPresent();
     }
 
     private void insertEventLogData(String eventName, long sequenceId) throws InvalidSequenceIdException {
