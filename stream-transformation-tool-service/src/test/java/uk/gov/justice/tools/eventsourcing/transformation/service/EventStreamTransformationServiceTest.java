@@ -23,8 +23,10 @@ import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_AC
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.event.EventJdbcRepository;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
+import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.services.messaging.spi.DefaultJsonEnvelopeProvider;
 import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
@@ -95,6 +97,9 @@ public class EventStreamTransformationServiceTest {
     @Mock
     private StreamRepository streamRepository;
 
+    @Mock
+    private EventJdbcRepository eventRepository;
+
     @InjectMocks
     private EventStreamTransformationService underTest;
 
@@ -132,7 +137,7 @@ public class EventStreamTransformationServiceTest {
         assertThat(jsonEnvelope.metadata().streamId().isPresent(), is(true));
         jsonEnvelope.metadata().streamId().ifPresent(streamId -> assertThat(streamId, is(STREAM_ID)));
 
-        verifyZeroInteractions(streamRepository);
+        verifyZeroInteractions(streamRepository, eventRepository);
     }
 
     @Test
@@ -146,7 +151,7 @@ public class EventStreamTransformationServiceTest {
 
         verify(streamRepository).deactivateStream(STREAM_ID);
         verifyNoMoreInteractions(streamRepository);
-        verifyZeroInteractions(streamTransformer);
+        verifyZeroInteractions(streamTransformer, eventRepository);
     }
 
     @Test
@@ -173,7 +178,7 @@ public class EventStreamTransformationServiceTest {
         assertThat(jsonEnvelope.get(1).metadata().streamId().isPresent(), is(true));
         jsonEnvelope.get(1).metadata().streamId().ifPresent(streamId -> assertThat(streamId, is(STREAM_ID)));
 
-        verifyZeroInteractions(streamRepository);
+        verifyZeroInteractions(streamRepository, eventRepository);
     }
 
     @Test
@@ -187,7 +192,7 @@ public class EventStreamTransformationServiceTest {
 
         verify(streamRepository).deactivateStream(STREAM_ID);
         verifyNoMoreInteractions(streamRepository);
-        verifyZeroInteractions(streamTransformer);
+        verifyZeroInteractions(streamTransformer, eventRepository);
     }
 
     @Test
@@ -199,7 +204,7 @@ public class EventStreamTransformationServiceTest {
 
         underTest.transformEventStream(STREAM_ID);
 
-        verifyZeroInteractions(streamTransformer, streamRepository);
+        verifyZeroInteractions(streamTransformer, streamRepository, eventRepository);
     }
 
     @Test
@@ -212,23 +217,23 @@ public class EventStreamTransformationServiceTest {
 
         underTest.transformEventStream(STREAM_ID);
 
-        verifyZeroInteractions(streamTransformer, streamRepository);
+        verifyZeroInteractions(streamTransformer, streamRepository, eventRepository);
     }
 
     @Test
     public void shouldRegisterTransformation() throws InstantiationException, IllegalAccessException {
         underTest.transformations = new HashSet<>();
         final EventTransformationFoundEvent eventTransformationEvent = new EventTransformationFoundEvent(TestTransformation.class);
-        
+
         underTest.register(eventTransformationEvent);
 
         assertThat(underTest.transformations, hasSize(1));
-        underTest.transformations.stream().findFirst().ifPresent(transformation -> 
+        underTest.transformations.stream().findFirst().ifPresent(transformation ->
                 assertThat(transformation, instanceOf(TestTransformation.class)));
     }
 
     @Test
-    public void shouldPerformAllTheIndicatedActionsOnAStream() {
+    public void shouldPerformAllTheIndicatedActionsOnAStream() throws EventStreamException {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         when(eventTransformation.actionFor(any(JsonEnvelope.class))).thenReturn(
                 new Action(true, true, false)
@@ -238,11 +243,12 @@ public class EventStreamTransformationServiceTest {
 
         underTest.transformEventStream(STREAM_ID);
 
-        final InOrder inOrder = inOrder(streamTransformer, streamRepository);
+        final InOrder inOrder = inOrder(streamTransformer, streamRepository, eventRepository);
         inOrder.verify(streamTransformer).transformAndBackupStream(STREAM_ID, underTest.transformations);
         inOrder.verify(streamRepository).deleteStream(BACKUP_STREAM_ID);
+        inOrder.verify(eventRepository).clear(BACKUP_STREAM_ID);
         inOrder.verify(streamRepository).deactivateStream(STREAM_ID);
-        verifyNoMoreInteractions(streamTransformer, streamRepository);
+        verifyNoMoreInteractions(streamTransformer, streamRepository, eventRepository);
     }
 
     private JsonEnvelope buildEnvelope(final String eventName) {

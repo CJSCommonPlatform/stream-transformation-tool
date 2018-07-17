@@ -6,12 +6,13 @@ import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.event.EventJdbcRepository;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.messaging.JsonEnvelope;
-import uk.gov.justice.tools.eventsourcing.transformation.repository.StreamRepository;
 import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 import uk.gov.justice.tools.eventsourcing.transformation.api.extension.EventTransformationFoundEvent;
+import uk.gov.justice.tools.eventsourcing.transformation.repository.StreamRepository;
 
 import java.util.HashSet;
 import java.util.List;
@@ -49,6 +50,9 @@ public class EventStreamTransformationService {
     @Inject
     private StreamRepository streamRepository;
 
+    @Inject
+    private EventJdbcRepository eventRepository; 
+
     Set<EventTransformation> transformations = new HashSet<>();
 
     /**
@@ -80,6 +84,7 @@ public class EventStreamTransformationService {
             if (!action.isKeepBackup()) {
                 if (backupStreamId.isPresent()) {
                     streamRepository.deleteStream(backupStreamId.get());
+                    eventRepository.clear(backupStreamId.get());    
                 } else {
                     if (logger.isWarnEnabled()) {
                         logger.warn(format("cannot delete backup stream. No backup stream was created for stream '%s'", streamId));
