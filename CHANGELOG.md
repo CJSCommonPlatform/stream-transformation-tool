@@ -5,6 +5,11 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+## [3.0.0] - 2018-08-30
+
+### Changed
+- Upgraded to [microservice-framework 4.3.2](https://github.com/CJSCommonPlatform/microservice_framework/releases/tag/release-4.3.2)
+
 ## [2.1.0] - 2018-07-17
 
 ### Changed
