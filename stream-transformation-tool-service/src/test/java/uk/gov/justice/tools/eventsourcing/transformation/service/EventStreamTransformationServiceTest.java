@@ -16,7 +16,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static uk.gov.justice.services.messaging.spi.DefaultJsonMetadata.metadataBuilder;
+import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
+import static uk.gov.justice.services.messaging.JsonEnvelope.metadataBuilder;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.ARCHIVE;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.DEACTIVATE;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
@@ -28,7 +29,6 @@ import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
-import uk.gov.justice.services.messaging.spi.DefaultJsonEnvelopeProvider;
 import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transformation;
@@ -252,7 +252,7 @@ public class EventStreamTransformationServiceTest {
     }
 
     private JsonEnvelope buildEnvelope(final String eventName) {
-        return DefaultJsonEnvelopeProvider.provider().envelopeFrom(
+        return envelopeFrom(
                 metadataBuilder().withId(randomUUID()).withStreamId(STREAM_ID).withName(eventName),
                 createObjectBuilder().add("field", "value").build());
     }
