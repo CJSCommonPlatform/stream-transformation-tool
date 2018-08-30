@@ -142,7 +142,7 @@ public class StreamTransformerTest {
     }
 
     private JsonEnvelope buildEnvelope(final String eventName) {
-        return DefaultJsonEnvelopeProvider.provider().envelopeFrom(
+        return new DefaultJsonEnvelopeProvider().envelopeFrom(
                 metadataBuilder().withId(randomUUID()).withStreamId(STREAM_ID).withName(eventName),
                 createObjectBuilder().add("field", "value").build());
     }

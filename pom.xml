@@ -23,7 +23,7 @@
     <properties>
         <cpp.repo.name>stream-transformation-tool</cpp.repo.name>
 
-        <framework.version>3.0.0</framework.version>
+        <framework.version>4.3.2</framework.version>
         <common-bom.version>1.22.0</common-bom.version>
         <utilities.version>1.11.0</utilities.version>
         <test-utils.version>1.16.0</test-utils.version>
