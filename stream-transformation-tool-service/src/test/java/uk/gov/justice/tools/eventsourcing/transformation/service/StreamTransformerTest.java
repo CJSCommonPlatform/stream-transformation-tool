@@ -9,7 +9,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static uk.gov.justice.services.messaging.spi.DefaultJsonMetadata.metadataBuilder;
+import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
+import static uk.gov.justice.services.messaging.JsonEnvelope.metadataBuilder;
 import static uk.gov.justice.services.test.utils.core.enveloper.EnveloperFactory.createEnveloper;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
@@ -19,7 +20,6 @@ import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
-import uk.gov.justice.services.messaging.spi.DefaultJsonEnvelopeProvider;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 
 import java.util.Optional;
@@ -142,7 +142,7 @@ public class StreamTransformerTest {
     }
 
     private JsonEnvelope buildEnvelope(final String eventName) {
-        return DefaultJsonEnvelopeProvider.provider().envelopeFrom(
+        return envelopeFrom(
                 metadataBuilder().withId(randomUUID()).withStreamId(STREAM_ID).withName(eventName),
                 createObjectBuilder().add("field", "value").build());
     }
