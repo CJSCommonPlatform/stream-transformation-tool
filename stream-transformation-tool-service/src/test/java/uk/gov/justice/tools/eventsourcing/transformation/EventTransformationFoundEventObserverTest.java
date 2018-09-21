@@ -2,13 +2,10 @@ package uk.gov.justice.tools.eventsourcing.transformation;
 
 
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import uk.gov.justice.tools.eventsourcing.transformation.api.extension.EventTransformationFoundEvent;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationServiceTest;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -29,11 +26,6 @@ public class EventTransformationFoundEventObserverTest {
     @Mock
     private EventTransformationRegistry eventTransformationRegistry;
 
-    @Before
-    public void setup() {
-        when(logger.isDebugEnabled()).thenReturn(true);
-    }
-
     @Test
     public void shouldRegisterTransformation() throws InstantiationException, IllegalAccessException {
 
@@ -41,7 +33,7 @@ public class EventTransformationFoundEventObserverTest {
 
         eventTransformationFoundEventObserver.register(eventTransformationEvent);
 
-        verify(logger).debug("Loading Event Transformation TestTransformation");
+        verify(logger).info("Loading Event Transformation TestTransformation");
         verify(eventTransformationRegistry).createTransformations(eventTransformationEvent);
     }
 }

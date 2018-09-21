@@ -1,4 +1,4 @@
-package uk.gov.sample.event.transformation;
+package uk.gov.sample.event.transformation.transform;
 
 import static java.util.UUID.randomUUID;
 import static javax.json.Json.createObjectBuilder;

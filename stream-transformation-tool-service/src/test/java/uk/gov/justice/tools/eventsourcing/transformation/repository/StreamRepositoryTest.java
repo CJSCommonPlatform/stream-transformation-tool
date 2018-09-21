@@ -1,10 +1,10 @@
 package uk.gov.justice.tools.eventsourcing.transformation.repository;
 
 import static java.util.UUID.randomUUID;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import uk.gov.justice.services.eventsourcing.repository.jdbc.event.EventJdbcRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
 
 import java.util.UUID;
@@ -18,36 +18,46 @@ import org.slf4j.Logger;
 
 @RunWith(MockitoJUnitRunner.class)
 public class StreamRepositoryTest {
-    
+
     private static final UUID STREAM_ID = randomUUID();
-    
+
     @Mock
     private Logger logger;
 
     @Mock
     private EventStreamJdbcRepository eventStreamJdbcRepository;
 
+    @Mock
+    private EventJdbcRepository eventRepository;
+
     @InjectMocks
-    private StreamRepository underTest;
-    
+    private StreamRepository streamRepository;
+
     @Test
     public void shouldDeactivateTheStreamWhenRequested() {
-        given(logger.isDebugEnabled()).willReturn(true);
-        
-        underTest.deactivateStream(STREAM_ID);
-        
+
+
+        streamRepository.deactivateStream(STREAM_ID);
+
         verify(eventStreamJdbcRepository).markActive(STREAM_ID, false);
         verifyNoMoreInteractions(eventStreamJdbcRepository);
     }
-    
+
     @Test
     public void shouldDeleteTheStreamWhenRequested() {
-        given(logger.isDebugEnabled()).willReturn(true);
-        
-        underTest.deleteStream(STREAM_ID);
-        
+        streamRepository.deleteStream(STREAM_ID);
+
         verify(eventStreamJdbcRepository).delete(STREAM_ID);
+        verify(eventRepository).clear(STREAM_ID);
         verifyNoMoreInteractions(eventStreamJdbcRepository);
     }
-    
+
+    @Test
+    public void shouldCreateTheStreamWhenRequested() {
+        final UUID streamId = streamRepository.createStream();
+
+        verify(eventStreamJdbcRepository).insert(streamId);
+        verifyNoMoreInteractions(eventStreamJdbcRepository);
+    }
+
 }

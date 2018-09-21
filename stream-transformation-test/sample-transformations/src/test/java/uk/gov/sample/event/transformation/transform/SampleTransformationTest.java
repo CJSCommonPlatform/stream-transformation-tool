@@ -1,4 +1,4 @@
-package uk.gov.sample.event.transformation;
+package uk.gov.sample.event.transformation.transform;
 
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
@@ -11,8 +11,6 @@ import static org.junit.Assert.assertTrue;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.spi.DefaultJsonMetadata.metadataBuilder;
 import static uk.gov.justice.services.test.utils.core.enveloper.EnveloperFactory.createEnveloper;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
@@ -24,44 +22,37 @@ import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SampleTransformationPass1Test {
+public class SampleTransformationTest {
 
-    private static final String SOURCE_EVENT_NAME = "sample.events.name.pass";
-    private static final String TRANSFORMED_EVENT_NAME = "sample.events.transformedName.pass";
+    private static final String SOURCE_EVENT_NAME = "sample.events.name";
+    private static final String TRANSFORMED_EVENT_NAME = "sample.events.transformedName";
 
-    private SampleTransformationPass1 sampleTransformationPass1 = new SampleTransformationPass1();
+    private SampleTransformation sampleTransformation = new SampleTransformation();
 
     private Enveloper enveloper = createEnveloper();
 
     @Before
     public void setup() {
-        sampleTransformationPass1.setEnveloper(enveloper);
-    }
-
-    @Test
-    public void shouldSetTransformAction() {
-        final JsonEnvelope event = buildEnvelope("sample.events.name.pass");
-
-        assertThat(sampleTransformationPass1.actionFor(event), is(TRANSFORM));
-    }
-
-    @Test
-    public void shouldSetNoAction() {
-        final JsonEnvelope event = buildEnvelope("dummy.sample.events.name.pass");
-
-        assertThat(sampleTransformationPass1.actionFor(event), is(NO_ACTION));
+        sampleTransformation.setEnveloper(enveloper);
     }
 
     @Test
     public void shouldCreateInstanceOfEventTransformation() {
-        assertThat(sampleTransformationPass1, instanceOf(EventTransformation.class));
+        assertThat(sampleTransformation, instanceOf(EventTransformation.class));
     }
-    
+
+    @Test
+    public void shouldSetIsApplicable() {
+        final JsonEnvelope event = buildEnvelope("sample.events.name");
+
+        assertTrue(sampleTransformation.isApplicable(event));
+    }
+
     @Test
     public void shouldCreateTransformation() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
-        
-        final Stream<JsonEnvelope> transformedStream = sampleTransformationPass1.apply(event);
+
+        final Stream<JsonEnvelope> transformedStream = sampleTransformation.apply(event);
 
         final List<JsonEnvelope> transformedEvents = transformedStream.collect(toList());
         assertThat(transformedEvents, hasSize(1));
@@ -76,5 +67,5 @@ public class SampleTransformationPass1Test {
                 metadataBuilder().withId(randomUUID()).withName(eventName),
                 createObjectBuilder().add("field", "value").build());
     }
-    
+
 }

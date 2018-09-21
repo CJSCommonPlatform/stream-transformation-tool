@@ -1,4 +1,4 @@
-package uk.gov.sample.event.transformation;
+package uk.gov.sample.event.transformation.transform;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
@@ -18,13 +18,13 @@ public class SampleTransformation implements EventTransformation {
     }
 
     @Override
-    public Stream<JsonEnvelope> apply(JsonEnvelope event) {
+    public Stream<JsonEnvelope> apply(final JsonEnvelope event) {
         final JsonEnvelope transformedEnvelope = enveloper.withMetadataFrom(event, "sample.events.transformedName").apply(event.payload());
         return Stream.of(transformedEnvelope);
     }
 
     @Override
-    public void setEnveloper(Enveloper enveloper) {
+    public void setEnveloper(final Enveloper enveloper) {
         this.enveloper = enveloper;
     }
 }

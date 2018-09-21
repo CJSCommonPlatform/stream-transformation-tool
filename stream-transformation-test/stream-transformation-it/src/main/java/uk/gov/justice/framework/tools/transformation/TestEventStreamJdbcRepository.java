@@ -12,7 +12,7 @@ public class TestEventStreamJdbcRepository extends EventStreamJdbcRepository {
 
     private final DataSource dbsource;
 
-    public TestEventStreamJdbcRepository(DataSource dataSource) {
+    public TestEventStreamJdbcRepository(final DataSource dataSource) {
         this.dbsource = dataSource;
         setField(this, "dataSource", dbsource);
         setField(this, "eventStreamJdbcRepositoryHelper", new JdbcRepositoryHelper());

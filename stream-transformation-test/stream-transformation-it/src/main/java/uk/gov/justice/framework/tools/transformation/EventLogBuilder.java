@@ -15,7 +15,7 @@ public class EventLogBuilder {
     private EventLogBuilder() {
 
     }
-    
+
     public static Event eventLogFrom(final String eventName, final Long sequenceId, final UUID streamId) {
         final JsonEnvelope jsonEnvelope = envelope()
                 .with(metadataWithRandomUUID(eventName)

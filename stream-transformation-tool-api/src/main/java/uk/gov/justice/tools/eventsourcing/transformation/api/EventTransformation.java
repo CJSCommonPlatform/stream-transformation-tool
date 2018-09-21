@@ -21,11 +21,10 @@ public interface EventTransformation {
      *
      * @param event - the event to check
      * @return TRUE if the event is eligible to have the transformation applied to it.
-     * @deprecated use actionFor method instead
-     * The default implementation is false
+     * @deprecated use actionFor method instead The default implementation is false
      */
     @Deprecated
-    default boolean isApplicable(final JsonEnvelope event){
+    default boolean isApplicable(final JsonEnvelope event) {
         return false;
     }
 
@@ -44,10 +43,10 @@ public interface EventTransformation {
      * Transforms an events into zero to many events.
      *
      * @param event - the event to be transformed
-     * @return a stream of transformed events.
-     * The default implementation is provided for other than transform actio, as other actions dose not need to implement this method.
+     * @return a stream of transformed events. The default implementation is provided for other than
+     * transform actio, as other actions dose not need to implement this method.
      */
-    default Stream<JsonEnvelope> apply(final JsonEnvelope event){
+    default Stream<JsonEnvelope> apply(final JsonEnvelope event) {
         return of(event);
 
     }

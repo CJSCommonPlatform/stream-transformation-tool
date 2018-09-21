@@ -1,4 +1,4 @@
-package uk.gov.sample.event.transformation;
+package uk.gov.sample.event.transformation.move;
 
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
@@ -11,27 +11,28 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transfor
 
 import java.util.stream.Stream;
 
-@Transformation
-public class SampleTransformationV2 implements EventTransformation {
+@Transformation(pass = 3)
+public class SampleTransformationMove3 implements EventTransformation {
 
     private Enveloper enveloper;
 
     @Override
-    public Action actionFor(JsonEnvelope event) {
-        if (event.metadata().name().equalsIgnoreCase("sample.v2.events.name")){
+    public Action actionFor(final JsonEnvelope event) {
+        if (event.metadata().name().equalsIgnoreCase("sample.transformation.move.3")) {
             return TRANSFORM;
         }
         return NO_ACTION;
     }
 
     @Override
-    public Stream<JsonEnvelope> apply(JsonEnvelope event) {
-        final JsonEnvelope transformedEnvelope = enveloper.withMetadataFrom(event, "sample.events.transformedName").apply(event.payload());
+    public Stream<JsonEnvelope> apply(final JsonEnvelope event) {
+        final JsonEnvelope transformedEnvelope = enveloper.withMetadataFrom(event, "sample.transformation.move.4").apply(event.payload());
         return Stream.of(transformedEnvelope);
     }
 
     @Override
-    public void setEnveloper(Enveloper enveloper) {
+    public void setEnveloper(final Enveloper enveloper) {
         this.enveloper = enveloper;
     }
+
 }
