@@ -18,15 +18,18 @@ public class StreamTransformationTask implements Callable<UUID>, ManagedTask {
 
     private ManagedTaskListener transformationListener;
 
-    public StreamTransformationTask(final UUID streamId, final EventStreamTransformationService eventStreamTransformationService, final ManagedTaskListener transformationListener) {
+    private int pass;
+
+    public StreamTransformationTask(final UUID streamId, final EventStreamTransformationService eventStreamTransformationService, final ManagedTaskListener transformationListener , final int pass) {
         this.eventStreamTransformationService = eventStreamTransformationService;
         this.transformationListener = transformationListener;
         this.streamId = streamId;
+        this.pass = pass;
     }
 
     @Override
     public UUID call() throws EventStreamException {
-        return eventStreamTransformationService.transformEventStream(this.streamId);
+        return eventStreamTransformationService.transformEventStream(this.streamId, pass);
     }
 
     @Override

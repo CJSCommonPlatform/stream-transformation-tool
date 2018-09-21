@@ -1,12 +1,16 @@
 package uk.gov.justice.event.tool.extension;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import uk.gov.justice.domain.annotation.Event;
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
@@ -69,6 +73,7 @@ public class EventTransformationScannerTest {
         doReturn(annotatedType).when(processAnnotatedType).getAnnotatedType();
         doReturn(true).when(annotatedType).isAnnotationPresent(clazz);
         doReturn(TestTransformation.class).when(annotatedType).getJavaClass();
+        doReturn(mock(Transformation.class)).when(annotatedType).getAnnotation(Transformation.class);
     }
 
     @Transformation

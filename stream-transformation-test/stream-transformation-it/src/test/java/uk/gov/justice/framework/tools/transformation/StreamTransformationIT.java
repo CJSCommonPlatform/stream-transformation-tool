@@ -84,6 +84,17 @@ public class StreamTransformationIT {
         assertThat(clonedStreamAvailableAndActive(), is(false));
     }
 
+    @Test
+    public void shouldTransformEventByPass() throws Exception {
+        insertEventLogData("sample.events.name.pass", 1L);
+
+        swarmStarterUtil.runCommand();
+
+        assertThat(eventStoreTransformedEventPresent("sample.events.transformedName.pass2"), is(true));
+        assertThat(originalEventStreamIsActive(), is(true));
+        assertThat(clonedStreamAvailableAndActive(), is(false));
+    }
+
     private boolean clonedStreamAvailableAndActive() {
         final Optional<Event> matchingClonedEvent = EVENT_LOG_JDBC_REPOSITORY.findAll()
                 .filter(event -> event.getName().equals("system.events.cloned"))
