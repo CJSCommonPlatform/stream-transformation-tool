@@ -5,9 +5,7 @@ import static java.util.Optional.of;
 import static java.util.UUID.randomUUID;
 import static javax.json.Json.createObjectBuilder;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
@@ -29,14 +27,14 @@ import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
+import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
 import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transformation;
-import uk.gov.justice.tools.eventsourcing.transformation.api.extension.EventTransformationFoundEvent;
 import uk.gov.justice.tools.eventsourcing.transformation.repository.StreamRepository;
 
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -44,6 +42,7 @@ import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -55,6 +54,7 @@ import org.slf4j.Logger;
 
 @RunWith(DataProviderRunner.class)
 public class EventStreamTransformationServiceTest {
+
 
     private static final UUID STREAM_ID = randomUUID();
     private static final UUID BACKUP_STREAM_ID = randomUUID();
@@ -100,8 +100,11 @@ public class EventStreamTransformationServiceTest {
     @Mock
     private EventJdbcRepository eventRepository;
 
+    @Mock
+    private EventTransformationRegistry eventTransformationRegistry;
+
     @InjectMocks
-    private EventStreamTransformationService underTest;
+    private EventStreamTransformationService eventStreamTransformationService;
 
     @Captor
     private ArgumentCaptor<JsonEnvelope> envelopeCaptor;
@@ -110,7 +113,7 @@ public class EventStreamTransformationServiceTest {
     public void setup() {
         initMocks(this);
 
-        underTest.transformations = newHashSet(eventTransformation);
+        eventStreamTransformationService.transformations = newHashSet(eventTransformation);
 
         when(eventTransformation.apply(any(JsonEnvelope.class))).thenReturn(Stream.of(buildEnvelope(TRANSFORMED_EVENT_NAME)));
         when(logger.isDebugEnabled()).thenReturn(true);
@@ -121,16 +124,19 @@ public class EventStreamTransformationServiceTest {
     @Test
     public void shouldTransformStreamOfSingleEvent() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
+
         when(eventTransformation.actionFor(any(JsonEnvelope.class))).thenReturn(TRANSFORM);
         when(eventStream.read()).thenReturn(Stream.of(event));
+        when(eventTransformationRegistry.getEventTransformationBy(1)).thenReturn(eventStreamTransformationService.transformations);
 
-        underTest.transformEventStream(STREAM_ID);
+        eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
 
-        final InOrder inOrder = inOrder(eventSource, eventStream, eventTransformation, streamTransformer);
+        final InOrder inOrder = inOrder(eventSource, eventStream, eventTransformationRegistry, eventTransformation, streamTransformer);
         inOrder.verify(eventSource).getStreamById(STREAM_ID);
         inOrder.verify(eventStream).read();
+        inOrder.verify(eventTransformationRegistry).getEventTransformationBy(1);
         inOrder.verify(eventTransformation).actionFor(envelopeCaptor.capture());
-        inOrder.verify(streamTransformer).transformAndBackupStream(STREAM_ID, underTest.transformations);
+        inOrder.verify(streamTransformer).transformAndBackupStream(STREAM_ID, eventStreamTransformationService.transformations);
 
         final JsonEnvelope jsonEnvelope = envelopeCaptor.getValue();
         assertThat(jsonEnvelope.metadata().name(), is(SOURCE_EVENT_NAME));
@@ -146,8 +152,9 @@ public class EventStreamTransformationServiceTest {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         when(eventTransformation.actionFor(any(JsonEnvelope.class))).thenReturn(action);
         when(eventStream.read()).thenReturn(Stream.of(event));
+        when(eventTransformationRegistry.getEventTransformationBy(1)).thenReturn(eventStreamTransformationService.transformations);
 
-        underTest.transformEventStream(STREAM_ID);
+        eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
 
         verify(streamRepository).deactivateStream(STREAM_ID);
         verifyNoMoreInteractions(streamRepository);
@@ -159,15 +166,17 @@ public class EventStreamTransformationServiceTest {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         final JsonEnvelope event2 = buildEnvelope(OTHER_EVENT_NAME);
         when(eventStream.read()).thenReturn(Stream.of(event, event2));
+        when(eventTransformationRegistry.getEventTransformationBy(1)).thenReturn(eventStreamTransformationService.transformations);
         when(eventTransformation.actionFor(any(JsonEnvelope.class))).thenReturn(TRANSFORM);
 
-        underTest.transformEventStream(STREAM_ID);
+        eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
 
-        final InOrder inOrder = inOrder(eventSource, eventStream, eventTransformation, streamTransformer);
+        final InOrder inOrder = inOrder(eventSource, eventStream, eventTransformationRegistry, eventTransformation, streamTransformer);
         inOrder.verify(eventSource).getStreamById(STREAM_ID);
         inOrder.verify(eventStream).read();
+        inOrder.verify(eventTransformationRegistry).getEventTransformationBy(1);
         inOrder.verify(eventTransformation, times(2)).actionFor(envelopeCaptor.capture());
-        inOrder.verify(streamTransformer).transformAndBackupStream(STREAM_ID, underTest.transformations);
+        inOrder.verify(streamTransformer).transformAndBackupStream(STREAM_ID, eventStreamTransformationService.transformations);
 
         final List<JsonEnvelope> jsonEnvelope = envelopeCaptor.getAllValues();
         assertThat(jsonEnvelope.get(0).metadata().name(), is(SOURCE_EVENT_NAME));
@@ -185,10 +194,13 @@ public class EventStreamTransformationServiceTest {
     public void shouldDeactivateStreamOnlyOnceIrrespectiveOfNoOfEventsOnStream() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         final JsonEnvelope event2 = buildEnvelope(OTHER_EVENT_NAME);
+        final int pass = 1;
+
         when(eventStream.read()).thenReturn(Stream.of(event, event2));
+        when(eventTransformationRegistry.getEventTransformationBy(1)).thenReturn(eventStreamTransformationService.transformations);
         when(eventTransformation.actionFor(any())).thenReturn(DEACTIVATE);
 
-        underTest.transformEventStream(STREAM_ID);
+        eventStreamTransformationService.transformEventStream(STREAM_ID, pass);
 
         verify(streamRepository).deactivateStream(STREAM_ID);
         verifyNoMoreInteractions(streamRepository);
@@ -199,10 +211,12 @@ public class EventStreamTransformationServiceTest {
     @UseDataProvider("provideNoActionCombinations")
     public void shouldNotPerformAnyActionOnTheStreamIfNotIndicated(final Action action) {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
+        final int pass = 1;
         when(eventStream.read()).thenReturn(Stream.of(event));
+        when(eventTransformationRegistry.getEventTransformationBy(1)).thenReturn(eventStreamTransformationService.transformations);
         when(eventTransformation.actionFor(any())).thenReturn(action);
 
-        underTest.transformEventStream(STREAM_ID);
+        eventStreamTransformationService.transformEventStream(STREAM_ID, pass);
 
         verifyZeroInteractions(streamTransformer, streamRepository, eventRepository);
     }
@@ -211,26 +225,18 @@ public class EventStreamTransformationServiceTest {
     public void shouldNotPerformAnyActionIfMultipleActionsAreDefinedOnAStream() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         final JsonEnvelope event2 = buildEnvelope(OTHER_EVENT_NAME);
+
+
         when(eventStream.read()).thenReturn(Stream.of(event, event2));
+        when(eventTransformationRegistry.getEventTransformationBy(1)).thenReturn(eventStreamTransformationService.transformations);
         when(eventTransformation.actionFor(event)).thenReturn(DEACTIVATE);
         when(eventTransformation.actionFor(event2)).thenReturn(TRANSFORM);
 
-        underTest.transformEventStream(STREAM_ID);
+        eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
 
         verifyZeroInteractions(streamTransformer, streamRepository, eventRepository);
     }
 
-    @Test
-    public void shouldRegisterTransformation() throws InstantiationException, IllegalAccessException {
-        underTest.transformations = new HashSet<>();
-        final EventTransformationFoundEvent eventTransformationEvent = new EventTransformationFoundEvent(TestTransformation.class);
-
-        underTest.register(eventTransformationEvent);
-
-        assertThat(underTest.transformations, hasSize(1));
-        underTest.transformations.stream().findFirst().ifPresent(transformation ->
-                assertThat(transformation, instanceOf(TestTransformation.class)));
-    }
 
     @Test
     public void shouldPerformAllTheIndicatedActionsOnAStream() throws EventStreamException {
@@ -239,12 +245,13 @@ public class EventStreamTransformationServiceTest {
                 new Action(true, true, false)
         );
         when(eventStream.read()).thenReturn(Stream.of(event));
+        when(eventTransformationRegistry.getEventTransformationBy(1)).thenReturn(eventStreamTransformationService.transformations);
         when(streamTransformer.transformAndBackupStream(any(UUID.class), any())).thenReturn(of(BACKUP_STREAM_ID));
 
-        underTest.transformEventStream(STREAM_ID);
+        eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
 
         final InOrder inOrder = inOrder(streamTransformer, streamRepository, eventRepository);
-        inOrder.verify(streamTransformer).transformAndBackupStream(STREAM_ID, underTest.transformations);
+        inOrder.verify(streamTransformer).transformAndBackupStream(STREAM_ID, eventStreamTransformationService.transformations);
         inOrder.verify(streamRepository).deleteStream(BACKUP_STREAM_ID);
         inOrder.verify(eventRepository).clear(BACKUP_STREAM_ID);
         inOrder.verify(streamRepository).deactivateStream(STREAM_ID);

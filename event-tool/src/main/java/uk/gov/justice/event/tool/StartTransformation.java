@@ -5,7 +5,6 @@ import static java.nio.file.Files.delete;
 import static org.wildfly.swarm.bootstrap.Main.MAIN_PROCESS_FILE;
 
 import uk.gov.justice.event.tool.task.StreamTransformationTask;
-import uk.gov.justice.services.eventsourcing.repository.jdbc.JdbcEventRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
@@ -27,7 +26,6 @@ import javax.enterprise.concurrent.ManagedTaskListener;
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Singleton
 @Startup
@@ -35,13 +33,11 @@ public class StartTransformation implements ManagedTaskListener {
 
     private static final String NO_PROCESS_FILE_WARNING = "!!!!! No Swarm Process File specific, application will not auto-shutdown on completion. Please use option '-Dorg.wildfly.swarm.mainProcessFile=/pathTo/aFile' to specify location of process file with read/write permissions !!!!!";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(StartTransformation.class);
+    @Inject
+    private Logger logger;
 
     @Resource(name = "event-tool")
     private ManagedExecutorService executorService;
-
-    @Inject
-    private JdbcEventRepository jdbcEventRepository;
 
     @Inject
     private EventStreamJdbcRepository eventStreamJdbcRepository;
@@ -49,67 +45,88 @@ public class StartTransformation implements ManagedTaskListener {
     @Inject
     private EventStreamTransformationService eventStreamTransformationService;
 
+    @Inject
+    private PassesDeterminer passesDeterminer;
+
     Deque<Future<UUID>> outstandingTasks = new LinkedBlockingDeque<>();
 
     boolean allTasksCreated = false;
 
     @PostConstruct
     void go() {
-        LOGGER.info("-------------- Invoke Event Streams Transformation -------------");
+        logger.info("-------------- Invoke Event Streams Transformation -------------");
 
         checkForMainProcessFile();
 
-        createTransformationTasks();
+        createTransformationTasks(passesDeterminer.getPassValue());
 
-        shutdownIfFinished();
-
-        LOGGER.info("-------------- Invocation of Event Streams Transformation Completed --------------");
+        logger.info("-------------- Invocation of Event Streams Transformation Completed --------------");
     }
 
-    private void createTransformationTasks() {
+    private void createTransformationTasks(final int pass) {
         final Stream<UUID> activeStreams = eventStreamJdbcRepository.findActive().map(EventStream::getStreamId);
+
         activeStreams
                 .forEach(streamId -> {
-                    final StreamTransformationTask transformationTask = new StreamTransformationTask(streamId, eventStreamTransformationService, this);
+                    final StreamTransformationTask transformationTask = new StreamTransformationTask(streamId, eventStreamTransformationService, this, pass);
                     outstandingTasks.add(executorService.submit(transformationTask));
                 });
         activeStreams.close();
+
+        if (outstandingTasks.isEmpty()) {
+            shutdown();
+        }
 
         allTasksCreated = true;
     }
 
     public void taskStarting(final Future<?> futureTask, final ManagedExecutorService managedExecutorService, final Object task) {
-        LOGGER.debug("Starting Transformation task");
+        logger.debug("Starting Transformation task");
     }
 
     public void taskSubmitted(final Future<?> futureTask, final ManagedExecutorService managedExecutorService, final Object task) {
-        LOGGER.debug("Submitted Transformation task");
+        logger.debug("Submitted Transformation task");
     }
 
     public void taskDone(final Future<?> futureTask, final ManagedExecutorService managedExecutorService, final Object task, final Throwable throwable) {
-        LOGGER.debug("Completed Transformation task");
+        logger.debug("Completed Transformation task");
         removeOutstandingTask(futureTask);
-        shutdownIfFinished();
+        nextPassIfFinished();
     }
 
     public void taskAborted(final Future<?> futureTask, final ManagedExecutorService managedExecutorService, final Object task, final Throwable throwable) {
-        LOGGER.debug("Aborted Transformation task");
+        logger.error(String.format("Aborted Transformation task: '%s'", throwable.getMessage()));
         removeOutstandingTask(futureTask);
-        shutdownIfFinished();
+        shutDownIfFinished();
     }
 
     private void removeOutstandingTask(final Future<?> futureTask) {
         outstandingTasks.remove(futureTask);
     }
 
-    private void shutdownIfFinished() {
-        if (allTasksCreated && outstandingTasks.isEmpty()) {
+    private void nextPassIfFinished() {
+        if (isTaskFinished()) {
+            final boolean isLastElementInPasses = passesDeterminer.isLastElementInPasses();
+            if (isLastElementInPasses) {
+                shutdown();
+            } else {
+                createTransformationTasks(passesDeterminer.getNextPassValue());
+            }
+        }
+    }
+
+    private void shutDownIfFinished() {
+        if (isTaskFinished()) {
             shutdown();
         }
     }
 
+    private boolean isTaskFinished() {
+        return allTasksCreated && outstandingTasks.isEmpty();
+    }
+
     private void shutdown() {
-        LOGGER.info("========== ALL TASKS HAVE BEEN DISPATCHED -- ATTEMPTING SHUTDOWN =================");
+        logger.info("========== ALL TASKS HAVE BEEN DISPATCHED -- ATTEMPTING SHUTDOWN =================");
 
         final String processFile = System.getProperty(MAIN_PROCESS_FILE);
         if (processFile != null) {
@@ -118,13 +135,13 @@ public class StartTransformation implements ManagedTaskListener {
                 try {
                     delete(uuidFile.toPath());
                 } catch (IOException e) {
-                    if (LOGGER.isWarnEnabled()) {
-                        LOGGER.warn(format("Failed to delete process file '%s', file does not exist", processFile), e);
+                    if (logger.isWarnEnabled()) {
+                        logger.warn(format("Failed to delete process file '%s', file does not exist", processFile), e);
                     }
                 }
             } else {
-                if (LOGGER.isWarnEnabled()) {
-                    LOGGER.warn(format("Failed to delete process file '%s', file does not exist", processFile));
+                if (logger.isWarnEnabled()) {
+                    logger.warn(format("Failed to delete process file '%s', file does not exist", processFile));
                 }
             }
         }
@@ -132,7 +149,8 @@ public class StartTransformation implements ManagedTaskListener {
 
     private void checkForMainProcessFile() {
         if (System.getProperty(MAIN_PROCESS_FILE) == null) {
-            LOGGER.warn(NO_PROCESS_FILE_WARNING);
+            logger.warn(NO_PROCESS_FILE_WARNING);
         }
     }
+
 }

@@ -5,16 +5,14 @@ import static java.util.stream.Collectors.toList;
 import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
 
-import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.EventJdbcRepository;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.messaging.JsonEnvelope;
+import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
 import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
-import uk.gov.justice.tools.eventsourcing.transformation.api.extension.EventTransformationFoundEvent;
 import uk.gov.justice.tools.eventsourcing.transformation.repository.StreamRepository;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,7 +21,6 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
@@ -42,38 +39,25 @@ public class EventStreamTransformationService {
     private EventSource eventSource;
 
     @Inject
-    private Enveloper enveloper;
-
-    @Inject
     private StreamTransformer streamTransformer;
 
     @Inject
     private StreamRepository streamRepository;
 
     @Inject
-    private EventJdbcRepository eventRepository; 
+    private EventJdbcRepository eventRepository;
 
-    Set<EventTransformation> transformations = new HashSet<>();
+    @Inject
+    private EventTransformationRegistry eventTransformationRegistry;
 
-    /**
-     * Register method, invoked automatically to register all {@link EventTransformation} classes
-     * into the transformations set.
-     *
-     * @param event identified by the framework to be registered into the event map.
-     */
-    public void register(@Observes final EventTransformationFoundEvent event) throws IllegalAccessException, InstantiationException {
-        if (logger.isDebugEnabled()) {
-            logger.debug(format("Loading Event Transformation %s", event.getClazz().getSimpleName()));
-        }
-
-        final EventTransformation eventTransformation = (EventTransformation) event.getClazz().newInstance();
-        eventTransformation.setEnveloper(enveloper);
-        transformations.add(eventTransformation);
-    }
+    Set<EventTransformation> transformations;
 
     @Transactional(REQUIRES_NEW)
-    public UUID transformEventStream(final UUID streamId) {
+    public UUID transformEventStream(final UUID streamId, final int pass) {
         final Stream<JsonEnvelope> eventStream = eventSource.getStreamById(streamId).read();
+
+        transformations = getEventTransformations(pass);
+
         final Action action = requiresTransformation(eventStream, streamId);
 
         Optional<UUID> backupStreamId;
@@ -84,7 +68,7 @@ public class EventStreamTransformationService {
             if (!action.isKeepBackup()) {
                 if (backupStreamId.isPresent()) {
                     streamRepository.deleteStream(backupStreamId.get());
-                    eventRepository.clear(backupStreamId.get());    
+                    eventRepository.clear(backupStreamId.get());
                 } else {
                     if (logger.isWarnEnabled()) {
                         logger.warn(format("cannot delete backup stream. No backup stream was created for stream '%s'", streamId));
@@ -100,6 +84,7 @@ public class EventStreamTransformationService {
         eventStream.close();
         return streamId;
     }
+
 
     private Action requiresTransformation(final Stream<JsonEnvelope> eventStream, final UUID streamId) {
         final List<Action> eventTransformationList = eventStream.map(this::checkTransformations)
@@ -131,5 +116,9 @@ public class EventStreamTransformationService {
                 .filter(Objects::nonNull)
                 .filter(t -> !t.equals(NO_ACTION))
                 .collect(toList());
+    }
+
+    private Set<EventTransformation> getEventTransformations(final int pass) {
+        return eventTransformationRegistry.getEventTransformationBy(pass);
     }
 }

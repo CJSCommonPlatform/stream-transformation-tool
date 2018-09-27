@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -30,17 +31,13 @@ public class StreamTransformationTaskTest {
     private ManagedTaskListener transformationListener;
 
     @InjectMocks
-    private StreamTransformationTask streamTransformationTask;
-
-    @Before
-    public void setup() {
-        streamTransformationTask = new StreamTransformationTask(STREAM_ID, eventStreamTransformationService, transformationListener);
-    }
+    private StreamTransformationTask streamTransformationTask = new
+            StreamTransformationTask(STREAM_ID, eventStreamTransformationService, transformationListener, 1);
 
     @Test
     public void shouldTransformAnEvent() throws EventStreamException {
         streamTransformationTask.call();
-        verify(eventStreamTransformationService).transformEventStream(STREAM_ID);
+        verify(eventStreamTransformationService).transformEventStream(STREAM_ID, 1);
     }
 
     @Test
