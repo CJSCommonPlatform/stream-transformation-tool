@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 @ApplicationScoped
 public class StreamMover {
 
+/*
     @Inject
     private Logger logger;
 
@@ -85,5 +86,6 @@ public class StreamMover {
     private JsonEnvelope clearEventPositioning(final JsonEnvelope event) {
         return enveloper.withMetadataFrom(event, event.metadata().name()).apply(event.payload());
     }
+*/
 
 }

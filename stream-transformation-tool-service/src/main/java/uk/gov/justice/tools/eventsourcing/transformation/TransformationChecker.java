@@ -1,7 +1,6 @@
 package uk.gov.justice.tools.eventsourcing.transformation;
 
 import static java.util.stream.Collectors.toList;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.MOVE_AND_TRANSFORM;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
 
 import uk.gov.justice.services.messaging.JsonEnvelope;
@@ -30,7 +29,7 @@ public class TransformationChecker {
 
     public Action requiresTransformation(final Stream<JsonEnvelope> eventStream, final UUID streamId, int pass) {
         final List<Action> eventTransformationList = eventStream
-                .map(jsonEnvelope -> checkMoveTransformations(jsonEnvelope, pass))
+                .map(jsonEnvelope -> checkTransformations(jsonEnvelope, pass))
                 .flatMap(List::stream)
                 .distinct()
                 .collect(toList());
@@ -53,49 +52,14 @@ public class TransformationChecker {
         return NO_ACTION;
     }
 
-    private List<Action> checkMoveTransformations(final JsonEnvelope event, final int pass) {
+    private List<Action> checkTransformations(final JsonEnvelope event, final int pass) {
+
         final Set<EventTransformation> eventTransformations = getEventTransformations(pass);
-
-        final List<Action> moveActions = getMoveActions(event, eventTransformations);
-
-        final List<Action> allActions = getAllActions(event, eventTransformations);
-
-        final List<Action> transformActions = getTransformActions(event, eventTransformations);
-
-        if (!moveActions.isEmpty() && !allActions.isEmpty()) {
-            return allActions;
-        }
-
-        if (!transformActions.isEmpty()) {
-            return transformActions;
-        }
-
-        return moveActions;
-    }
-
-    private List<Action> getTransformActions(final JsonEnvelope event, final Set<EventTransformation> eventTransformations) {
         return eventTransformations
                 .stream()
                 .map(t -> t.actionFor(event))
                 .filter(Objects::nonNull)
-                .filter(t -> !t.equals(NO_ACTION) && !t.equals(MOVE_AND_TRANSFORM))
-                .collect(toList());
-    }
-
-    private List<Action> getAllActions(final JsonEnvelope event, final Set<EventTransformation> eventTransformations) {
-        return eventTransformations
-                .stream()
-                .map(t -> t.actionFor(event))
-                .filter(Objects::nonNull)
-                .collect(toList());
-    }
-
-    private List<Action> getMoveActions(final JsonEnvelope event, final Set<EventTransformation> eventTransformations) {
-        return eventTransformations
-                .stream()
-                .map(t -> t.actionFor(event))
-                .filter(Objects::nonNull)
-                .filter(Action::isMoveStream)
+                .filter(t -> !t.equals(NO_ACTION))
                 .collect(toList());
     }
 

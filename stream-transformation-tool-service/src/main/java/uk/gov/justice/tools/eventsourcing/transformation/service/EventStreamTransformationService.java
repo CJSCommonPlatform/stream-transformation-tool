@@ -59,18 +59,18 @@ public class EventStreamTransformationService {
 
         final Action action = transformationChecker.requiresTransformation(eventStream, originalStreamId, pass);
 
-        if (action.isTransform()) {
-            final Optional<UUID> backupStreamId = streamTransformer.transformAndBackupStream(originalStreamId, eventTransformations);
-            deleteBackUpstreamIfNeeded(backupStreamId, originalStreamId, action);
-        }
+        final Optional<UUID> backupStreamId = streamTransformer.transformAndBackupStream(originalStreamId, eventTransformations);
+        deleteBackUpstreamIfNeeded(backupStreamId, originalStreamId, action);
+
         if (action.isDeactivate()) {
             streamRepository.deactivateStream(originalStreamId);
         }
 
-        if (action.isMoveStream()) {
+/*        if (action.isMoveStream()) {
             final Optional<UUID> backupStreamId = streamMover.moveAndBackupStream(originalStreamId, eventTransformations);
             deleteBackUpstreamIfNeeded(backupStreamId, originalStreamId, action);
-        }
+        }*/
+
         eventStream.close();
         return originalStreamId;
     }

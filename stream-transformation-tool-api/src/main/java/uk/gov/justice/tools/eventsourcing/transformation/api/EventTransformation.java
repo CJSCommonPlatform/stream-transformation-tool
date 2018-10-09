@@ -7,6 +7,8 @@ import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANS
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 /**
@@ -49,6 +51,10 @@ public interface EventTransformation {
     default Stream<JsonEnvelope> apply(final JsonEnvelope event) {
         return of(event);
 
+    }
+
+    default Optional<UUID> streamId(final JsonEnvelope event){
+        return Optional.empty();
     }
 
     void setEnveloper(Enveloper enveloper);

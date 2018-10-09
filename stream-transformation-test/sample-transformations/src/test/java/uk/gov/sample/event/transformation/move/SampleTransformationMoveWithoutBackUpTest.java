@@ -48,7 +48,7 @@ public class SampleTransformationMoveWithoutBackUpTest {
     @Test
     public void shouldSetTransformAction() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
-        final Action action = new Action(false, false, false, true);
+        final Action action = new Action(false, false, false);
         assertThat(sampleTransformationMoveWithoutBackUp.actionFor(event), is(action));
     }
 

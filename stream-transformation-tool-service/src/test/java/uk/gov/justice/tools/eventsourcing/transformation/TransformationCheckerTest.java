@@ -7,7 +7,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.JsonEnvelope.metadataBuilder;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.MOVE_AND_TRANSFORM;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
 
@@ -60,7 +59,7 @@ public class TransformationCheckerTest {
         final JsonEnvelope event1 = buildEnvelope(PASS_EVENT_NAME);
         final Action action = transformationChecker.requiresTransformation(Stream.of(event, event1), STREAM_ID, 1);
 
-        assertTrue(action.equals(NO_ACTION));
+        assertTrue(action.equals(TRANSFORM));
     }
 
     @Test
@@ -74,7 +73,7 @@ public class TransformationCheckerTest {
         final JsonEnvelope event1 = buildEnvelope(PASS_EVENT_NAME);
         final Action action = transformationChecker.requiresTransformation(Stream.of(event, event1), STREAM_ID, 1);
 
-        assertTrue(action.equals(MOVE_AND_TRANSFORM));
+        assertTrue(action.equals(TRANSFORM));
     }
 
     @Test
@@ -129,7 +128,7 @@ public class TransformationCheckerTest {
         @Override
         public Action actionFor(JsonEnvelope event) {
             if (event.metadata().name().equalsIgnoreCase(MOVE_EVENT_NAME)) {
-                return MOVE_AND_TRANSFORM;
+                return TRANSFORM;
             }
             return NO_ACTION;
         }
@@ -180,7 +179,7 @@ public class TransformationCheckerTest {
         @Override
         public Action actionFor(final JsonEnvelope event) {
             if (event.metadata().name().equalsIgnoreCase(NEXT_EVENT_NAME)) {
-                return new Action(false, false, false, true);
+                return new Action(false, false, false);
             }
             return NO_ACTION;
         }

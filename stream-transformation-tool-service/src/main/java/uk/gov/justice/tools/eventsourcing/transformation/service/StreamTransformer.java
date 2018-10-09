@@ -11,6 +11,7 @@ import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.StreamTransformerUtil;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -53,6 +54,10 @@ public class StreamTransformer {
 
             final Stream<JsonEnvelope> transformedEventStream = streamTransformerUtil.transform(events, transformations);
 
+           // events.filter(event -> this.transformMoveEvent(event, transformations)).findFirst();
+
+            Optional<UUID> streamId1 = transformedEventStream.forEach(event -> transformMoveEvent(event , transformations));
+
             stream.append(transformedEventStream.map(this::clearEventPositioning));
 
             events.close();
@@ -67,8 +72,19 @@ public class StreamTransformer {
         return empty();
     }
 
+
     private JsonEnvelope clearEventPositioning(final JsonEnvelope event) {
         return enveloper.withMetadataFrom(event, event.metadata().name()).apply(event.payload());
+    }
+
+    private Optional<UUID> transformMoveEvent(final JsonEnvelope event, final Set<EventTransformation> transformations) {
+        final Optional<EventTransformation> first = transformations
+                .stream()
+                .filter(transformation -> transformation.streamId(event).isPresent())
+                .findFirst();
+
+        return first.isPresent() ? first.get().streamId(event) : empty();
+
     }
 
 }

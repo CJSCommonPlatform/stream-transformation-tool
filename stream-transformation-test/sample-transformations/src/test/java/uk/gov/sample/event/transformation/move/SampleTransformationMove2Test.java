@@ -10,8 +10,8 @@ import static org.junit.Assert.assertThat;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.spi.DefaultJsonMetadata.metadataBuilder;
 import static uk.gov.justice.services.test.utils.core.enveloper.EnveloperFactory.createEnveloper;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.MOVE_AND_TRANSFORM;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
@@ -49,7 +49,7 @@ public class SampleTransformationMove2Test {
     public void shouldSetTransformAction() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
 
-        assertThat(sampleTransformationMove2.actionFor(event), is(MOVE_AND_TRANSFORM));
+        assertThat(sampleTransformationMove2.actionFor(event), is(TRANSFORM));
     }
 
     @Test

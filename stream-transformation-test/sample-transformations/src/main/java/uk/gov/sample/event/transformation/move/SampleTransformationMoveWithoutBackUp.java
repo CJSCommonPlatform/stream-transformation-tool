@@ -18,7 +18,7 @@ public class SampleTransformationMoveWithoutBackUp implements EventTransformatio
     @Override
     public Action actionFor(final JsonEnvelope event) {
         if (event.metadata().name().equalsIgnoreCase("sample.transformation.move.without.backup")) {
-            return new Action(false, false, false, true);
+            return new Action(true, false, false);
         }
         return NO_ACTION;
     }
