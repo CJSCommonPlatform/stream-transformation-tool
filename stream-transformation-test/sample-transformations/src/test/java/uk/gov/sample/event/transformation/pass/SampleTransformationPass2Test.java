@@ -1,4 +1,4 @@
-package uk.gov.sample.event.transformation;
+package uk.gov.sample.event.transformation.pass;
 
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
@@ -55,11 +55,11 @@ public class SampleTransformationPass2Test {
 
         assertThat(sampleTransformationPass2.actionFor(event), is(NO_ACTION));
     }
-    
+
     @Test
     public void shouldCreateTransformation() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
-        
+
         final Stream<JsonEnvelope> transformedStream = sampleTransformationPass2.apply(event);
 
         final List<JsonEnvelope> transformedEvents = transformedStream.collect(toList());
@@ -75,5 +75,5 @@ public class SampleTransformationPass2Test {
                 metadataBuilder().withId(randomUUID()).withName(eventName),
                 createObjectBuilder().add("field", "value").build());
     }
-    
+
 }

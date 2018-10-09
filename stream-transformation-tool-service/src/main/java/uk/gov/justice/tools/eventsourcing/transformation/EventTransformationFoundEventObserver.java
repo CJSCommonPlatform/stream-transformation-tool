@@ -27,10 +27,11 @@ public class EventTransformationFoundEventObserver {
      *
      * @param event identified by the framework to be registered into the event map.
      */
+    @SuppressWarnings({"squid:S2629"})
     public void register(@Observes final EventTransformationFoundEvent event) throws IllegalAccessException, InstantiationException {
-        if (logger.isDebugEnabled()) {
-            logger.debug(format("Loading Event Transformation %s", event.getClazz().getSimpleName()));
-        }
+
+        logger.info(format("Loading Event Transformation %s", event.getClazz().getSimpleName()));
+
         eventTransformationRegistry.createTransformations(event);
     }
 

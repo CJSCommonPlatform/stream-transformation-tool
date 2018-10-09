@@ -1,14 +1,17 @@
 package uk.gov.justice.tools.eventsourcing.transformation.service;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static java.util.Optional.empty;
 import static java.util.UUID.randomUUID;
 import static javax.json.Json.createObjectBuilder;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.JsonEnvelope.metadataBuilder;
 import static uk.gov.justice.services.test.utils.core.enveloper.EnveloperFactory.createEnveloper;
@@ -20,13 +23,15 @@ import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
+import uk.gov.justice.tools.eventsourcing.transformation.StreamTransformerUtil;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -60,8 +65,14 @@ public class StreamTransformerTest {
     @Mock
     private EventTransformation eventTransformation;
 
+    @Mock
+    private StreamTransformerUtil streamTransformerUtil;
+
     @Captor
     private ArgumentCaptor<Stream<JsonEnvelope>> streamArgumentCaptor;
+
+    @Captor
+    private ArgumentCaptor<Set<EventTransformation>> eventTransformationArgumentCaptor;
 
     @Captor
     private ArgumentCaptor<JsonEnvelope> envelopeCaptor;
@@ -73,23 +84,22 @@ public class StreamTransformerTest {
     private Enveloper enveloper = createEnveloper();
 
     @InjectMocks
-    private StreamTransformer underTest;
+    private StreamTransformer streamTransformer;
 
-    @Before
-    public void setup() {
-        given(logger.isDebugEnabled()).willReturn(true);
-    }
 
     @Test
     public void shouldTransformStreamOfSingleEventAndReturnBackupStreamId() throws EventStreamException {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
+        final Set<EventTransformation> transformations = new HashSet<>();
+        transformations.add(eventTransformation);
         given(eventSource.cloneStream(STREAM_ID)).willReturn(BACKUP_STREAM_ID);
         given(eventSource.getStreamById(STREAM_ID)).willReturn(eventStream);
         given(eventStream.read()).willReturn(Stream.of(event));
+        given(streamTransformerUtil.transform(streamArgumentCaptor.capture(), eventTransformationArgumentCaptor.capture())).willReturn(Stream.of(event));
         given(eventTransformation.actionFor(any(JsonEnvelope.class))).willReturn(TRANSFORM);
         given(eventTransformation.apply(event)).willReturn(Stream.of(buildEnvelope(TRANSFORMED_EVENT_NAME)));
 
-        final Optional<UUID> resultStreamId = underTest.transformAndBackupStream(STREAM_ID, newHashSet(eventTransformation));
+        final Optional<UUID> resultStreamId = streamTransformer.transformAndBackupStream(STREAM_ID, newHashSet(eventTransformation));
 
         final InOrder inOrder = inOrder(eventSource, eventStream, eventTransformation);
         inOrder.verify(eventSource).cloneStream(STREAM_ID);
@@ -121,7 +131,7 @@ public class StreamTransformerTest {
         given(eventTransformation.actionFor(event)).willReturn(TRANSFORM);
         given(eventTransformation.actionFor(event2)).willReturn(NO_ACTION);
 
-        underTest.transformAndBackupStream(STREAM_ID, newHashSet(eventTransformation));
+        streamTransformer.transformAndBackupStream(STREAM_ID, newHashSet(eventTransformation));
 
         // todo can't get below assertions working as actionFor and apply methods are not
         // being called at unit test level. Not sure if there's an issue with the way we have mocked objects
@@ -139,6 +149,35 @@ public class StreamTransformerTest {
 //        assertThat(events2.get(0).metadata().name(), is(SOURCE_EVENT_NAME));
 
         verifyNoMoreInteractions(eventTransformation);
+    }
+
+    @Test
+    public void shouldLogErrorAndReturnEmptyStreamIdIfTransformAndBackUpStreamFailed() throws EventStreamException {
+
+        final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
+        Set<EventTransformation> transformations = newHashSet(eventTransformation);
+
+        given(eventSource.cloneStream(STREAM_ID)).willReturn(BACKUP_STREAM_ID);
+        given(eventSource.getStreamById(STREAM_ID)).willReturn(eventStream);
+
+        when(eventStream.read()).thenReturn(Stream.of(event));
+        given(eventTransformation.actionFor(any(JsonEnvelope.class))).willReturn(TRANSFORM);
+        given(eventTransformation.apply(event)).willReturn(Stream.of(buildEnvelope(TRANSFORMED_EVENT_NAME)));
+
+        Optional<UUID> clonedStreamId =  streamTransformer.transformAndBackupStream(STREAM_ID, transformations);
+
+        assertThat(clonedStreamId, is(empty()));
+    }
+
+    @Test
+    public void shouldLogEventStreamExceptionAndReturnEmptyStreamIdIfTransformAndBackUpStreamFailed() throws Exception {
+
+        Set<EventTransformation> transformations = newHashSet(eventTransformation);
+        doThrow(EventStreamException.class).when(eventSource).cloneStream(any());
+
+        Optional<UUID> clonedStreamId = streamTransformer.transformAndBackupStream(STREAM_ID, transformations);
+
+        assertThat(clonedStreamId, is(empty()));
     }
 
     private JsonEnvelope buildEnvelope(final String eventName) {

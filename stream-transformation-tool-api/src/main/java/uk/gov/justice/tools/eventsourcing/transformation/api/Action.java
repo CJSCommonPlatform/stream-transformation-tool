@@ -9,40 +9,55 @@ import java.util.Objects;
 public class Action {
 
     /**
-     * Action specifying a stream to be transformed.
-     * A backup of the stream will be created as part of the transform action
+     * Action specifying a stream to be moved. A backup of the stream will be created as part of the
+     * transform action
      */
-    public static final Action TRANSFORM = new Action(true, false, true);
+    public static final Action MOVE_AND_TRANSFORM = new Action(false, false, true, true);
+
+    /**
+     * Action specifying a stream to be transformed. A backup of the stream will be created as part
+     * of the transform action
+     */
+    public static final Action TRANSFORM = new Action(true, false, true, false);
 
     /**
      * Action to deactivate a stream. No backup of the stream will be created
      */
-    public static final Action DEACTIVATE = new Action(false, true, false);
+    public static final Action DEACTIVATE = new Action(false, true, false, false);
 
     /**
-     * Action to archive/deactivate a stream. Retained for backward compatibility. No backup of the stream will be created
+     * Action to archive/deactivate a stream. Retained for backward compatibility. No backup of the
+     * stream will be created
+     *
      * @deprecated use DEACTIVATE instead
      */
     @Deprecated
-    public static final Action ARCHIVE = new Action(false, true, false);
+    public static final Action ARCHIVE = new Action(false, true, false, false);
 
     /**
      * No action to be taken on the stream.
      */
-    public static final Action NO_ACTION = new Action(false, false, false);
+    public static final Action NO_ACTION = new Action(false, false, false, false);
 
     private final boolean transformStream;
     private final boolean deactivateStream;
     private final boolean keepBackup;
+    private final boolean moveStream;
 
-    public Action(final boolean transformStream, final boolean deactivateStream, final boolean keepBackup) {
+
+    public Action(final boolean transformStream, final boolean deactivateStream, final boolean keepBackup, final boolean moveStream) {
         this.transformStream = transformStream;
         this.deactivateStream = deactivateStream;
         this.keepBackup = keepBackup;
+        this.moveStream = moveStream;
     }
 
     public boolean isTransform() {
         return transformStream;
+    }
+
+    public boolean isMoveStream() {
+        return moveStream;
     }
 
     public boolean isDeactivate() {
@@ -64,11 +79,12 @@ public class Action {
         final Action that = (Action) o;
         return this.transformStream == that.transformStream &&
                 this.deactivateStream == that.deactivateStream &&
-                this.keepBackup == that.keepBackup;
+                this.keepBackup == that.keepBackup &&
+                this.moveStream == that.moveStream;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.transformStream, this.deactivateStream, this.keepBackup);
+        return Objects.hash(this.transformStream, this.deactivateStream, this.keepBackup, this.moveStream);
     }
 }

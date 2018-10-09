@@ -1,14 +1,14 @@
 package uk.gov.justice.tools.eventsourcing.transformation.service;
 
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
-import static java.util.function.Function.identity;
+import static java.util.Optional.empty;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
+import uk.gov.justice.tools.eventsourcing.transformation.StreamTransformerUtil;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 
 import java.util.Optional;
@@ -33,15 +33,16 @@ public class StreamTransformer {
     @Inject
     private Enveloper enveloper;
 
+    @Inject
+    private StreamTransformerUtil streamTransformerUtil;
+
+    @SuppressWarnings({"squid:S2629"})
     public Optional<UUID> transformAndBackupStream(final UUID streamId, final Set<EventTransformation> transformations) {
-        UUID backupStreamId = null;
 
         try {
-            backupStreamId = eventSource.cloneStream(streamId);
+            final UUID backupStreamId = eventSource.cloneStream(streamId);
 
-            if (logger.isDebugEnabled()) {
-                logger.debug(format("created backup stream '%s' from stream '%s'", backupStreamId, streamId));
-            }
+            logger.info(format("created backup stream '%s' from stream '%s'", backupStreamId, streamId));
 
             final EventStream stream = eventSource.getStreamById(streamId);
             final Stream<JsonEnvelope> events = stream.read();
@@ -50,36 +51,24 @@ public class StreamTransformer {
 
             logger.info("transforming events on stream {}", streamId);
 
-            final Stream<JsonEnvelope> transformedEventStream = transform(events, transformations);
+            final Stream<JsonEnvelope> transformedEventStream = streamTransformerUtil.transform(events, transformations);
 
             stream.append(transformedEventStream.map(this::clearEventPositioning));
 
             events.close();
+
+            return Optional.of(backupStreamId);
+
         } catch (final EventStreamException e) {
             logger.error(format("Failed to backup stream %s", streamId), e);
         } catch (final Exception e) {
             logger.error(format("Unknown error while transforming events on stream %s", streamId), e);
         }
-        return ofNullable(backupStreamId);
+        return empty();
     }
 
     private JsonEnvelope clearEventPositioning(final JsonEnvelope event) {
         return enveloper.withMetadataFrom(event, event.metadata().name()).apply(event.payload());
-    }
-
-    private Stream<JsonEnvelope> transform(final Stream<JsonEnvelope> events,
-                                           final Set<EventTransformation> transformations) {
-        return events.map(event -> {
-            final Optional<EventTransformation> transformer = hasTransformer(event, transformations);
-            return transformer.isPresent() ? transformer.get().apply(event) : Stream.of(event);
-        }).flatMap(identity());
-    }
-
-    private Optional<EventTransformation> hasTransformer(final JsonEnvelope event,
-                                                         final Set<EventTransformation> transformations) {
-        return transformations.stream()
-                .filter(transformation -> transformation.actionFor(event).isTransform())
-                .findFirst();
     }
 
 }

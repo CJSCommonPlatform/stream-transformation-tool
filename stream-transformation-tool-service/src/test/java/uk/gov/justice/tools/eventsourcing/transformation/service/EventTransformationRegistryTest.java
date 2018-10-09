@@ -25,7 +25,7 @@ import org.junit.Test;
 public class EventTransformationRegistryTest {
 
     @Test
-    public void shouldCreateTransformationMap() throws Exception {
+    public void shouldCreateSortedTransformationMap() throws Exception {
 
         final EventTransformationRegistry eventTransformationRegistry = new EventTransformationRegistry();
 
@@ -84,24 +84,13 @@ public class EventTransformationRegistryTest {
 
         final EventTransformationFoundEvent eventTransformationEvent1 = new EventTransformationFoundEvent(TestTransformation.class, 1);
         final EventTransformationFoundEvent eventTransformationEvent2 = new EventTransformationFoundEvent(TestTransformation.class, 2);
-        final EventTransformationFoundEvent eventTransformationEvent3 = new EventTransformationFoundEvent(TestTransformation.class, 3);
-        final EventTransformationFoundEvent eventTransformationEvent4 = new EventTransformationFoundEvent(TestTransformation.class, 4);
-        final EventTransformationFoundEvent eventTransformationEvent5 = new EventTransformationFoundEvent(TestTransformation.class, 5);
 
-        eventTransformationRegistry.createTransformations(eventTransformationEvent2);
         eventTransformationRegistry.createTransformations(eventTransformationEvent1);
-        eventTransformationRegistry.createTransformations(eventTransformationEvent3);
-        eventTransformationRegistry.createTransformations(eventTransformationEvent5);
-        eventTransformationRegistry.createTransformations(eventTransformationEvent4);
-
+        eventTransformationRegistry.createTransformations(eventTransformationEvent2);
         final List<Integer> passes = new ArrayList<>(eventTransformationRegistry.getPasses());
 
         assertThat(passes.get(0), is(1));
         assertThat(passes.get(1), is(2));
-        assertThat(passes.get(2), is(3));
-        assertThat(passes.get(3), is(4));
-        assertThat(passes.get(4), is(5));
-
     }
 
     @Transformation
