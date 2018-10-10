@@ -57,6 +57,7 @@ public class EventStreamTransformationService {
 
         //TODO refactor cloning
         final Optional<UUID> backupStreamId = streamTransformer.transformAndBackupStream(originalStreamId, eventTransformations);
+
         deleteBackUpstreamIfNeeded(backupStreamId, originalStreamId, action);
 
         if (action.isDeactivate()) {

@@ -1,8 +1,8 @@
 package uk.gov.justice.tools.eventsourcing.transformation.service;
 
 import static java.lang.String.format;
-import static java.util.Optional.*;
 import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -44,9 +43,6 @@ public class StreamTransformer {
     @Inject
     private EventTransformationStreamIdFilter eventTransformationStreamIdFilter;
 
-    public StreamTransformer() {
-    }
-
     @SuppressWarnings({"squid:S2629"})
     public Optional<UUID> transformAndBackupStream(final UUID originalStreamId, final Set<EventTransformation> transformations) {
         try {
@@ -66,16 +62,14 @@ public class StreamTransformer {
 
             final Optional<UUID> eventTransformationStreamId = eventTransformationStreamIdFilter.getEventTransformationStreamId(transformations, transformedEventStream);
 
-            if(eventTransformationStreamId.isPresent()){
+            if (eventTransformationStreamId.isPresent()) {
                 logger.info(String.format("move originalEventStream id is %s ", eventTransformationStreamId.get()));
 
                 appendFilteredEventsToStream(eventTransformationStreamId.get(), transformedEventStream);
                 appendUnprocessedEventsToOriginalStream(originalStreamId, originalEventList, streamTransformerUtil);
-            }
-            else{
+            } else {
                 eventStream.append(transformedEventStream.stream().map(this::clearEventPositioning));
             }
-
             return of(backupStreamId);
 
         } catch (final EventStreamException e) {
