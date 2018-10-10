@@ -6,7 +6,6 @@ import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
-import uk.gov.justice.tools.eventsourcing.transformation.StreamMover;
 import uk.gov.justice.tools.eventsourcing.transformation.TransformationChecker;
 import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
@@ -39,9 +38,6 @@ public class EventStreamTransformationService {
     private StreamTransformer streamTransformer;
 
     @Inject
-    private StreamMover streamMover;
-
-    @Inject
     private StreamRepository streamRepository;
 
     @Inject
@@ -59,17 +55,13 @@ public class EventStreamTransformationService {
 
         final Action action = transformationChecker.requiresTransformation(eventStream, originalStreamId, pass);
 
+        //TODO refactor cloning
         final Optional<UUID> backupStreamId = streamTransformer.transformAndBackupStream(originalStreamId, eventTransformations);
         deleteBackUpstreamIfNeeded(backupStreamId, originalStreamId, action);
 
         if (action.isDeactivate()) {
             streamRepository.deactivateStream(originalStreamId);
         }
-
-/*        if (action.isMoveStream()) {
-            final Optional<UUID> backupStreamId = streamMover.moveAndBackupStream(originalStreamId, eventTransformations);
-            deleteBackUpstreamIfNeeded(backupStreamId, originalStreamId, action);
-        }*/
 
         eventStream.close();
         return originalStreamId;

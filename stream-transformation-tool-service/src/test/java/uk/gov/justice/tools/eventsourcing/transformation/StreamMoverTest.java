@@ -49,8 +49,8 @@ public class StreamMoverTest {
     private ArgumentCaptor<Stream<JsonEnvelope>> streamArgumentCaptor;
 
 
-    @InjectMocks
-    private StreamMover streamMover;
+    //@InjectMocks
+    //private StreamMover streamMover;
 
     @Test
     public void doNothing(){

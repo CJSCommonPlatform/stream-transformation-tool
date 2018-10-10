@@ -54,7 +54,7 @@ public class StreamMoveFilterTest {
         final JsonEnvelope jsonEnvelope = buildEnvelope("sample.events.name.move");
         final JsonEnvelope jsonEnvelope1 = buildEnvelope("should.not.apply.move");
 
-        final List<JsonEnvelope> jsonEnvelopeList = streamMoveFilter.filterMoveEvents(asList(jsonEnvelope, jsonEnvelope1)).collect(toList());
+        final List<JsonEnvelope> jsonEnvelopeList = streamMoveFilter.transformEvents(asList(jsonEnvelope, jsonEnvelope1)).collect(toList());
 
         assertThat(jsonEnvelopeList.size(), is(1));
         assertThat(jsonEnvelopeList.get(0).metadata().name(), is("sample.events.transformedName.move"));
@@ -81,7 +81,7 @@ public class StreamMoveFilterTest {
         final JsonEnvelope jsonEnvelope1 = buildEnvelope("should.not.apply.move1");
         final JsonEnvelope jsonEnvelope2 = buildEnvelope("should.not.apply.move2");
 
-        final List<JsonEnvelope> jsonEnvelopeList = streamMoveFilter.filterMoveEvents(asList(jsonEnvelope, jsonEnvelope1, jsonEnvelope2)).collect(toList());
+        final List<JsonEnvelope> jsonEnvelopeList = streamMoveFilter.transformEvents(asList(jsonEnvelope, jsonEnvelope1, jsonEnvelope2)).collect(toList());
 
         assertTrue(jsonEnvelopeList.isEmpty());
     }

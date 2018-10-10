@@ -23,13 +23,16 @@ import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
+import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationStreamIdFilter;
 import uk.gov.justice.tools.eventsourcing.transformation.StreamTransformerUtil;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -68,6 +71,9 @@ public class StreamTransformerTest {
     @Mock
     private StreamTransformerUtil streamTransformerUtil;
 
+    @Mock
+    private EventTransformationStreamIdFilter eventTransformationStreamIdFilter;
+
     @Captor
     private ArgumentCaptor<Stream<JsonEnvelope>> streamArgumentCaptor;
 
@@ -89,14 +95,20 @@ public class StreamTransformerTest {
 
     @Test
     public void shouldTransformStreamOfSingleEventAndReturnBackupStreamId() throws EventStreamException {
+
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         final Set<EventTransformation> transformations = new HashSet<>();
         transformations.add(eventTransformation);
+
         given(eventSource.cloneStream(STREAM_ID)).willReturn(BACKUP_STREAM_ID);
         given(eventSource.getStreamById(STREAM_ID)).willReturn(eventStream);
         given(eventStream.read()).willReturn(Stream.of(event));
-        given(streamTransformerUtil.transform(streamArgumentCaptor.capture(), eventTransformationArgumentCaptor.capture())).willReturn(Stream.of(event));
+        final List<JsonEnvelope> event1 = Stream.of(event).collect(Collectors.toList());
+        //given(streamTransformerUtil.transform(streamArgumentCaptor.capture(), eventTransformationArgumentCaptor.capture())).willReturn(event1);
+        when(eventTransformationStreamIdFilter.getEventTransformationStreamId(transformations, event1)).thenReturn(Optional.of(UUID.randomUUID()));
+        //when(streamTransformerUtil.getTransformedStream()).thenReturn(event1);
         given(eventTransformation.actionFor(any(JsonEnvelope.class))).willReturn(TRANSFORM);
+        given(eventTransformation.streamId(any(JsonEnvelope.class))).willReturn(Optional.of(UUID.randomUUID()));
         given(eventTransformation.apply(event)).willReturn(Stream.of(buildEnvelope(TRANSFORMED_EVENT_NAME)));
 
         final Optional<UUID> resultStreamId = streamTransformer.transformAndBackupStream(STREAM_ID, newHashSet(eventTransformation));
