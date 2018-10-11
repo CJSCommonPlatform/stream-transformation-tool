@@ -58,14 +58,14 @@ public class StreamTransformer {
 
             logger.info("Transforming events on stream {}", originalStreamId);
 
-            final List<JsonEnvelope> transformedEventStream = streamTransformerUtil.transform(originalEventList, transformations);
+            final List<JsonEnvelope> transformedEventStream = streamTransformerUtil.transform(originalEventList, transformations, empty());
 
             final Optional<UUID> eventTransformationStreamId = eventTransformationStreamIdFilter.getEventTransformationStreamId(transformations, transformedEventStream);
 
             if (eventTransformationStreamId.isPresent()) {
                 logger.info(String.format("move originalEventStream id is %s ", eventTransformationStreamId.get()));
 
-                appendFilteredEventsToStream(eventTransformationStreamId.get(), transformedEventStream);
+                appendFilteredEventsToStream(eventTransformationStreamId, transformedEventStream, transformations, streamTransformerUtil);
                 appendUnprocessedEventsToOriginalStream(originalStreamId, originalEventList, streamTransformerUtil);
             } else {
                 eventStream.append(transformedEventStream.stream().map(this::clearEventPositioning));
@@ -84,10 +84,13 @@ public class StreamTransformer {
         return enveloper.withMetadataFrom(event, event.metadata().name()).apply(event.payload());
     }
 
-    private void appendFilteredEventsToStream(final UUID streamId,
-                                              final List<JsonEnvelope> filteredEventStream) throws EventStreamException {
+    private void appendFilteredEventsToStream(final Optional<UUID> streamId,
+                                              final List<JsonEnvelope> transformedEventStream,
+                                              final Set<EventTransformation> transformations,
+                                              final StreamTransformerUtil streamTransformerUtil) throws EventStreamException {
 
-        final UUID moveStreamId = streamRepository.createStreamIfNeeded(streamId);
+        final UUID moveStreamId = streamRepository.createStreamIfNeeded(streamId.get());
+        final List<JsonEnvelope> filteredEventStream = streamTransformerUtil.transform(transformedEventStream, transformations, streamId);
         appendStream(moveStreamId, filteredEventStream);
     }
 
@@ -96,7 +99,6 @@ public class StreamTransformer {
                                                          final StreamTransformerUtil streamTransformerUtil) throws EventStreamException {
 
         final List<JsonEnvelope> unfilteredMoveEvents = streamTransformerUtil.filterOriginalEvents(jsonEnvelopeList.stream());
-
         appendStream(originalStreamId, unfilteredMoveEvents);
     }
 

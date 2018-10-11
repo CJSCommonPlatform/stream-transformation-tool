@@ -11,6 +11,7 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,12 +24,23 @@ public class StreamTransformerUtil {
     }
 
     public List<JsonEnvelope> transform(final List<JsonEnvelope> events,
-                                        final Set<EventTransformation> transformations) {
-        return events.stream().map(event ->
-                transformerFor(event, transformations)
-                        .map(eventTransformation -> eventTransformation.apply(event))
-                        .orElse(Stream.of(event))
-        ).flatMap(identity()).collect(toList());
+                                        final Set<EventTransformation> transformations,
+                                        final Optional<UUID> eventTransformationStreamId) {
+
+        if(eventTransformationStreamId.isPresent()){
+            return events.stream().map(event ->
+                    transformerFor(event, transformations)
+                            .map(eventTransformation -> eventTransformation.apply(event))
+                            .orElse(empty())
+            ).flatMap(identity()).collect(toList());
+        }
+        else{
+            return events.stream().map(event ->
+                    transformerFor(event, transformations)
+                            .map(eventTransformation -> eventTransformation.apply(event))
+                            .orElse(Stream.of(event))
+            ).flatMap(identity()).collect(toList());
+        }
     }
 
     public List<JsonEnvelope> filterOriginalEvents(final Stream<JsonEnvelope> events) {
@@ -50,5 +62,4 @@ public class StreamTransformerUtil {
 
         return eventTransformationOptional.isPresent() ? Stream.of(event) : empty();
     }
-
 }

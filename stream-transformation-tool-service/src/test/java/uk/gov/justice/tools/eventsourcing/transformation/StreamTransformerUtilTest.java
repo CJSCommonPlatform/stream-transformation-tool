@@ -21,6 +21,7 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transfor
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -49,7 +50,7 @@ public class StreamTransformerUtilTest {
 
         final StreamTransformerUtil streamTransformerUtil = new StreamTransformerUtil(transformations);
 
-        final List<JsonEnvelope> transformedJsonEnvelopeStream = streamTransformerUtil.transform(jsonEnvelopeStream, transformations);
+        final List<JsonEnvelope> transformedJsonEnvelopeStream = streamTransformerUtil.transform(jsonEnvelopeStream, transformations, Optional.empty());
 
         final List<JsonEnvelope> transformedJsonEnvelopeList = transformedJsonEnvelopeStream.stream().collect(toList());
 
@@ -69,7 +70,7 @@ public class StreamTransformerUtilTest {
 
         final StreamTransformerUtil streamTransformerUtil = new StreamTransformerUtil(transformations);
 
-        final List<JsonEnvelope> transformedJsonEnvelopeStream = streamTransformerUtil.transform(jsonEnvelopeStream, transformations);
+        final List<JsonEnvelope> transformedJsonEnvelopeStream = streamTransformerUtil.transform(jsonEnvelopeStream, transformations, Optional.empty());
 
         final List<JsonEnvelope> transformedJsonEnvelopeList = transformedJsonEnvelopeStream.stream().collect(toList());
 

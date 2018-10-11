@@ -73,6 +73,7 @@ public class EventStreamTransformationServiceTest {
     @Mock
     private StreamTransformer streamTransformer;
 
+
     @Mock
     private StreamRepository streamRepository;
 
