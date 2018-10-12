@@ -1,6 +1,7 @@
 package uk.gov.justice.tools.eventsourcing.transformation.service;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
@@ -11,6 +12,7 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 import uk.gov.justice.tools.eventsourcing.transformation.repository.StreamRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -49,7 +51,7 @@ public class EventStreamTransformationService {
 
     @Transactional(REQUIRES_NEW)
     public UUID transformEventStream(final UUID originalStreamId, final int pass) {
-        final Stream<JsonEnvelope> eventStream = eventSource.getStreamById(originalStreamId).read();
+        final List<JsonEnvelope> eventStream = eventSource.getStreamById(originalStreamId).read().collect(toList());
 
         final Set<EventTransformation> eventTransformations = getEventTransformations(pass);
 
@@ -64,7 +66,6 @@ public class EventStreamTransformationService {
             streamRepository.deactivateStream(originalStreamId);
         }
 
-        eventStream.close();
         return originalStreamId;
     }
 

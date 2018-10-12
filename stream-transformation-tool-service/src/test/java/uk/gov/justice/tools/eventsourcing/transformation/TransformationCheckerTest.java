@@ -1,6 +1,7 @@
 package uk.gov.justice.tools.eventsourcing.transformation;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static javax.json.Json.createObjectBuilder;
 import static org.junit.Assert.assertTrue;
@@ -16,6 +17,7 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transformation;
 
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -57,7 +59,7 @@ public class TransformationCheckerTest {
     public void shouldReturnNoActionWhenMoreThanOneTransformationAvailableForMove() throws Exception {
         final JsonEnvelope event = buildEnvelope(MOVE_EVENT_NAME);
         final JsonEnvelope event1 = buildEnvelope(PASS_EVENT_NAME);
-        final Action action = transformationChecker.requiresTransformation(Stream.of(event, event1), STREAM_ID, 1);
+        final Action action = transformationChecker.requiresTransformation(asList(event, event1), STREAM_ID, 1);
 
         assertTrue(action.equals(TRANSFORM));
     }
@@ -71,7 +73,7 @@ public class TransformationCheckerTest {
 
         final JsonEnvelope event = buildEnvelope(MOVE_EVENT_NAME);
         final JsonEnvelope event1 = buildEnvelope(PASS_EVENT_NAME);
-        final Action action = transformationChecker.requiresTransformation(Stream.of(event, event1), STREAM_ID, 1);
+        final Action action = transformationChecker.requiresTransformation(asList(event, event1), STREAM_ID, 1);
 
         assertTrue(action.equals(TRANSFORM));
     }
@@ -85,7 +87,7 @@ public class TransformationCheckerTest {
 
         final JsonEnvelope event = buildEnvelope(PASS_EVENT_NAME);
         final JsonEnvelope event1 = buildEnvelope(MOVE_EVENT_NAME);
-        final Action action = transformationChecker.requiresTransformation(Stream.of(event, event1), STREAM_ID, 1);
+        final Action action = transformationChecker.requiresTransformation(asList(event, event1), STREAM_ID, 1);
 
         assertTrue(action.equals(TRANSFORM));
     }
@@ -100,7 +102,7 @@ public class TransformationCheckerTest {
 
         final JsonEnvelope event = buildEnvelope(PASS_EVENT_NAME);
         final JsonEnvelope event1 = buildEnvelope(NEXT_EVENT_NAME);
-        final Action action = transformationChecker.requiresTransformation(Stream.of(event, event1), STREAM_ID, 1);
+        final Action action = transformationChecker.requiresTransformation(asList(event, event1), STREAM_ID, 1);
 
         assertTrue(action.equals(TRANSFORM));
     }
@@ -116,7 +118,7 @@ public class TransformationCheckerTest {
 
         when(eventTransformationRegistry.getEventTransformationBy(1)).thenReturn(newHashSet(transformation1, transformation3));
 
-        final Action action = transformationChecker.requiresTransformation(Stream.of(event, event1), STREAM_ID, 1);
+        final Action action = transformationChecker.requiresTransformation(asList(event, event1), STREAM_ID, 1);
 
         assertTrue(action.equals(NO_ACTION));
     }

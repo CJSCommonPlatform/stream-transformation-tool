@@ -33,4 +33,5 @@ public class SampleTransformationMove1 implements EventTransformation {
     public void setEnveloper(final Enveloper enveloper) {
         this.enveloper = enveloper;
     }
+
 }

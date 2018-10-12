@@ -1,5 +1,6 @@
 package uk.gov.sample.event.transformation.move;
 
+import static java.util.UUID.randomUUID;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
@@ -8,9 +9,11 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transformation;
 
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
-@Transformation(pass = 6)
+@Transformation(pass = 3)
 public class SampleTransformationMoveWithoutBackUp implements EventTransformation {
 
     private Enveloper enveloper;
@@ -32,6 +35,11 @@ public class SampleTransformationMoveWithoutBackUp implements EventTransformatio
     @Override
     public void setEnveloper(final Enveloper enveloper) {
         this.enveloper = enveloper;
+    }
+
+    @Override
+    public Optional<UUID> streamId(final JsonEnvelope event) {
+        return Optional.of(randomUUID());
     }
 
 }

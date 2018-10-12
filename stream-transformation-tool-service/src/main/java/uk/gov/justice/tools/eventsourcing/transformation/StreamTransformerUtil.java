@@ -2,7 +2,7 @@ package uk.gov.justice.tools.eventsourcing.transformation;
 
 
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 
 import uk.gov.justice.services.messaging.JsonEnvelope;
@@ -11,8 +11,6 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class StreamTransformerUtil {
@@ -24,23 +22,26 @@ public class StreamTransformerUtil {
     }
 
     public List<JsonEnvelope> transform(final List<JsonEnvelope> events,
-                                        final Set<EventTransformation> transformations,
-                                        final Optional<UUID> eventTransformationStreamId) {
+                                        final Set<EventTransformation> transformations) {
 
-        if(eventTransformationStreamId.isPresent()){
-            return events.stream().map(event ->
-                    transformerFor(event, transformations)
-                            .map(eventTransformation -> eventTransformation.apply(event))
-                            .orElse(empty())
-            ).flatMap(identity()).collect(toList());
-        }
-        else{
-            return events.stream().map(event ->
-                    transformerFor(event, transformations)
-                            .map(eventTransformation -> eventTransformation.apply(event))
-                            .orElse(Stream.of(event))
-            ).flatMap(identity()).collect(toList());
-        }
+        return events.stream()
+                .map(event ->
+                        transformerFor(event, transformations)
+                                .map(eventTransformation -> eventTransformation.apply(event))
+                                .orElse(empty())
+                ).flatMap(identity())
+                .collect(toList());
+    }
+
+
+    public List<JsonEnvelope> getTransformedEvents(List<JsonEnvelope> events, Set<EventTransformation> transformations) {
+        return events.stream()
+                .map(event ->
+                        transformerFor(event, transformations)
+                                .map(eventTransformation -> eventTransformation.apply(event))
+                                .orElse(Stream.of(event))
+                ).flatMap(identity())
+                .collect(toList());
     }
 
     public List<JsonEnvelope> filterOriginalEvents(final Stream<JsonEnvelope> events) {
@@ -62,4 +63,5 @@ public class StreamTransformerUtil {
 
         return eventTransformationOptional.isPresent() ? Stream.of(event) : empty();
     }
+
 }

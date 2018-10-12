@@ -15,11 +15,16 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class EventTransformationStreamIdFilter {
 
-    public Optional<UUID> getEventTransformationStreamId(final Set<EventTransformation> transformations, final List<JsonEnvelope> transformedEventStream) {
-        final Optional<Optional<UUID>> eventTransformationStreamId = transformedEventStream.stream()
+    public Optional<UUID> getEventTransformationStreamId(final Set<EventTransformation> transformations,
+                                                         final List<JsonEnvelope> transformedEventStream) {
+
+        final Optional<Optional<UUID>> eventTransformationStreamId = transformedEventStream
+                .stream()
                 .map(e -> filterStreamId(e, transformations))
-                .filter(streamId1 -> streamId1.isPresent()).findFirst();
-        return eventTransformationStreamId.isPresent()?eventTransformationStreamId.get():empty();
+                .filter(streamId1 -> streamId1.isPresent())
+                .findFirst();
+
+        return eventTransformationStreamId.isPresent() ? eventTransformationStreamId.get() : empty();
     }
 
     private Optional<UUID> filterStreamId(final JsonEnvelope event, final Set<EventTransformation> transformations) {

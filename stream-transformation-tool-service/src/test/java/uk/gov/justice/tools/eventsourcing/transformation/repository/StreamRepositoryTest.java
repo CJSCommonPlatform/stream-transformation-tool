@@ -27,16 +27,11 @@ public class StreamRepositoryTest {
     @Mock
     private EventStreamJdbcRepository eventStreamJdbcRepository;
 
-    @Mock
-    private EventJdbcRepository eventRepository;
-
     @InjectMocks
     private StreamRepository streamRepository;
 
     @Test
     public void shouldDeactivateTheStreamWhenRequested() {
-
-
         streamRepository.deactivateStream(STREAM_ID);
 
         verify(eventStreamJdbcRepository).markActive(STREAM_ID, false);
@@ -48,12 +43,11 @@ public class StreamRepositoryTest {
         streamRepository.deleteStream(STREAM_ID);
 
         verify(eventStreamJdbcRepository).delete(STREAM_ID);
-        verify(eventRepository).clear(STREAM_ID);
         verifyNoMoreInteractions(eventStreamJdbcRepository);
     }
 
     @Test
-    public void shouldCreateTheStreamWhenRequested() {
+    public void shouldCreateStreamIfNeeded() {
         final UUID streamId = streamRepository.createStream();
 
         verify(eventStreamJdbcRepository).insert(streamId);

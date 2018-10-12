@@ -27,8 +27,8 @@ public class TransformationChecker {
     @Inject
     private EventTransformationRegistry eventTransformationRegistry;
 
-    public Action requiresTransformation(final Stream<JsonEnvelope> eventStream, final UUID streamId, int pass) {
-        final List<Action> eventTransformationList = eventStream
+    public Action requiresTransformation(final List<JsonEnvelope> eventStream, final UUID streamId, int pass) {
+        final List<Action> eventTransformationList = eventStream.stream()
                 .map(jsonEnvelope -> checkTransformations(jsonEnvelope, pass))
                 .flatMap(List::stream)
                 .distinct()

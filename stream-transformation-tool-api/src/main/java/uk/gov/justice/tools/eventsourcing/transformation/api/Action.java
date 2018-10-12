@@ -12,7 +12,6 @@ public class Action {
      * Action specifying a stream to be transformed. A backup of the stream will be created as part
      * of the transform action
      */
-    //TODO do we need TRANSFORM ACTION
     public static final Action TRANSFORM = new Action(true, false, true);
 
     /**
