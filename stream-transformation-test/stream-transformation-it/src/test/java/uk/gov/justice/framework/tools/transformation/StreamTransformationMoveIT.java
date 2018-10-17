@@ -41,7 +41,7 @@ public class StreamTransformationMoveIT {
     @Test
     public void shouldMoveEventInEventStore() throws Exception {
         databaseUtils.insertEventLogData("sample.transformation.move.1", STREAM_ID, 1L);
-        databaseUtils.insertEventLogData("sample.events.name.passer", STREAM_ID, 2L);
+        databaseUtils.insertEventLogData("sample.events.name.should.not.be.transformed", STREAM_ID, 2L);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
 
@@ -53,7 +53,7 @@ public class StreamTransformationMoveIT {
     @Test
     public void shouldMoveEventInEventStoreWithoutBackup() throws Exception {
         databaseUtils.insertEventLogData("sample.transformation.move.without.backup", STREAM_ID, 1L);
-        databaseUtils.insertEventLogData("sample.events.name.passer", STREAM_ID, 2L);
+        databaseUtils.insertEventLogData("sample.events.name.passer1", STREAM_ID, 2L);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
 

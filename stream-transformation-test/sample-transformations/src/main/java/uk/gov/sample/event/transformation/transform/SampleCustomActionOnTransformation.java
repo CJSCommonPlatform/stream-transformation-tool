@@ -38,7 +38,7 @@ public class SampleCustomActionOnTransformation implements EventTransformation {
         if (EVENTS_TO_DEACTIVATE.contains(event.metadata().name().toLowerCase())) {
             return DEACTIVATE;
         } else if (event.metadata().name().toLowerCase().endsWith(EVENT_NAME_ENDS_WITH)) {
-            return new Action(true, true, false, false);
+            return new Action(true, true, false);
         }
 
         return NO_ACTION;

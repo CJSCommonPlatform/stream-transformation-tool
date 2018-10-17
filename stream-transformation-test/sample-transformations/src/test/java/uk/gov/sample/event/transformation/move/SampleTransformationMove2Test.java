@@ -7,17 +7,20 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.spi.DefaultJsonMetadata.metadataBuilder;
 import static uk.gov.justice.services.test.utils.core.enveloper.EnveloperFactory.createEnveloper;
-import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.MOVE_AND_TRANSFORM;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.junit.Before;
@@ -49,7 +52,7 @@ public class SampleTransformationMove2Test {
     public void shouldSetTransformAction() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
 
-        assertThat(sampleTransformationMove2.actionFor(event), is(MOVE_AND_TRANSFORM));
+        assertThat(sampleTransformationMove2.actionFor(event), is(TRANSFORM));
     }
 
     @Test
@@ -58,6 +61,14 @@ public class SampleTransformationMove2Test {
 
         assertThat(sampleTransformationMove2.actionFor(event), is(NO_ACTION));
     }
+
+    @Test
+    public void shouldReturnStreamId() {
+        final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
+        final Optional<UUID> streamId = sampleTransformationMove2.setStreamId(event);
+        assertTrue(streamId.isPresent());
+    }
+
 
     @Test
     public void shouldCreateTransformation() {
