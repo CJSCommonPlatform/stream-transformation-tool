@@ -18,7 +18,7 @@ public class SampleTransformationPass1 implements EventTransformation {
 
     @Override
     public Action actionFor(final JsonEnvelope event) {
-        if (event.metadata().name().equalsIgnoreCase("sample.events.name.pass")) {
+        if (event.metadata().name().equalsIgnoreCase("sample.events.name.sequence")) {
             return TRANSFORM;
         }
         return NO_ACTION;
@@ -26,7 +26,7 @@ public class SampleTransformationPass1 implements EventTransformation {
 
     @Override
     public Stream<JsonEnvelope> apply(final JsonEnvelope event) {
-        final JsonEnvelope transformedEnvelope = enveloper.withMetadataFrom(event, "sample.events.transformedName.pass").apply(event.payload());
+        final JsonEnvelope transformedEnvelope = enveloper.withMetadataFrom(event, "sample.events.name.sequence1").apply(event.payload());
         return Stream.of(transformedEnvelope);
     }
 

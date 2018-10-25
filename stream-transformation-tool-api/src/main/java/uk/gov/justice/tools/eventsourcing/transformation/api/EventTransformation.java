@@ -7,6 +7,8 @@ import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANS
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 /**
@@ -44,11 +46,22 @@ public interface EventTransformation {
      *
      * @param event - the event to be transformed
      * @return a stream of transformed events. The default implementation is provided for other than
-     * transform actio, as other actions dose not need to implement this method.
+     * transform action, as other actions dose not need to implement this method.
      */
     default Stream<JsonEnvelope> apply(final JsonEnvelope event) {
         return of(event);
 
+    }
+
+    /**
+     * Checks if events need to be appended to a specified stream.
+     *
+     * @param event - the event to be moved or "transformed and moved"
+     * @return a stream of transformed events. The default implementation is provided and returns empty
+     * indication events do not need to be moved.
+     */
+    default Optional<UUID> setStreamId(final JsonEnvelope event){
+        return Optional.empty();
     }
 
     void setEnveloper(Enveloper enveloper);

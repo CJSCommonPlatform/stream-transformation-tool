@@ -22,10 +22,8 @@ import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
+
 public class SampleTransformationMove1Test {
 
     private static final String SOURCE_EVENT_NAME = "sample.transformation.move.1";

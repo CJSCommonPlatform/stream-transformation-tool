@@ -44,7 +44,7 @@ public class SampleCustomActionOnTransformationTest {
     public void shouldSetCustomActionForEventsThatMatch() {
         final JsonEnvelope event = buildEnvelope("sample.event.name.archived.old.release");
 
-        assertThat(underTest.actionFor(event), is(new Action(true, true, false, false)));
+        assertThat(underTest.actionFor(event), is(new Action(true, true, false)));
     }
 
     @Test

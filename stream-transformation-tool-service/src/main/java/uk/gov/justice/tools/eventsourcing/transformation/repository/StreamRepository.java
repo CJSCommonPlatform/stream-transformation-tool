@@ -1,7 +1,6 @@
 package uk.gov.justice.tools.eventsourcing.transformation.repository;
 
 import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
 
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.EventJdbcRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
@@ -25,6 +24,7 @@ public class StreamRepository {
     @Inject
     private EventStreamJdbcRepository eventStreamJdbcRepository;
 
+
     @SuppressWarnings({"squid:S2629"})
     public void deleteStream(final UUID streamId) {
         eventStreamJdbcRepository.delete(streamId);
@@ -38,9 +38,4 @@ public class StreamRepository {
         logger.info(format("deactivated/archived stream '%s'", streamId));
     }
 
-    public UUID createStream() {
-        final UUID streamId = randomUUID();
-        eventStreamJdbcRepository.insert(streamId);
-        return streamId;
-    }
 }

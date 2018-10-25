@@ -1,17 +1,21 @@
 package uk.gov.justice.tools.eventsourcing.transformation.service;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
+import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
+import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationStreamIdFilter;
 import uk.gov.justice.tools.eventsourcing.transformation.StreamMover;
 import uk.gov.justice.tools.eventsourcing.transformation.TransformationChecker;
 import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 import uk.gov.justice.tools.eventsourcing.transformation.repository.StreamRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -50,41 +54,49 @@ public class EventStreamTransformationService {
     @Inject
     private TransformationChecker transformationChecker;
 
+    @Inject
+    private EventTransformationStreamIdFilter eventTransformationStreamIdFilter;
+
 
     @Transactional(REQUIRES_NEW)
     public UUID transformEventStream(final UUID originalStreamId, final int pass) {
-        final Stream<JsonEnvelope> eventStream = eventSource.getStreamById(originalStreamId).read();
+        try (final Stream<JsonEnvelope> eventStream = eventSource.getStreamById(originalStreamId).read()) {
 
-        final Set<EventTransformation> eventTransformations = getEventTransformations(pass);
+            final List<JsonEnvelope> jsonEnvelopeList = eventStream.collect(toList());
 
-        final Action action = transformationChecker.requiresTransformation(eventStream, originalStreamId, pass);
+            final Set<EventTransformation> eventTransformations = getEventTransformations(pass);
+            final Action action = transformationChecker.requiresTransformation(jsonEnvelopeList, originalStreamId, pass);
 
-        if (action.isTransform()) {
-            final Optional<UUID> backupStreamId = streamTransformer.transformAndBackupStream(originalStreamId, eventTransformations);
-            deleteBackUpstreamIfNeeded(backupStreamId, originalStreamId, action);
+            if (action.isKeepBackup()) {
+                cloneStream(originalStreamId);
+            }
+
+            if (action.isTransform()) {
+                final Optional<UUID> newStreamId = eventTransformationStreamIdFilter.getEventTransformationStreamId(eventTransformations, jsonEnvelopeList);
+                if (newStreamId.isPresent()) {
+                    streamMover.transformAndMoveStream(originalStreamId, eventTransformations, newStreamId.get());
+                } else {
+                    streamTransformer.transformStream(originalStreamId, eventTransformations);
+                }
+            }
+
+            if (action.isDeactivate()) {
+                streamRepository.deactivateStream(originalStreamId);
+            }
+
+        }catch (final Exception e){
+            logger.error(format("Unknown error while moving events on stream %s", originalStreamId), e);
         }
-        if (action.isDeactivate()) {
-            streamRepository.deactivateStream(originalStreamId);
-        }
-
-        if (action.isMoveStream()) {
-            final Optional<UUID> backupStreamId = streamMover.moveAndBackupStream(originalStreamId, eventTransformations);
-            deleteBackUpstreamIfNeeded(backupStreamId, originalStreamId, action);
-        }
-        eventStream.close();
         return originalStreamId;
     }
 
     @SuppressWarnings({"squid:S2629"})
-    private void deleteBackUpstreamIfNeeded(final Optional<UUID> backupStreamId,
-                                            final UUID originalStreamId,
-                                            final Action action) {
-        if (!action.isKeepBackup()) {
-            if (backupStreamId.isPresent()) {
-                streamRepository.deleteStream(backupStreamId.get());
-            } else {
-                logger.info(format("Cannot delete backup stream. No backup stream was created for stream '%s'", originalStreamId));
-            }
+    private void cloneStream(final UUID originalStreamId) {
+        try {
+            final UUID clonedStreamId = eventSource.cloneStream(originalStreamId);
+            logger.info(format("Created backup stream '%s' from stream '%s'", clonedStreamId, originalStreamId));
+        } catch (final EventStreamException e) {
+            logger.error(format("Failed to backup stream %s", originalStreamId), e);
         }
     }
 

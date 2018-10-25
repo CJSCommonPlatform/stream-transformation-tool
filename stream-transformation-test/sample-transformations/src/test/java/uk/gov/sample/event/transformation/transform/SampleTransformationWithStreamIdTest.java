@@ -1,4 +1,4 @@
-package uk.gov.sample.event.transformation.move;
+package uk.gov.sample.event.transformation.transform;
 
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
@@ -12,10 +12,10 @@ import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.spi.DefaultJsonMetadata.metadataBuilder;
 import static uk.gov.justice.services.test.utils.core.enveloper.EnveloperFactory.createEnveloper;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
+import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.messaging.JsonEnvelope;
-import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 
 import java.util.List;
@@ -25,48 +25,46 @@ import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
-public class SampleTransformationMoveWithoutBackUpTest {
 
-    private static final String SOURCE_EVENT_NAME = "sample.transformation.move.without.backup";
-    private static final String TRANSFORMED_EVENT_NAME = "sample.transformation.move.without.backup.transformed";
+public class SampleTransformationWithStreamIdTest {
 
-    private SampleTransformationMoveWithoutBackUp sampleTransformationMoveWithoutBackUp = new SampleTransformationMoveWithoutBackUp();
+    private static final String SOURCE_EVENT_NAME = "sample.transformation.with.stream.id";
+    private static final String TRANSFORMED_EVENT_NAME = "sample.transformation.with.stream.id.transformed";
+
+    private SampleTransformationWithStreamId sampleTransformationWithStreamId = new SampleTransformationWithStreamId();
 
     private Enveloper enveloper = createEnveloper();
 
     @Before
     public void setup() {
-        sampleTransformationMoveWithoutBackUp.setEnveloper(enveloper);
+        sampleTransformationWithStreamId.setEnveloper(enveloper);
     }
 
     @Test
     public void shouldCreateInstanceOfEventTransformation() {
-        assertThat(sampleTransformationMoveWithoutBackUp, instanceOf(EventTransformation.class));
+        assertThat(sampleTransformationWithStreamId, instanceOf(EventTransformation.class));
     }
 
     @Test
     public void shouldSetTransformAction() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
-        final Action action = new Action(true, false, false);
-        assertThat(sampleTransformationMoveWithoutBackUp.actionFor(event), is(action));
+
+        assertThat(sampleTransformationWithStreamId.actionFor(event), is(TRANSFORM));
     }
 
     @Test
     public void shouldSetNoAction() {
         final JsonEnvelope event = buildEnvelope(TRANSFORMED_EVENT_NAME);
 
-        assertThat(sampleTransformationMoveWithoutBackUp.actionFor(event), is(NO_ACTION));
+        assertThat(sampleTransformationWithStreamId.actionFor(event), is(NO_ACTION));
     }
 
     @Test
     public void shouldCreateTransformation() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
 
-        final Stream<JsonEnvelope> transformedStream = sampleTransformationMoveWithoutBackUp.apply(event);
+        final Stream<JsonEnvelope> transformedStream = sampleTransformationWithStreamId.apply(event);
 
         final List<JsonEnvelope> transformedEvents = transformedStream.collect(toList());
         assertThat(transformedEvents, hasSize(1));
@@ -79,7 +77,7 @@ public class SampleTransformationMoveWithoutBackUpTest {
     @Test
     public void shouldReturnStreamId() {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
-        final Optional<UUID> streamId = sampleTransformationMoveWithoutBackUp.setStreamId(event);
+        final Optional<UUID> streamId = sampleTransformationWithStreamId.setStreamId(event);
         assertTrue(streamId.isPresent());
     }
 
@@ -88,6 +86,5 @@ public class SampleTransformationMoveWithoutBackUpTest {
                 metadataBuilder().withId(randomUUID()).withName(eventName),
                 createObjectBuilder().add("field", "value").build());
     }
-
 
 }

@@ -1,7 +1,11 @@
 package uk.gov.justice.tools.eventsourcing.transformation;
 
+import static com.google.common.collect.Sets.newHashSet;
+import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 import static javax.json.Json.createObjectBuilder;
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
@@ -16,13 +20,11 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transformation;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class StreamTransformerUtilTest {
@@ -33,20 +35,22 @@ public class StreamTransformerUtilTest {
     private static final String EVENT_NAME_PASS = "sample.events.name.pass";
     private static final String TRANSFORM_NAME = "sample.events.transformedName";
 
-    @Test
-    public void shouldTestTransform() {
+    private StreamTransformerUtil streamTransformerUtil;
 
-        final StreamTransformerUtil streamTransformerUtil = new StreamTransformerUtil();
+    @Before
+    public void setup() {
+        streamTransformerUtil = new StreamTransformerUtil();
+    }
+
+    @Test
+    public void shouldTransformEvents() {
 
         final JsonEnvelope event = buildEnvelope(EVENT_NAME);
         final Stream<JsonEnvelope> jsonEnvelopeStream = Stream.of(event);
-        final TestTransformation transformation1 = new TestTransformation();
-        final Set<EventTransformation> transformations = new HashSet<>();
-        transformations.add(transformation1);
 
-        final Stream<JsonEnvelope> transformedJsonEnvelopeStream = streamTransformerUtil.transform(jsonEnvelopeStream, transformations);
+        final Stream<JsonEnvelope> transformedJsonEnvelopeStream = streamTransformerUtil.transform(jsonEnvelopeStream, newHashSet(new TestTransformation()));
 
-        final List<JsonEnvelope> transformedJsonEnvelopeList = transformedJsonEnvelopeStream.collect(Collectors.toList());
+        final List<JsonEnvelope> transformedJsonEnvelopeList = transformedJsonEnvelopeStream.collect(toList());
 
         assertThat(transformedJsonEnvelopeList.size(), is(1));
 
@@ -54,23 +58,63 @@ public class StreamTransformerUtilTest {
     }
 
     @Test
-    public void shouldTestNoTransform() {
+    public void shouldTransformAndMove() {
 
-        final StreamTransformerUtil streamTransformerUtil = new StreamTransformerUtil();
+        final JsonEnvelope event = buildEnvelope(EVENT_NAME);
+        final JsonEnvelope event1 = buildEnvelope(EVENT_NAME_PASS);
+        final Stream<JsonEnvelope> jsonEnvelopeStream = Stream.of(event, event1);
+
+        final Stream<JsonEnvelope> transformedJsonEnvelopeStream = streamTransformerUtil.transformAndMove(jsonEnvelopeStream, newHashSet(new TestTransformation()));
+
+        final List<JsonEnvelope> transformedJsonEnvelopeList = transformedJsonEnvelopeStream.collect(toList());
+
+        assertThat(transformedJsonEnvelopeList.size(), is(1));
+
+        assertThat(transformedJsonEnvelopeList.get(0).metadata().name(), is(TRANSFORM_NAME));
+    }
+
+    @Test
+    public void shouldNotTransform() {
 
         final JsonEnvelope event = buildEnvelope(EVENT_NAME_PASS);
         final Stream<JsonEnvelope> jsonEnvelopeStream = Stream.of(event);
-        final TestTransformation transformation1 = new TestTransformation();
-        final Set<EventTransformation> transformations = new HashSet<>();
-        transformations.add(transformation1);
 
-        final Stream<JsonEnvelope> transformedJsonEnvelopeStream = streamTransformerUtil.transform(jsonEnvelopeStream, transformations);
+        final Stream<JsonEnvelope> transformedJsonEnvelopeStream = streamTransformerUtil.transform(jsonEnvelopeStream, newHashSet(new TestTransformation()));
 
-        final List<JsonEnvelope> transformedJsonEnvelopeList = transformedJsonEnvelopeStream.collect(Collectors.toList());
+        final List<JsonEnvelope> transformedJsonEnvelopeList = transformedJsonEnvelopeStream.collect(toList());
 
         assertThat(transformedJsonEnvelopeList.size(), is(1));
 
         assertThat(transformedJsonEnvelopeList.get(0).metadata().name(), is(EVENT_NAME_PASS));
+    }
+
+    @Test
+    public void shouldFilterOriginalEvents() throws Exception {
+
+        final JsonEnvelope jsonEnvelope = buildEnvelope("sample.events.name");
+        final JsonEnvelope jsonEnvelope1 = buildEnvelope("should.not.apply");
+        final JsonEnvelope jsonEnvelope2 = buildEnvelope("should.not.apply1");
+
+        final List<JsonEnvelope> jsonEnvelopeList = streamTransformerUtil
+                .filterOriginalEvents(asList(jsonEnvelope, jsonEnvelope1, jsonEnvelope2), newHashSet(new TestTransformation()))
+                .collect(toList());
+
+        assertThat(jsonEnvelopeList.size(), is(2));
+        assertThat(jsonEnvelopeList.get(0).metadata().name(), is("should.not.apply"));
+        assertThat(jsonEnvelopeList.get(1).metadata().name(), is("should.not.apply1"));
+    }
+
+
+    @Test
+    public void shouldReturnEmptyStreamForOriginalEvents() throws Exception {
+        final JsonEnvelope jsonEnvelope = buildEnvelope("sample.events.name");
+        final JsonEnvelope jsonEnvelope1 = buildEnvelope("sample.events.name");
+
+        final List<JsonEnvelope> jsonEnvelopeList = streamTransformerUtil
+                .filterOriginalEvents(asList(jsonEnvelope, jsonEnvelope1), newHashSet(new TestTransformation()))
+                .collect(toList());
+
+        assertTrue(jsonEnvelopeList.isEmpty());
     }
 
     @Transformation

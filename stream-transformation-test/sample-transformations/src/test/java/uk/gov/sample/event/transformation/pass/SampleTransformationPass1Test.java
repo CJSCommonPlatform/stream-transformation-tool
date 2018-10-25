@@ -25,8 +25,8 @@ import org.junit.Test;
 
 public class SampleTransformationPass1Test {
 
-    private static final String SOURCE_EVENT_NAME = "sample.events.name.pass";
-    private static final String TRANSFORMED_EVENT_NAME = "sample.events.transformedName.pass";
+    private static final String SOURCE_EVENT_NAME = "sample.events.name.sequence";
+    private static final String TRANSFORMED_EVENT_NAME = "sample.events.name.sequence1";
 
     private SampleTransformationPass1 sampleTransformationPass1 = new SampleTransformationPass1();
 
@@ -39,7 +39,7 @@ public class SampleTransformationPass1Test {
 
     @Test
     public void shouldSetTransformAction() {
-        final JsonEnvelope event = buildEnvelope("sample.events.name.pass");
+        final JsonEnvelope event = buildEnvelope("sample.events.name.sequence");
 
         assertThat(sampleTransformationPass1.actionFor(event), is(TRANSFORM));
     }
