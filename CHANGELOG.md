@@ -5,6 +5,12 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+# [4.0.0] - 2018-10-25
+
+### Added
+- Feature to specify transformation pass value so that transformations can be executed sequentially
+- Support for moving transformed events to new or existing streams
+
 ## [3.0.0] - 2018-08-30
 
 ### Changed
