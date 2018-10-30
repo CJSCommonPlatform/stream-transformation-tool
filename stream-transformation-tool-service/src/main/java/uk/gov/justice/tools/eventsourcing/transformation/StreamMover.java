@@ -1,10 +1,8 @@
 package uk.gov.justice.tools.eventsourcing.transformation;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
-import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 
@@ -24,7 +22,6 @@ public class StreamMover {
     @Inject
     private Logger logger;
 
-
     @Inject
     private EventSource eventSource;
 
@@ -34,12 +31,15 @@ public class StreamMover {
     @Inject
     private StreamTransformerUtil streamTransformerUtil;
 
+    @Inject
+    private EventStreamReader eventStreamReader;
+
+
     public void transformAndMoveStream(final UUID originalStreamId,
                                        final Set<EventTransformation> transformations,
                                        final UUID newStreamId) {
         try {
-            final EventStream originalEventStream = eventSource.getStreamById(originalStreamId);
-            final List<JsonEnvelope> jsonEnvelopeList = originalEventStream.read().collect(toList());
+            final List<JsonEnvelope> jsonEnvelopeList = eventStreamReader.getStreamBy(originalStreamId);
 
             eventSource.clearStream(originalStreamId);
 

@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static javax.json.Json.createObjectBuilder;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -12,13 +13,11 @@ import static org.mockito.Mockito.when;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.JsonEnvelope.metadataBuilder;
 
-import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
-import uk.gov.justice.tools.eventsourcing.transformation.repository.StreamRepository;
 
 import java.util.List;
 import java.util.Set;
@@ -61,6 +60,9 @@ public class StreamMoverTest {
     @Mock
     private StreamAppender streamAppender;
 
+    @Mock
+    private EventStreamReader eventStreamReader;
+
     @Captor
     private ArgumentCaptor<Stream<JsonEnvelope>> streamArgumentCaptor;
 
@@ -98,8 +100,8 @@ public class StreamMoverTest {
 
         streamMover.transformAndMoveStream(STREAM_ID, transformations, MOVED_STREAM_ID);
 
-        verify(eventSource).getStreamById(STREAM_ID);
-        verify(eventStream).read();
+        verify(eventStreamReader).getStreamBy(STREAM_ID);
+
         verify(eventSource).clearStream(STREAM_ID);
         verify(streamTransformerUtil).transformAndMove(streamArgumentCaptor.capture(), eventTransformationArgumentCaptor.capture());
         verify(streamTransformerUtil).filterOriginalEvents(listArgumentCaptor.capture(), eventTransformationArgumentCaptor.capture());
@@ -111,12 +113,10 @@ public class StreamMoverTest {
     @Test
     public void shouldLogEventStreamException() throws Exception {
         final Set<EventTransformation> transformations = newHashSet(eventTransformation);
-        try {
-            doThrow(Exception.class).when(eventSource).cloneStream(any());
-            streamMover.transformAndMoveStream(STREAM_ID, transformations, randomUUID());
-        } catch (final Exception expected) {
-            verify(logger).error(format(any(String.class)), expected);
-        }
+        doThrow(Exception.class).when(eventSource).clearStream(any());
+        streamMover.transformAndMoveStream(STREAM_ID, transformations, randomUUID());
+
+        verify(logger).error(format(anyString()), any(Exception.class));
     }
 
     private JsonEnvelope buildEnvelope(final String eventName) {
