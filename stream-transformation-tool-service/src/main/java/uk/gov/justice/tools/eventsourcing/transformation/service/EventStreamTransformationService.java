@@ -7,6 +7,7 @@ import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
+import uk.gov.justice.tools.eventsourcing.transformation.EventStreamReader;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationStreamIdFilter;
 import uk.gov.justice.tools.eventsourcing.transformation.StreamMover;
@@ -57,12 +58,15 @@ public class EventStreamTransformationService {
     @Inject
     private EventTransformationStreamIdFilter eventTransformationStreamIdFilter;
 
+    @Inject
+    private EventStreamReader eventStreamReader;
+
 
     @Transactional(REQUIRES_NEW)
     public UUID transformEventStream(final UUID originalStreamId, final int pass) {
-        try (final Stream<JsonEnvelope> eventStream = eventSource.getStreamById(originalStreamId).read()) {
+        try {
 
-            final List<JsonEnvelope> jsonEnvelopeList = eventStream.collect(toList());
+            final List<JsonEnvelope> jsonEnvelopeList = eventStreamReader.getStreamBy(originalStreamId);
 
             final Set<EventTransformation> eventTransformations = getEventTransformations(pass);
             final Action action = transformationChecker.requiresTransformation(jsonEnvelopeList, originalStreamId, pass);
