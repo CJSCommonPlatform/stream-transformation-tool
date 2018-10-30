@@ -5,6 +5,11 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+## [4.1.0] - 2018-10-30
+
+### Changed
+- fix stream closing issue. 
+
 # [4.0.0] - 2018-10-25
 
 ### Added
