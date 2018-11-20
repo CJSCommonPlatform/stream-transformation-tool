@@ -44,35 +44,39 @@ public class NonPublishingEventAppenderTest {
 
         final UUID eventId = randomUUID();
         final UUID streamId = randomUUID();
+        final String source = "example";
+
         eventAppender.append(
                 envelope()
                         .with(metadataOf(eventId, "name123"))
                         .withPayloadOf("payloadValue123", "somePayloadField")
                         .build(),
                 streamId,
-                3L);
+                3L,
+                source);
 
         ArgumentCaptor<JsonEnvelope> envelopeCaptor = ArgumentCaptor.forClass(JsonEnvelope.class);
 
-        verify(eventRepository).store(envelopeCaptor.capture());
+        verify(eventRepository).storeEvent(envelopeCaptor.capture());
 
         final JsonEnvelope storedEnvelope = envelopeCaptor.getValue();
         assertThat(storedEnvelope.metadata().streamId(), contains(streamId));
-        assertThat(storedEnvelope.metadata().version(), contains(3L));
+        assertThat(storedEnvelope.metadata().position(), contains(3L));
         assertThat(storedEnvelope.metadata().name(), is("name123"));
         assertThat(storedEnvelope.payloadAsJsonObject().getString("somePayloadField"), is("payloadValue123"));
     }
 
     @Test(expected = EventStreamException.class)
     public void shouldThrowExceptionWhenStoreEventRequestFails() throws Exception {
-        doThrow(StoreEventRequestFailedException.class).when(eventRepository).store(any());
-        eventAppender.append(envelope().with(metadataWithDefaults()).build(), randomUUID(), 1l);
+        doThrow(StoreEventRequestFailedException.class).when(eventRepository).storeEvent(any());
+        eventAppender.append(envelope().with(metadataWithDefaults()).build(), randomUUID(), 1L, "example");
     }
 
     @Test
     public void shouldStoreANewEventStream() throws EventStreamException {
         final UUID eventId = randomUUID();
         final UUID streamId = randomUUID();
+        final String source = "example";
 
         final long firstStreamEvent = 1L;
         eventAppender.append(
@@ -81,7 +85,8 @@ public class NonPublishingEventAppenderTest {
                         .withPayloadOf("payloadValue456", "someOtherPayloadField")
                         .build(),
                 streamId,
-                firstStreamEvent);
+                firstStreamEvent,
+                source);
 
         final ArgumentCaptor<UUID> streamIdCapture = ArgumentCaptor.forClass(UUID.class);
 
@@ -96,6 +101,7 @@ public class NonPublishingEventAppenderTest {
         final UUID eventId = randomUUID();
         final UUID streamId = randomUUID();
         final long secondStreamEvent = 2L;
+        final String source = "example";
 
         eventAppender.append(
                 envelope()
@@ -103,7 +109,8 @@ public class NonPublishingEventAppenderTest {
                         .withPayloadOf("payloadValue456", "someOtherPayloadField")
                         .build(),
                 streamId,
-                secondStreamEvent);
+                secondStreamEvent,
+                source);
 
         verifyNoMoreInteractions(eventStreamRepository);
     }

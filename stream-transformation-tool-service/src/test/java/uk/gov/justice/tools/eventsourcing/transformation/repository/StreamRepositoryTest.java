@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.spi.DefaultJsonMetadata.metadataBuilder;
 
+import uk.gov.justice.services.eventsourcing.repository.jdbc.EventRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.EventJdbcRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
@@ -38,7 +39,7 @@ public class StreamRepositoryTest {
     private EventStreamJdbcRepository eventStreamJdbcRepository;
 
     @Mock
-    private EventJdbcRepository eventRepository;
+    private EventRepository eventRepository;
 
 
     @InjectMocks
@@ -58,7 +59,7 @@ public class StreamRepositoryTest {
         streamRepository.deleteStream(STREAM_ID);
 
         verify(eventStreamJdbcRepository).delete(STREAM_ID);
-        verify(eventRepository).clear(STREAM_ID);
+        verify(eventRepository).clearEventsForStream(STREAM_ID);
         verifyNoMoreInteractions(eventStreamJdbcRepository);
     }
 

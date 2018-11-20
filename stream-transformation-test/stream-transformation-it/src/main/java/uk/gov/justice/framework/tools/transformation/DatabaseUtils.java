@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 import static uk.gov.justice.framework.tools.transformation.EventLogBuilder.eventLogFrom;
 
-import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidSequenceIdException;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidPositionException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -45,7 +45,7 @@ public class DatabaseUtils {
         }
     }
 
-    public void insertEventLogData(final String eventName, final UUID streamId, final long sequenceId) throws InvalidSequenceIdException {
+    public void insertEventLogData(final String eventName, final UUID streamId, final long sequenceId) throws InvalidPositionException {
         eventLogJdbcRepository.insert(eventLogFrom(eventName, sequenceId, streamId));
         eventStreamJdbcRepository.insert(streamId);
     }

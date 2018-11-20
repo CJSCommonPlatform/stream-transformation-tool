@@ -35,16 +35,16 @@ public class NonPublishingEventAppender implements EventAppender {
      *
      * @param event    - the event to be appended
      * @param streamId - id of the stream the event will be part of
-     * @param version  - version id of the event in the stream
+     * @param position - version id of the event in the stream
      */
     @Override
-    public void append(final JsonEnvelope event, final UUID streamId, final long version) throws EventStreamException {
+    public void append(final JsonEnvelope event, final UUID streamId, final long position, final String eventSourceName) throws EventStreamException {
         try {
-            if (version == INITIAL_EVENT_VERSION) {
+            if (position == INITIAL_EVENT_VERSION) {
                 streamRepository.insert(streamId);
             }
-            final JsonEnvelope eventWithStreamIdAndVersion = eventFrom(event, streamId, version);
-            eventRepository.store(eventWithStreamIdAndVersion);
+            final JsonEnvelope eventWithStreamIdAndVersion = eventFrom(event, streamId, position, eventSourceName);
+            eventRepository.storeEvent(eventWithStreamIdAndVersion);
         } catch (StoreEventRequestFailedException e) {
             throw new EventStreamException(format("Failed to append event to the event store %s", event.metadata().id()), e);
         }

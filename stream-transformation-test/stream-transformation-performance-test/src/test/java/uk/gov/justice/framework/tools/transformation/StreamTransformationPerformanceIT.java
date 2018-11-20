@@ -5,7 +5,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static uk.gov.justice.framework.tools.transformation.EventLogBuilder.eventLogFrom;
 
-import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidSequenceIdException;
+
+import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidPositionException;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class StreamTransformationPerformanceIT {
     }
 
 
-    private void insertPerformanceTestData() throws SQLException, InvalidSequenceIdException {
+    private void insertPerformanceTestData() throws InvalidPositionException {
 
         final List<UUID> streamIds = new ArrayList<>();
 
@@ -56,8 +57,7 @@ public class StreamTransformationPerformanceIT {
         }
 
         for (final UUID id : streamIds) {
-            for (int i = 1; i <= EVENTS_PER_STREAM; i++) {
-                Long logId = new Long(i);
+            for (long logId = 1; logId <= EVENTS_PER_STREAM; logId++) {
                 databaseUtils.getEventLogJdbcRepository().insert(eventLogFrom("sample.events.name", logId, id));
             }
             databaseUtils.getEventStreamJdbcRepository().insert(id);

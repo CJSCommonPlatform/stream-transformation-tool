@@ -3,6 +3,7 @@ package uk.gov.justice.tools.eventsourcing.transformation.service;
 import static java.lang.String.format;
 
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
+import uk.gov.justice.services.eventsourcing.source.core.EventSourceTransformation;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.StreamAppender;
@@ -28,6 +29,9 @@ public class StreamTransformer {
     private EventSource eventSource;
 
     @Inject
+    private EventSourceTransformation eventSourceTransformation;
+
+    @Inject
     private StreamAppender streamAppender;
 
     @Inject
@@ -39,13 +43,13 @@ public class StreamTransformer {
             final EventStream stream = eventSource.getStreamById(streamId);
             final Stream<JsonEnvelope> events = stream.read();
 
-            eventSource.clearStream(streamId);
+            eventSourceTransformation.clearStream(streamId);
 
             logger.info("Transforming events on stream {}", streamId);
 
             final Stream<JsonEnvelope> transformedEventStream = streamTransformerUtil.transform(events, transformations);
 
-            streamAppender.appendEventsToStream(streamId , transformedEventStream);
+            streamAppender.appendEventsToStream(streamId, transformedEventStream);
 
             events.close();
 

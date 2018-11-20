@@ -21,7 +21,9 @@ public class EventLogBuilder {
                 .with(metadataWithRandomUUID(eventName)
                         .createdAt(ZonedDateTime.now())
                         .withVersion(sequenceId)
-                        .withStreamId(streamId))
+                        .withStreamId(streamId)
+                        .withSource("sample")
+                )
                 .withPayloadOf("test", "a string")
                 .build();
 

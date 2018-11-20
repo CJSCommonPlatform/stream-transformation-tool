@@ -126,30 +126,65 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:datasources:4.0">
             <datasources>
-                <datasource jndi-name="java:/app/event-tool/DS.eventstore"
-                            pool-name="DS.event-tool.eventstore" enabled="true"
-                            use-java-context="true">
-                    <connection-url>jdbc:h2:tcp://localhost:8092/mem:eventstore;MVCC=true</connection-url>
+
+                <xa-datasource jndi-name="java:/app/event-tool/DS.eventstore"
+                               pool-name="DS.event-tool.eventstore" enabled="true" spy="true"
+                               statistics-enabled="true" use-java-context="true" use-ccm="true">
+                    <driver>postgres</driver>
+                    <xa-datasource-property name="ServerName">localhost</xa-datasource-property>
+                    <xa-datasource-property name="PortNumber">5432</xa-datasource-property>
+                    <xa-datasource-property name="DatabaseName">frameworkeventstore
+                    </xa-datasource-property>
+                    <xa-datasource-property name="ApplicationName">replay-tool
+                    </xa-datasource-property>
+                    <xa-datasource-property name="CurrentSchema">public</xa-datasource-property>
+                    <xa-datasource-property name="LogLevel">0</xa-datasource-property>
+                    <xa-pool>
+                        <min-pool-size>1</min-pool-size>
+                        <initial-pool-size>20</initial-pool-size>
+                        <max-pool-size>50</max-pool-size>
+                        <allow-multiple-users>true</allow-multiple-users>
+                    </xa-pool>
+                    <timeout>
+                        <xa-resource-timeout>100</xa-resource-timeout>
+                    </timeout>
+                    <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+                    <statement>
+                        <track-statements>true</track-statements>
+                    </statement>
+                    <security>
+                        <user-name>framework</user-name>
+                        <password>framework</password>
+                    </security>
+                    <validation>
+                        <exception-sorter
+                                class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter"/>
+                        <valid-connection-checker
+                                class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker"/>
+                    </validation>
+                </xa-datasource>
+
+                <xa-datasource jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS">
                     <driver>h2</driver>
-                    <pool>
+                    <xa-datasource-property name="URL">
+                        jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+                    </xa-datasource-property>
+                    <xa-pool>
                         <min-pool-size>3</min-pool-size>
-                        <max-pool-size>3</max-pool-size>
+                        <max-pool-size>20</max-pool-size>
                         <prefill>true</prefill>
-                    </pool>
+                    </xa-pool>
                     <security>
                         <user-name>sa</user-name>
                         <password>sa</password>
                     </security>
-                </datasource>
-                <datasource jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS" enabled="true" use-java-context="true">
-                    <connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url>
-                    <driver>h2</driver>
-                    <security>
-                        <user-name>sa</user-name>
-                        <password>sa</password>
-                    </security>
-                </datasource>
+                </xa-datasource>
+
                 <drivers>
+                    <driver name="postgres" module="org.postgresql">
+                        <driver-class>org.postgresql.Driver</driver-class>
+                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                    </driver>
                     <driver name="h2" module="com.h2database.h2">
                         <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
                     </driver>

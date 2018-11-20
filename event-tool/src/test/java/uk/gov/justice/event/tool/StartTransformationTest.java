@@ -1,5 +1,6 @@
 package uk.gov.justice.event.tool;
 
+import static java.util.UUID.randomUUID;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -9,11 +10,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import uk.gov.justice.event.tool.task.StreamTransformationTask;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.EventRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
 
+import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.stream.Stream;
 
@@ -34,7 +37,7 @@ public class StartTransformationTest {
     private ManagedExecutorService executorService;
 
     @Mock
-    private EventStreamJdbcRepository eventStreamJdbcRepository;
+    private EventRepository eventRepository;
 
     @Mock
     private EventStreamTransformationService eventStreamTransformationService;
@@ -59,13 +62,17 @@ public class StartTransformationTest {
 
     @Before
     public void setup() {
-        when(eventStreamJdbcRepository.findActive()).thenReturn(Stream.of(eventStream, eventStream2));
         when(passesDeterminer.getPassValue()).thenReturn(1).thenReturn(2);
         when(passesDeterminer.isLastElementInPasses()).thenReturn(true);
     }
 
     @Test
     public void shouldCreateTasksForEachStream() {
+
+        final UUID streamId_1 = randomUUID();
+        final UUID streamId_2 = randomUUID();
+
+        when(eventRepository.getAllActiveStreamIds()).thenReturn(Stream.of(streamId_1, streamId_2));
         when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(mock(Future.class));
 
         startTransformation.go();
@@ -76,7 +83,11 @@ public class StartTransformationTest {
 
     @Test
     public void shouldRemoveFinishedTasks() {
-        when(eventStreamJdbcRepository.findActive()).thenReturn(Stream.of(eventStream, eventStream2));
+
+        final UUID streamId_1 = randomUUID();
+        final UUID streamId_2 = randomUUID();
+
+        when(eventRepository.getAllActiveStreamIds()).thenReturn(Stream.of(streamId_1, streamId_2));
         when(passesDeterminer.getPassValue()).thenReturn(1);
 
         final Future future = mock(Future.class);
@@ -96,7 +107,15 @@ public class StartTransformationTest {
 
     @Test
     public void shouldRemoveFinishedTaskForAllPasses(){
-        when(eventStreamJdbcRepository.findActive()).thenReturn(Stream.of(eventStream, eventStream2)).thenReturn(Stream.of(eventStream2));
+
+        final UUID streamId_1 = randomUUID();
+        final UUID streamId_2 = randomUUID();
+        final UUID streamId_3 = randomUUID();
+
+        when(eventRepository.getAllActiveStreamIds())
+                .thenReturn(Stream.of(streamId_1, streamId_2))
+                .thenReturn(Stream.of(streamId_3));
+        
         when(passesDeterminer.getPassValue()).thenReturn(1).thenReturn(2);
         when(passesDeterminer.isLastElementInPasses()).thenReturn(false).thenReturn(true);
 
