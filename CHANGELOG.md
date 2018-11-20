@@ -5,6 +5,13 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+
+## [5.0.0] - 2018-11-20
+
+### Changed
+- Upgraded framework to 5.0.4
+- Moved integration tests to using Postgres rather than H2 
+
 ## [4.1.0] - 2018-10-30
 
 ### Changed
