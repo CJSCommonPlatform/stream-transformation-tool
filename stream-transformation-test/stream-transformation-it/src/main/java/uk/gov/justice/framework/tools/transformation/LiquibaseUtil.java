@@ -8,45 +8,36 @@ import liquibase.Liquibase;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
-import org.apache.commons.dbcp2.BasicDataSource;
+import org.postgresql.ds.PGSimpleDataSource;
 
 public class LiquibaseUtil {
 
-    private static final TestProperties TEST_PROPERTIES = new TestProperties("test.properties");
+    private static final String DATABASE_NAME = "frameworkeventstore";
+
+    private TestProperties testProperties = new TestProperties("test.properties");
 
     public DataSource initEventStoreDb() throws SQLException, LiquibaseException {
-        return initDatabase("db.eventstore.url",
-                "db.eventstore.userName",
-                "db.eventstore.password",
-                "liquibase/event-store-db-changelog.xml");
-    }
 
-    private DataSource initDatabase(final String dbUrlPropertyName,
-                                    final String dbUserNamePropertyName,
-                                    final String dbPasswordPropertyName,
-                                    final String... liquibaseChangeLogXmls) throws SQLException, LiquibaseException {
+        final String username = testProperties.value("db.eventstore.userName");
+        final String password = testProperties.value("db.eventstore.password");
+        final int portNumber = Integer.parseInt(testProperties.value("db.eventstore.portNumber"));
 
-        final BasicDataSource dataSource = new BasicDataSource();
+        final PGSimpleDataSource dataSource = new PGSimpleDataSource();
+        dataSource.setPortNumber(portNumber);
+        dataSource.setDatabaseName(DATABASE_NAME);
+        dataSource.setUser(username);
+        dataSource.setPassword(password);
 
-        dataSource.setDriverClassName(TEST_PROPERTIES.value("db.driver"));
-
-        dataSource.setUrl(TEST_PROPERTIES.value(dbUrlPropertyName));
-        dataSource.setUsername(TEST_PROPERTIES.value(dbUserNamePropertyName));
-        dataSource.setPassword(TEST_PROPERTIES.value(dbPasswordPropertyName));
-        boolean dropped = false;
         final JdbcConnection jdbcConnection = new JdbcConnection(dataSource.getConnection());
 
-        for (String liquibaseChangeLogXml : liquibaseChangeLogXmls) {
-            Liquibase liquibase = new Liquibase(liquibaseChangeLogXml,
-                    new ClassLoaderResourceAccessor(), jdbcConnection);
-            if (!dropped) {
-                liquibase.dropAll();
-                dropped = true;
-            }
-            liquibase.update("");
-        }
+        final Liquibase liquibase = new Liquibase(
+                "liquibase/event-store-db-changelog.xml",
+                new ClassLoaderResourceAccessor(),
+                jdbcConnection);
+
+        liquibase.dropAll();
+        liquibase.update("");
+
         return dataSource;
     }
-
-
 }

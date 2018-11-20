@@ -2,7 +2,7 @@ package uk.gov.justice.tools.eventsourcing.transformation.service;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
-import static java.util.Arrays.*;
+import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.UUID.randomUUID;
 import static javax.json.Json.createObjectBuilder;
@@ -24,6 +24,7 @@ import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANS
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.EventJdbcRepository;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
+import uk.gov.justice.services.eventsourcing.source.core.EventSourceTransformation;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
@@ -37,7 +38,6 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation
 import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transformation;
 import uk.gov.justice.tools.eventsourcing.transformation.repository.StreamRepository;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -58,7 +58,6 @@ import org.slf4j.Logger;
 @RunWith(MockitoJUnitRunner.class)
 public class EventStreamTransformationServiceTest {
 
-
     private static final UUID STREAM_ID = randomUUID();
     private static final UUID MOVE_STREAM_ID = randomUUID();
 
@@ -70,6 +69,9 @@ public class EventStreamTransformationServiceTest {
 
     @Mock
     private EventSource eventSource;
+
+    @Mock
+    private EventSourceTransformation eventSourceTransformation;
 
     @Mock
     private EventStream eventStream;
@@ -136,7 +138,7 @@ public class EventStreamTransformationServiceTest {
 
         eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
 
-        final InOrder inOrder = inOrder(eventSource,eventStreamReader, eventStream, eventTransformationRegistry, transformationChecker, streamTransformer);
+        final InOrder inOrder = inOrder(eventSourceTransformation, eventStreamReader, eventStream, eventTransformationRegistry, transformationChecker, streamTransformer);
 
         inOrder.verify(eventStreamReader).getStreamBy(STREAM_ID);
 
@@ -145,7 +147,7 @@ public class EventStreamTransformationServiceTest {
         inOrder.verify(transformationChecker).requiresTransformation(listArgumentCaptor.capture(),
                 uuidCaptor.capture(), intArgumentCaptor.capture());
 
-        inOrder.verify(eventSource).cloneStream(STREAM_ID);
+        inOrder.verify(eventSourceTransformation).cloneStream(STREAM_ID);
 
         inOrder.verify(streamTransformer).transformStream(STREAM_ID, newHashSet(eventTransformation));
 
@@ -296,7 +298,7 @@ public class EventStreamTransformationServiceTest {
         when(eventTransformationStreamIdFilter.getEventTransformationStreamId(eventTransformationArgumentCaptor.capture(),
                 listArgumentCaptor.capture())).thenReturn(empty());
 
-        doThrow(EventStreamException.class).when(eventSource).cloneStream(any());
+        doThrow(EventStreamException.class).when(eventSourceTransformation).cloneStream(any());
 
         eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
 

@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.JsonEnvelope.metadataBuilder;
 
-import uk.gov.justice.services.eventsourcing.source.core.EventSource;
+import uk.gov.justice.services.eventsourcing.source.core.EventSourceTransformation;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
@@ -46,7 +46,7 @@ public class StreamMoverTest {
     private Logger logger;
 
     @Mock
-    private EventSource eventSource;
+    private EventSourceTransformation eventSourceTransformation;
 
     @Mock
     private EventStream eventStream;
@@ -75,10 +75,8 @@ public class StreamMoverTest {
     @Captor
     private ArgumentCaptor<UUID> streamIdArgumentCaptor;
 
-
     @InjectMocks
     private StreamMover streamMover;
-
 
     @Test
     public void shouldMoveStream() throws EventStreamException {
@@ -87,12 +85,8 @@ public class StreamMoverTest {
         final Set<EventTransformation> transformations = newHashSet(eventTransformation);
         final Stream<JsonEnvelope> jsonEnvelopeStream = Stream.of(event);
 
-        when(eventSource.getStreamById(STREAM_ID)).thenReturn(eventStream);
         when(eventStream.read()).thenReturn(jsonEnvelopeStream);
         when(eventTransformation.apply(event)).thenReturn(Stream.of(buildEnvelope(TRANSFORMED_EVENT_NAME)));
-
-        when(eventSource.getStreamById(STREAM_ID)).thenReturn(eventStream);
-        when(eventSource.getStreamById(MOVED_STREAM_ID)).thenReturn(eventStream);
 
         when(eventStream.append(streamArgumentCaptor.capture())).thenReturn(1L);
         when(streamTransformerUtil.transformAndMove(streamArgumentCaptor.capture(), eventTransformationArgumentCaptor.capture())).thenReturn(jsonEnvelopeStream);
@@ -102,21 +96,20 @@ public class StreamMoverTest {
 
         verify(eventStreamReader).getStreamBy(STREAM_ID);
 
-        verify(eventSource).clearStream(STREAM_ID);
+        verify(eventSourceTransformation).clearStream(STREAM_ID);
         verify(streamTransformerUtil).transformAndMove(streamArgumentCaptor.capture(), eventTransformationArgumentCaptor.capture());
         verify(streamTransformerUtil).filterOriginalEvents(listArgumentCaptor.capture(), eventTransformationArgumentCaptor.capture());
         verify(streamTransformerUtil).filterOriginalEvents(listArgumentCaptor.capture(), eventTransformationArgumentCaptor.capture());
         verify(streamAppender, times(2)).appendEventsToStream(streamIdArgumentCaptor.capture(), streamArgumentCaptor.capture());
     }
 
-
     @Test
     public void shouldLogEventStreamException() throws Exception {
         final Set<EventTransformation> transformations = newHashSet(eventTransformation);
-        doThrow(Exception.class).when(eventSource).clearStream(any());
+        doThrow(Exception.class).when(eventSourceTransformation).clearStream(any());
         streamMover.transformAndMoveStream(STREAM_ID, transformations, randomUUID());
 
-        verify(logger).error(format(anyString()), any(Exception.class));
+        verify(logger).error(anyString(), any(Exception.class));
     }
 
     private JsonEnvelope buildEnvelope(final String eventName) {

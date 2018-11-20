@@ -5,8 +5,8 @@ import static java.nio.file.Files.delete;
 import static org.wildfly.swarm.bootstrap.Main.MAIN_PROCESS_FILE;
 
 import uk.gov.justice.event.tool.task.StreamTransformationTask;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.EventRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
-import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
 
 import java.io.File;
@@ -40,7 +40,7 @@ public class StartTransformation implements ManagedTaskListener {
     private ManagedExecutorService executorService;
 
     @Inject
-    private EventStreamJdbcRepository eventStreamJdbcRepository;
+    private EventRepository eventRepository;
 
     @Inject
     private EventStreamTransformationService eventStreamTransformationService;
@@ -64,7 +64,8 @@ public class StartTransformation implements ManagedTaskListener {
     }
 
     private void createTransformationTasks(final int pass) {
-        final Stream<UUID> activeStreams = eventStreamJdbcRepository.findActive().map(EventStream::getStreamId);
+
+        final Stream<UUID> activeStreams = eventRepository.getAllActiveStreamIds();
 
         activeStreams
                 .forEach(streamId -> {

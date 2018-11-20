@@ -1,7 +1,7 @@
 package uk.gov.justice.framework.tools.transformation;
 
 
-import static uk.gov.justice.services.test.utils.common.reflection.ReflectionUtils.setField;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import uk.gov.justice.services.eventsourcing.repository.jdbc.AnsiSQLEventLogInsertionStrategy;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.EventJdbcRepository;
@@ -17,10 +17,15 @@ public class TestEventLogJdbcRepository extends EventJdbcRepository {
     protected final DataSource dbsource;
 
     public TestEventLogJdbcRepository(final DataSource datasource) {
+        super(
+                new AnsiSQLEventLogInsertionStrategy(),
+                new JdbcRepositoryHelper(),
+                jndiName -> datasource,
+                "",
+                getLogger(EventJdbcRepository.class)
+        );
+
         this.dbsource = datasource;
-        setField(this, "eventInsertionStrategy", new AnsiSQLEventLogInsertionStrategy());
-        setField(this, "dataSource", datasource);
-        setField(this, "jdbcRepositoryHelper", new JdbcRepositoryHelper());
     }
 
     protected DataSource getDataSource() {
