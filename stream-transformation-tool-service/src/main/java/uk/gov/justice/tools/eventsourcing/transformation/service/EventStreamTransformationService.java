@@ -1,7 +1,6 @@
 package uk.gov.justice.tools.eventsourcing.transformation.service;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
@@ -20,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

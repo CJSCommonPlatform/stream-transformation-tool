@@ -16,10 +16,14 @@ public class EventLogBuilder {
 
     }
 
-    public static Event eventLogFrom(final String eventName, final Long sequenceId, final UUID streamId) {
+    public static Event eventLogFrom(
+            final String eventName,
+            final Long sequenceId,
+            final UUID streamId,
+            final ZonedDateTime createdAt) {
         final JsonEnvelope jsonEnvelope = envelope()
                 .with(metadataWithRandomUUID(eventName)
-                        .createdAt(ZonedDateTime.now())
+                        .createdAt(createdAt)
                         .withVersion(sequenceId)
                         .withStreamId(streamId))
                 .withPayloadOf("test", "a string")
@@ -30,8 +34,14 @@ public class EventLogBuilder {
 
         final String name = metadata.name();
         final String payload = jsonEnvelope.payloadAsJsonObject().toString();
-        final ZonedDateTime createdAt = metadata.createdAt().orElse(null);
 
-        return new Event(id, streamId, sequenceId, name, metadata.asJsonObject().toString(), payload, createdAt);
+        return new Event(
+                id,
+                streamId,
+                sequenceId,
+                name,
+                metadata.asJsonObject().toString(),
+                payload,
+                createdAt);
     }
 }

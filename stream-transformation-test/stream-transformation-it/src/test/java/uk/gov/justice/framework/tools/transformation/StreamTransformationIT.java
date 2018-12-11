@@ -1,12 +1,16 @@
 package uk.gov.justice.framework.tools.transformation;
 
 import static java.util.UUID.fromString;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
+import uk.gov.justice.services.common.util.UtcClock;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.Event;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
 
+import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -36,11 +40,12 @@ public class StreamTransformationIT {
         databaseUtils.resetDatabase();
     }
 
-
     @Test
     public void shouldTransformEventInEventStore() throws Exception {
-        databaseUtils.insertEventLogData("sample.events.name", STREAM_ID, 1L);
-        databaseUtils.insertEventLogData("sample.v2.events.name", STREAM_ID, 2L);
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        databaseUtils.insertEventLogData("sample.events.name", STREAM_ID, 1L, createdAt);
+        databaseUtils.insertEventLogData("sample.v2.events.name", STREAM_ID, 2L, createdAt);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
 
@@ -50,8 +55,25 @@ public class StreamTransformationIT {
     }
 
     @Test
+    public void shouldUseTheOriginalCreatedAtDateInTransformation() throws Exception {
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        final String eventName = "sample.events.check-date-not-transformed";
+        databaseUtils.insertEventLogData(eventName, STREAM_ID, 1L, createdAt);
+
+        swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
+
+        final List<Event> transformedEvents = getTransformedEvents(eventName);
+
+        transformedEvents.forEach(event -> assertThat(event.getCreatedAt(), is(createdAt)));
+    }
+
+    @Test
     public void shouldDeactivateStreamInEventStore() throws Exception {
-        databaseUtils.insertEventLogData("sample.deactivate.events.name", STREAM_ID, 1L);
+
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        databaseUtils.insertEventLogData("sample.deactivate.events.name", STREAM_ID, 1L, createdAt);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
 
@@ -60,7 +82,10 @@ public class StreamTransformationIT {
 
     @Test
     public void shouldPerformCustomActionOnStreamInEventStore() throws Exception {
-        databaseUtils.insertEventLogData("sample.event.name.archived.old.release", STREAM_ID, 1L);
+
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        databaseUtils.insertEventLogData("sample.event.name.archived.old.release", STREAM_ID, 1L, createdAt);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
 
@@ -72,7 +97,10 @@ public class StreamTransformationIT {
 
     @Test
     public void shouldTransformEventByPass() throws Exception {
-        databaseUtils.insertEventLogData("sample.events.name.sequence", STREAM_ID, 1L);
+
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        databaseUtils.insertEventLogData("sample.events.name.sequence", STREAM_ID, 1L, createdAt);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
 
@@ -81,11 +109,13 @@ public class StreamTransformationIT {
         assertThat(clonedStreamAvailableAndActive(), is(false));
     }
 
-
     @Test
     public void shouldTransformEventAndAddToSameStreamUsingSetStreamIdMethod() throws Exception {
-        databaseUtils.insertEventLogData("sample.transformation.with.stream.id", fromString("80764cb1-a031-4328-b59e-6c18b0974a84"), 1L);
-        databaseUtils.insertEventLogData("sample.transformation.should.not.transform", fromString("80764cb1-a031-4328-b59e-6c18b0974a84"), 2L);
+
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        databaseUtils.insertEventLogData("sample.transformation.with.stream.id", fromString("80764cb1-a031-4328-b59e-6c18b0974a84"), 1L, createdAt);
+        databaseUtils.insertEventLogData("sample.transformation.should.not.transform", fromString("80764cb1-a031-4328-b59e-6c18b0974a84"), 2L, createdAt);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
 
@@ -97,7 +127,10 @@ public class StreamTransformationIT {
 
     @Test
     public void shouldTransformAndMoveEventInEventStoreAndPreserveEventSequenceInTheStream() throws Exception {
-        databaseUtils.insertEventLogData("sample.events.name.pass1.sequence", STREAM_ID, 1L);
+
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        databaseUtils.insertEventLogData("sample.events.name.pass1.sequence", STREAM_ID, 1L, createdAt);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
 
@@ -108,7 +141,6 @@ public class StreamTransformationIT {
 
         assertThat(eventStoreTransformedEventPresentAndSequenceCorrect("sample.events.name.pass1.sequence1", STREAM_ID ,1L), is(true));
     }
-
 
     private boolean clonedStreamAvailableAndActive() {
         final Optional<Event> matchingClonedEvent = databaseUtils.getEventLogJdbcRepository().findAll()
@@ -170,4 +202,8 @@ public class StreamTransformationIT {
         return databaseUtils.getEventStreamJdbcRepository().findAll().count();
     }
 
+    private List<Event> getTransformedEvents(final String transformedEventName) {
+        final Stream<Event> eventLogs = databaseUtils.getEventLogJdbcRepository().findAll();
+        return eventLogs.filter(item -> item.getStreamId().equals(STREAM_ID)).collect(toList());
+    }
 }

@@ -2,7 +2,7 @@ package uk.gov.justice.tools.eventsourcing.transformation.service;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
-import static java.util.Arrays.*;
+import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.UUID.randomUUID;
 import static javax.json.Json.createObjectBuilder;
@@ -37,7 +37,6 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation
 import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transformation;
 import uk.gov.justice.tools.eventsourcing.transformation.repository.StreamRepository;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;

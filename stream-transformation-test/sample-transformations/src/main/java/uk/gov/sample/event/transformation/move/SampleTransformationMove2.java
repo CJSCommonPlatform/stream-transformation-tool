@@ -1,7 +1,6 @@
 package uk.gov.sample.event.transformation.move;
 
 import static java.util.UUID.randomUUID;
-
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.NO_ACTION;
 import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANSFORM;
 
