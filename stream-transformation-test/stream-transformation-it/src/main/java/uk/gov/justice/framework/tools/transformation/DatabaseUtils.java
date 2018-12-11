@@ -9,6 +9,7 @@ import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidPo
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import javax.sql.DataSource;
@@ -45,8 +46,8 @@ public class DatabaseUtils {
         }
     }
 
-    public void insertEventLogData(final String eventName, final UUID streamId, final long sequenceId) throws InvalidPositionException {
-        eventLogJdbcRepository.insert(eventLogFrom(eventName, sequenceId, streamId));
+    public void insertEventLogData(final String eventName, final UUID streamId, final long sequenceId, final ZonedDateTime createdAt) throws InvalidPositionException {
+        eventLogJdbcRepository.insert(eventLogFrom(eventName, sequenceId, streamId, createdAt));
         eventStreamJdbcRepository.insert(streamId);
     }
 

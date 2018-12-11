@@ -7,8 +7,11 @@ import static uk.gov.justice.framework.tools.transformation.EventLogBuilder.even
 
 
 import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidPositionException;
+import uk.gov.justice.services.common.util.UtcClock;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidSequenceIdException;
 
 import java.sql.SQLException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -56,9 +59,12 @@ public class StreamTransformationPerformanceIT {
             streamIds.add(randomUUID());
         }
 
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
         for (final UUID id : streamIds) {
-            for (long logId = 1; logId <= EVENTS_PER_STREAM; logId++) {
-                databaseUtils.getEventLogJdbcRepository().insert(eventLogFrom("sample.events.name", logId, id));
+            for (int i = 1; i <= EVENTS_PER_STREAM; i++) {
+                Long logId = new Long(i);
+                databaseUtils.getEventLogJdbcRepository().insert(eventLogFrom("sample.events.name", logId, id, createdAt));
             }
             databaseUtils.getEventStreamJdbcRepository().insert(id);
         }
