@@ -53,12 +53,13 @@ public class NonPublishingEventAppenderTest {
 
         final JsonEnvelope event = mock(JsonEnvelope.class);
         final JsonEnvelope eventWithStreamIdAndVersion = mock(JsonEnvelope.class);
+        final String eventSourceName = "event-source-name";
 
-        when(newEnvelopeCreator.toNewEnvelope(event, streamId, version)).thenReturn(eventWithStreamIdAndVersion);
+        when(newEnvelopeCreator.toNewEnvelope(event, streamId, version, eventSourceName)).thenReturn(eventWithStreamIdAndVersion);
 
-        eventAppender.append(event, streamId, version);
+        eventAppender.append(event, streamId, version, eventSourceName);
 
-        verify(eventRepository).store(eventWithStreamIdAndVersion);
+        verify(eventRepository).storeEvent(eventWithStreamIdAndVersion);
 
         verifyZeroInteractions(eventStreamRepository);
     }
@@ -68,18 +69,19 @@ public class NonPublishingEventAppenderTest {
 
         final UUID streamId = randomUUID();
         final long version = INITIAL_EVENT_VERSION;
+        final String eventSourceName = "event-source-name";
 
         final JsonEnvelope event = mock(JsonEnvelope.class);
         final JsonEnvelope eventWithStreamIdAndVersion = mock(JsonEnvelope.class);
 
-        when(newEnvelopeCreator.toNewEnvelope(event, streamId, version)).thenReturn(eventWithStreamIdAndVersion);
+        when(newEnvelopeCreator.toNewEnvelope(event, streamId, version, eventSourceName)).thenReturn(eventWithStreamIdAndVersion);
 
-        eventAppender.append(event, streamId, version);
+        eventAppender.append(event, streamId, version, eventSourceName);
 
         final InOrder inOrder = inOrder(eventStreamRepository, eventRepository);
 
         inOrder.verify(eventStreamRepository).insert(streamId);
-        inOrder.verify(eventRepository).store(eventWithStreamIdAndVersion);
+        inOrder.verify(eventRepository).storeEvent(eventWithStreamIdAndVersion);
     }
 
     @Test
@@ -90,18 +92,19 @@ public class NonPublishingEventAppenderTest {
         final String eventId = "89f9194a-a544-4cae-8904-a1dc78df98c3";
         final UUID streamId = randomUUID();
         final long version = 982374L;
+        final String eventSourceName = "event-source-name";
 
         final JsonEnvelope event = mock(JsonEnvelope.class);
         final Metadata metadata = mock(Metadata.class);
         final JsonEnvelope eventWithStreamIdAndVersion = mock(JsonEnvelope.class);
 
-        when(newEnvelopeCreator.toNewEnvelope(event, streamId, version)).thenReturn(eventWithStreamIdAndVersion);
+        when(newEnvelopeCreator.toNewEnvelope(event, streamId, version, eventSourceName)).thenReturn(eventWithStreamIdAndVersion);
         when(event.metadata()).thenReturn(metadata);
         when(metadata.id()).thenReturn(fromString(eventId));
-        doThrow(storeEventRequestFailedException).when(eventRepository).store(eventWithStreamIdAndVersion);
+        doThrow(storeEventRequestFailedException).when(eventRepository).storeEvent(eventWithStreamIdAndVersion);
 
         try {
-            eventAppender.append(event, streamId, version);
+            eventAppender.append(event, streamId, version, eventSourceName);
             fail();
         } catch (final EventStreamException expected) {
             assertThat(expected.getCause(), is(storeEventRequestFailedException));

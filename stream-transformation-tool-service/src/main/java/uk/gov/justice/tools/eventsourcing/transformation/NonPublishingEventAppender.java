@@ -45,8 +45,7 @@ public class NonPublishingEventAppender implements EventAppender {
             if (position == INITIAL_EVENT_VERSION) {
                 streamRepository.insert(streamId);
             }
-//            final JsonEnvelope eventWithStreamIdAndVersion = eventFrom(event, streamId, position, eventSourceName);
-            final JsonEnvelope eventWithStreamIdAndVersion = newEnvelopeCreator.toNewEnvelope(event, streamId, version);
+            final JsonEnvelope eventWithStreamIdAndVersion = newEnvelopeCreator.toNewEnvelope(event, streamId, position, eventSourceName);
             eventRepository.storeEvent(eventWithStreamIdAndVersion);
         } catch (final StoreEventRequestFailedException e) {
             throw new EventStreamException(format("Failed to append event with id '%s' to the event store", event.metadata().id()), e);

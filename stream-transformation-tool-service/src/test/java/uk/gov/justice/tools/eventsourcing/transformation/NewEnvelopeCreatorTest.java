@@ -38,9 +38,10 @@ public class NewEnvelopeCreatorTest {
         final UUID streamId = randomUUID();
         final UUID id = randomUUID();
         final String commandName = "some-command";
+        final String eventSourceName = "event-source-name";
 
-        final long oldVersion = 23L;
-        final long newVersion = 29387L;
+        final long oldPosition = 23L;
+        final long newPosition = 29387L;
 
         final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
         final UUID causationId_1 = randomUUID();
@@ -54,7 +55,7 @@ public class NewEnvelopeCreatorTest {
                 .withUserId(userId.toString())
                 .withStreamId(streamId)
                 .createdAt(createdAt)
-                .withVersion(oldVersion)
+                .withVersion(oldPosition)
                 .withCausation(causationId_1, causationId_2);
 
         final JsonEnvelope event = envelopeFrom(
@@ -63,9 +64,9 @@ public class NewEnvelopeCreatorTest {
                         .add("exampleField", "example value"));
 
 
-        final JsonEnvelope envelope = newEnvelopeCreator.toNewEnvelope(event, streamId, newVersion);
+        final JsonEnvelope envelope = newEnvelopeCreator.toNewEnvelope(event, streamId, newPosition, eventSourceName);
 
-        assertThat(envelope.metadata().version(), is(of(newVersion)));
+        assertThat(envelope.metadata().position(), is(of(newPosition)));
         assertThat(envelope.metadata().createdAt(), is(of(createdAt)));
 
         assertThat(envelope.metadata().id().toString(), isAUuid());
@@ -77,5 +78,6 @@ public class NewEnvelopeCreatorTest {
         assertThat(envelope.metadata().sessionId(), is(of(sessionId.toString())));
         assertThat(envelope.metadata().clientCorrelationId(), is(of(correlationId.toString())));
         assertThat(envelope.metadata().causation(), hasItems(causationId_1, causationId_2));
+        assertThat(envelope.metadata().source(), is(of(eventSourceName)));
     }
 }

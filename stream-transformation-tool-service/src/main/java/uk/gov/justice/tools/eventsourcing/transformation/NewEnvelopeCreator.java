@@ -12,13 +12,14 @@ import java.util.UUID;
 
 public class NewEnvelopeCreator {
 
-    public JsonEnvelope toNewEnvelope(final JsonEnvelope event, final UUID streamId, final long version) {
+    public JsonEnvelope toNewEnvelope(final JsonEnvelope event, final UUID streamId, final long position, final String source) {
 
         final Metadata metadata = event.metadata();
         final MetadataBuilder metadataBuilder = metadataFrom(metadata)
                 .withId(randomUUID())
                 .withStreamId(streamId)
-                .withVersion(version);
+                .withVersion(position)
+                .withSource(source);
 
         metadata.createdAt().ifPresent(metadataBuilder::createdAt);
 

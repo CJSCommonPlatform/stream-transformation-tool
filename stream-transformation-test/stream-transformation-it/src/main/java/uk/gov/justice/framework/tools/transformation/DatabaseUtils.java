@@ -1,9 +1,8 @@
 package uk.gov.justice.framework.tools.transformation;
 
-import static java.lang.String.format;
-import static org.slf4j.LoggerFactory.getLogger;
 import static uk.gov.justice.framework.tools.transformation.EventLogBuilder.eventLogFrom;
 
+import uk.gov.justice.services.eventsourcing.repository.jdbc.event.Event;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidPositionException;
 
 import java.sql.Connection;
@@ -14,24 +13,19 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
-import org.slf4j.Logger;
+import liquibase.exception.LiquibaseException;
 
 public class DatabaseUtils {
-    private static final Logger LOGGER = getLogger(DatabaseUtils.class);
 
     private TestEventLogJdbcRepository eventLogJdbcRepository;
     private TestEventStreamJdbcRepository eventStreamJdbcRepository;
 
     private final LiquibaseUtil liquibaseUtil = new LiquibaseUtil();
 
-    public DatabaseUtils() {
-        try {
-            final DataSource dataSource = liquibaseUtil.initEventStoreDb();
-            eventLogJdbcRepository = new TestEventLogJdbcRepository(dataSource);
-            eventStreamJdbcRepository = new TestEventStreamJdbcRepository(dataSource);
-        } catch (final Exception e) {
-            LOGGER.error(format("Failed to create database connections '%s'", e.getMessage()));
-        }
+    public DatabaseUtils() throws SQLException, LiquibaseException {
+        final DataSource dataSource = liquibaseUtil.initEventStoreDb();
+        eventLogJdbcRepository = new TestEventLogJdbcRepository(dataSource);
+        eventStreamJdbcRepository = new TestEventStreamJdbcRepository(dataSource);
     }
 
     public void resetDatabase() throws SQLException {
@@ -47,7 +41,9 @@ public class DatabaseUtils {
     }
 
     public void insertEventLogData(final String eventName, final UUID streamId, final long sequenceId, final ZonedDateTime createdAt) throws InvalidPositionException {
-        eventLogJdbcRepository.insert(eventLogFrom(eventName, sequenceId, streamId, createdAt));
+        final Event event = eventLogFrom(eventName, sequenceId, streamId, createdAt);
+
+        eventLogJdbcRepository.insert(event);
         eventStreamJdbcRepository.insert(streamId);
     }
 

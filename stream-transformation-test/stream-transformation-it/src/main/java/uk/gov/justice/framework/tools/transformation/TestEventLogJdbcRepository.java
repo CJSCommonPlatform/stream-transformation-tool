@@ -4,6 +4,7 @@ package uk.gov.justice.framework.tools.transformation;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import uk.gov.justice.services.eventsourcing.repository.jdbc.AnsiSQLEventLogInsertionStrategy;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.PostgresSQLEventLogInsertionStrategy;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.EventJdbcRepository;
 import uk.gov.justice.services.jdbc.persistence.JdbcRepositoryHelper;
 
@@ -18,7 +19,7 @@ public class TestEventLogJdbcRepository extends EventJdbcRepository {
 
     public TestEventLogJdbcRepository(final DataSource datasource) {
         super(
-                new AnsiSQLEventLogInsertionStrategy(),
+                new PostgresSQLEventLogInsertionStrategy(),
                 new JdbcRepositoryHelper(),
                 jndiName -> datasource,
                 "",
