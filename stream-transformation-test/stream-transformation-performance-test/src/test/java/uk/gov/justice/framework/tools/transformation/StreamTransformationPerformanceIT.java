@@ -5,9 +5,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static uk.gov.justice.framework.tools.transformation.EventLogBuilder.eventLogFrom;
 
+import uk.gov.justice.services.common.util.UtcClock;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidSequenceIdException;
 
 import java.sql.SQLException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -55,10 +57,12 @@ public class StreamTransformationPerformanceIT {
             streamIds.add(randomUUID());
         }
 
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
         for (final UUID id : streamIds) {
             for (int i = 1; i <= EVENTS_PER_STREAM; i++) {
                 Long logId = new Long(i);
-                databaseUtils.getEventLogJdbcRepository().insert(eventLogFrom("sample.events.name", logId, id));
+                databaseUtils.getEventLogJdbcRepository().insert(eventLogFrom("sample.events.name", logId, id, createdAt));
             }
             databaseUtils.getEventStreamJdbcRepository().insert(id);
         }
