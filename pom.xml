@@ -30,7 +30,6 @@
 
         <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
         <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>
-        <com.h2database.version>1.4.187</com.h2database.version>
         <junit-dataprovider.version>1.13.1</junit-dataprovider.version>
     </properties>
 
