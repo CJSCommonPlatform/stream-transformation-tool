@@ -68,8 +68,7 @@ public class StreamTransformationPerformanceIT {
         final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
 
         for (final UUID id : streamIds) {
-            for (int i = 1; i <= EVENTS_PER_STREAM; i++) {
-                Long logId = new Long(i);
+            for (long logId = 1; logId <= EVENTS_PER_STREAM; logId++) {
                 databaseUtils.getEventLogJdbcRepository().insert(eventLogFrom("sample.events.name", logId, id, createdAt));
             }
             databaseUtils.getEventStreamJdbcRepository().insert(id);

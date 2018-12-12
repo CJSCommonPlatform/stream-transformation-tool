@@ -36,7 +36,7 @@ public class StreamAppenderTest {
     private EventSource eventSource;
 
     @Mock
-    private EventPositionClearer eventPositionClearer;
+    private EnvelopeFixer envelopeFixer;
 
     @InjectMocks
     private StreamAppender streamAppender;
@@ -58,8 +58,8 @@ public class StreamAppenderTest {
         final EventStream eventStream = mock(EventStream.class);
 
         when(eventSource.getStreamById(streamId)).thenReturn(eventStream);
-        when(eventPositionClearer.clearEventPositioning(event_1)).thenReturn(clearedEvent_1);
-        when(eventPositionClearer.clearEventPositioning(event_2)).thenReturn(clearedEvent_2);
+        when(envelopeFixer.clearPositionAndGiveNewId(event_1)).thenReturn(clearedEvent_1);
+        when(envelopeFixer.clearPositionAndGiveNewId(event_2)).thenReturn(clearedEvent_2);
 
         streamAppender.appendEventsToStream(streamId, Stream.of(event_1, event_2));
 
@@ -81,9 +81,6 @@ public class StreamAppenderTest {
 
         final JsonEnvelope event_1 = mock(JsonEnvelope.class);
         final JsonEnvelope event_2 = mock(JsonEnvelope.class);
-
-        final JsonEnvelope clearedEvent_1 = mock(JsonEnvelope.class);
-        final JsonEnvelope clearedEvent_2 = mock(JsonEnvelope.class);
 
         final EventStream eventStream = mock(EventStream.class);
         final Stream<JsonEnvelope> jsonEnvelopeStream = Stream.of(event_1, event_2);
