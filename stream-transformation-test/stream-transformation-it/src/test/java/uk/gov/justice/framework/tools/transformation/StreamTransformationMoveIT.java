@@ -5,8 +5,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertTrue;
 
+import uk.gov.justice.services.common.util.UtcClock;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.Event;
 
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -27,7 +29,6 @@ public class StreamTransformationMoveIT {
 
     private DatabaseUtils databaseUtils;
 
-
     @Before
     public void setUp() throws Exception {
         databaseUtils = new DatabaseUtils();
@@ -40,8 +41,11 @@ public class StreamTransformationMoveIT {
 
     @Test
     public void shouldMoveEventInEventStore() throws Exception {
-        databaseUtils.insertEventLogData("sample.transformation.move.1", STREAM_ID, 1L);
-        databaseUtils.insertEventLogData("sample.events.name.should.not.be.transformed", STREAM_ID, 2L);
+
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        databaseUtils.insertEventLogData("sample.transformation.move.1", STREAM_ID, 1L, createdAt);
+        databaseUtils.insertEventLogData("sample.events.name.should.not.be.transformed", STREAM_ID, 2L, createdAt);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
 
@@ -52,8 +56,11 @@ public class StreamTransformationMoveIT {
 
     @Test
     public void shouldMoveEventInEventStoreWithoutBackup() throws Exception {
-        databaseUtils.insertEventLogData("sample.transformation.move.without.backup", STREAM_ID, 1L);
-        databaseUtils.insertEventLogData("sample.events.name.passer1", STREAM_ID, 2L);
+
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        databaseUtils.insertEventLogData("sample.transformation.move.without.backup", STREAM_ID, 1L, createdAt);
+        databaseUtils.insertEventLogData("sample.events.name.passer1", STREAM_ID, 2L, createdAt);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS);
 
@@ -82,5 +89,4 @@ public class StreamTransformationMoveIT {
 
         return eventStream.count();
     }
-
 }

@@ -8,20 +8,18 @@ import uk.gov.justice.tools.eventsourcing.transformation.api.annotation.Transfor
 import java.util.stream.Stream;
 
 @Transformation
-public class SampleTransformation implements EventTransformation {
+public class DatePreservingTransformation implements EventTransformation {
 
     private Enveloper enveloper;
 
     @Override
-    public boolean isApplicable(JsonEnvelope event) {
-        return event.metadata().name().equalsIgnoreCase("sample.events.name");
+    public boolean isApplicable(final JsonEnvelope event) {
+        return event.metadata().name().equalsIgnoreCase("sample.events.check-date-not-transformed");
     }
 
     @Override
     public Stream<JsonEnvelope> apply(final JsonEnvelope event) {
-
-        final JsonEnvelope transformedEnvelope = enveloper.withMetadataFrom(event, "sample.events.transformedName").apply(event.payload());
-        return Stream.of(transformedEnvelope);
+        return Stream.of(enveloper.withMetadataFrom(event).apply(event.payloadAsJsonObject()));
     }
 
     @Override

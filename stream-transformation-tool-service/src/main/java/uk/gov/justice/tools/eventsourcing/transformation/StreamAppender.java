@@ -1,6 +1,5 @@
 package uk.gov.justice.tools.eventsourcing.transformation;
 
-import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
@@ -19,20 +18,20 @@ public class StreamAppender {
     private EventSource eventSource;
 
     @Inject
-    private Enveloper enveloper;
+    private EnvelopeFixer envelopeFixer;
 
+    public void appendEventsToStream(
+            final UUID streamId,
+            final Stream<JsonEnvelope> jsonEnvelopeStream) throws EventStreamException {
 
-    public void appendEventsToStream(final UUID streamId,
-                                     final Stream<JsonEnvelope> jsonEnvelopeStream) throws EventStreamException {
-
-        final EventStream eventStream = eventSource.getStreamById(streamId);
-
-        eventStream.append(jsonEnvelopeStream.map(this::clearEventPositioning));
-
-        jsonEnvelopeStream.close();
-    }
-
-    private JsonEnvelope clearEventPositioning(final JsonEnvelope event) {
-        return enveloper.withMetadataFrom(event, event.metadata().name()).apply(event.payload());
+        try {
+            final EventStream eventStream = eventSource
+                    .getStreamById(streamId);
+            eventStream
+                    .append(jsonEnvelopeStream.map(envelopeFixer::clearPositionAndGiveNewId));
+        } catch (final Exception e) {
+            jsonEnvelopeStream.close();
+            throw new EventStreamException("Failed to append events to stream", e);
+        }
     }
 }

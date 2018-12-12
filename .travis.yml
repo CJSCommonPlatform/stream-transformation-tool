@@ -2,19 +2,21 @@ dist: trusty
 sudo: false
 language: java
 jdk:
-- oraclejdk8
+  - oraclejdk8
 git:
   cache: 3
 cache:
   directories:
-  - "$HOME/.m2"
+    - "$HOME/.m2"
 services:
-- postgresql
+  - postgresql
 before_script:
-- psql -c 'create database frameworkeventstore;' -U postgres
-- psql -c 'create database frameworkviewstore;' -U postgres
-- psql -c "CREATE USER framework WITH PASSWORD 'framework';" -U postgres
+  - psql -c 'create database frameworkeventstore;' -U postgres
+  - psql -c 'create database frameworkviewstore;' -U postgres
+  - psql -c 'create database frameworkfilestore;' -U postgres
+  - psql -c "CREATE USER framework WITH PASSWORD 'framework';" -U postgres
 addons:
+  postgresql: '9.5'
   sonarcloud:
     organization: cjscommonplatform
     token:
@@ -22,13 +24,13 @@ addons:
     github_token:
       secure: jatqcNwt1GiQe8wZF4bDjdUvD/0PhYrd07ny0OP4bnDdSxxbOku2No55sikgmYkbtNB07sj8ixv4zzfD0f6pzm4RwEii7CTSqSej8ZYPeOT2RpF8fAWh3a2jCF0p4v9DWV3DfHHjd+636dRPhmtHIrivCdxZgcphZ+pESVmz+okegqzf9sHC9+UoE7ue99l3uWlrDsGw4ODAaSqPuOha8jg1Rmmh17M+/4z0OamNkHpWipw6AV+oK2fqre4tMwuo3DMc3gaVhrRnuf1vQi3TV9dXq+d/jLOFAEA4/E5bAnd1M9ZYRqH8QLiHETb4DGkXBaH+pcbqdIPdwkz7Yo3OEfWTeV0dOya5F9y5XeDkNq1jHKOtjOMFQ1t1W1VVzJd667KJs+XXtFmgwYRBdzOPX8Lq1+OvoM+vLO+2KUBXISodO6XJfj9HZSdKoL2kAiwhOXWMfSqsK4Jf+E3upJKPtrx2hQEXyFPmHHpPTzglnVeFXWwNPZob3Sn778wwZShKVdTsB/THF9KGuVLFUYbJLPGZnI625pCXcr6CA+T/8B0FAVnsXf5S6tRT/rMfbIgDojM0KIAfp/wjDVrwrDVCr4DJrKWfuRcu042MksUphKaC6MWXTgapZCp9OV5aCiUJY17zd3R6uvaL4+fOGBBdSRdt8LwHqkZE/XZaQQGDeX4=
 before_install:
-- git clone https://github.com/CJSCommonPlatform/travis-settings.git target/travis-settings
-- ln -sfT ${PWD}/target/travis-settings/settings.xml ${HOME}/.m2/settings.xml
+  - git clone https://github.com/CJSCommonPlatform/travis-settings.git target/travis-settings
+  - ln -sfT ${PWD}/target/travis-settings/settings.xml ${HOME}/.m2/settings.xml
 install: "${PWD}/target/travis-settings/java/install.sh -e -q -DexcludeGroupIds=uk.gov.justice.service,uk.gov.justice.services"
 script: "${PWD}/target/travis-settings/java/script-install.sh coveralls:report sonar:sonar"
 after_success: "${PWD}/target/travis-settings/java/after_success.sh"
 env:
   global:
-  - PGPORT=5432
-  - secure: XwuDzOLJPJ8Sz2/9cN57nVUoRzW6c6lNboDyveD2ec4fQhOgLdb78yYaV4e7yx31WhXyUX1GeQYKghDGgDluH5jDAeCG91/BrK4KVRAT0AC//34pGnujAJq4pNL7/w0CAcRoQXNLUsdet8tIlkmX4XaM6fokCV4RTdXm0nnICCLQegzvVIBi1Pc2pHKAxpz67aebJHXmC7fTxwtdallm+3KlBgTyhoOfXCTrnyboKYdXMs8tzDP7ro1KzOEVCVhhtR5MZfHCCbPotRewbuX+0WHmXicaBoCZrAxovxaAdjRqC5UuU1iqOV1uXUydg49QxoLy0vfzaLrVz/TQk/ac+YIdJYaR7HTjYp23XJX6i/2Tq4BZPo6EoLc7ERFIleKasJHDiHxYBD6FiWCFe+TPmfHjEsi+pTW/hK3GlLYB9jNM0/6taWiA0aP7Q0rXgRqyuHF1hIelBKHmJBpY+pJpv7IXUNGMmzzRjZX+wbLvODF18DjJpzrai2sBd53tkqBpTjYoFMPLOG9rXpEju92aym/h6I7A8fnCVxsM2Q1a+E7Ahan7YxYMFjz6bzwTg3LuPop0ZzHdJ6/yboAmsTSg2BZvZDFDaQYxPxQEH49NpfMGmN+st1EIl5NSHypO7Kmd7NwWLmymtwraPKurd+yfyp96QO6KQbwuNf71ifSSdiA=
-  - secure: fVz9tjeWQh+1QrA+gMQZiOD/PJz0txejlsg9HFhkiA4NpdXbAIhx8K/FILIAOiiWqo+V2mDYVzULMsPV3ecD4Z0RdeA0iEUZzbzl3w+IXMZpclydML8147AerDOdz2gEM/FybIrATU0ig3VLMYsgU859rKK68TGY8LiA67ad1WNV5ru02Gqc917NSvda/gUoxoZ23qy0kbDFPyElgD8k8oxzCSK1FNNAr03VKInQNGXm4w6YbCSV/VIxKLwsrs05i6zoqHzP1z8wU908KQDsHtjzIA8jEltCm107SfdZIZHRxAW4CpEhOQjMHYtmXrqCBuAkrUdQfzpGaUYtFt8gpsZFKoVwRLHpFSP6iIwQYVJGJdi2Wk015NmnAK+g3hpcypovSDS0OuC/mducMvrxdl5sw9h+FImrgnLAm7UTCfDugeS5vKN5BbJeNapcf8xOPi4oEDXIsdb8Tyq/kJsgoRB5kD90Ig7Mzp559J38YelmSeJSulzPMW2Sp+VAjlcqCLeBMURcg/eH+UTJ9EAk2DV9DJUn0jLNWS1bdY8CpCn10cgcrmNRYWLdUqRIw9cdpVy7jw55kur4KdS2fpEeOvOk3e6UkBYjIwsUacr74cGphswpvJwnYRIYOBbAN2ONceMo/LtU3wdtaIvUvckGvAWYKGzMd0NXraPIK/e0p7c=
+    - PGPORT=5432
+    - secure: XwuDzOLJPJ8Sz2/9cN57nVUoRzW6c6lNboDyveD2ec4fQhOgLdb78yYaV4e7yx31WhXyUX1GeQYKghDGgDluH5jDAeCG91/BrK4KVRAT0AC//34pGnujAJq4pNL7/w0CAcRoQXNLUsdet8tIlkmX4XaM6fokCV4RTdXm0nnICCLQegzvVIBi1Pc2pHKAxpz67aebJHXmC7fTxwtdallm+3KlBgTyhoOfXCTrnyboKYdXMs8tzDP7ro1KzOEVCVhhtR5MZfHCCbPotRewbuX+0WHmXicaBoCZrAxovxaAdjRqC5UuU1iqOV1uXUydg49QxoLy0vfzaLrVz/TQk/ac+YIdJYaR7HTjYp23XJX6i/2Tq4BZPo6EoLc7ERFIleKasJHDiHxYBD6FiWCFe+TPmfHjEsi+pTW/hK3GlLYB9jNM0/6taWiA0aP7Q0rXgRqyuHF1hIelBKHmJBpY+pJpv7IXUNGMmzzRjZX+wbLvODF18DjJpzrai2sBd53tkqBpTjYoFMPLOG9rXpEju92aym/h6I7A8fnCVxsM2Q1a+E7Ahan7YxYMFjz6bzwTg3LuPop0ZzHdJ6/yboAmsTSg2BZvZDFDaQYxPxQEH49NpfMGmN+st1EIl5NSHypO7Kmd7NwWLmymtwraPKurd+yfyp96QO6KQbwuNf71ifSSdiA=
+    - secure: fVz9tjeWQh+1QrA+gMQZiOD/PJz0txejlsg9HFhkiA4NpdXbAIhx8K/FILIAOiiWqo+V2mDYVzULMsPV3ecD4Z0RdeA0iEUZzbzl3w+IXMZpclydML8147AerDOdz2gEM/FybIrATU0ig3VLMYsgU859rKK68TGY8LiA67ad1WNV5ru02Gqc917NSvda/gUoxoZ23qy0kbDFPyElgD8k8oxzCSK1FNNAr03VKInQNGXm4w6YbCSV/VIxKLwsrs05i6zoqHzP1z8wU908KQDsHtjzIA8jEltCm107SfdZIZHRxAW4CpEhOQjMHYtmXrqCBuAkrUdQfzpGaUYtFt8gpsZFKoVwRLHpFSP6iIwQYVJGJdi2Wk015NmnAK+g3hpcypovSDS0OuC/mducMvrxdl5sw9h+FImrgnLAm7UTCfDugeS5vKN5BbJeNapcf8xOPi4oEDXIsdb8Tyq/kJsgoRB5kD90Ig7Mzp559J38YelmSeJSulzPMW2Sp+VAjlcqCLeBMURcg/eH+UTJ9EAk2DV9DJUn0jLNWS1bdY8CpCn10cgcrmNRYWLdUqRIw9cdpVy7jw55kur4KdS2fpEeOvOk3e6UkBYjIwsUacr74cGphswpvJwnYRIYOBbAN2ONceMo/LtU3wdtaIvUvckGvAWYKGzMd0NXraPIK/e0p7c=

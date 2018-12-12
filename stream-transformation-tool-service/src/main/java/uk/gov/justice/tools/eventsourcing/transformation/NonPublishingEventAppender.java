@@ -18,7 +18,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Alternative;
 import javax.inject.Inject;
 
-@SuppressWarnings("WeakerAccess")
 @ApplicationScoped
 @Alternative
 @Priority(2)
@@ -29,6 +28,9 @@ public class NonPublishingEventAppender implements EventAppender {
 
     @Inject
     EventStreamJdbcRepository streamRepository;
+
+    @Inject
+    NewEnvelopeCreator newEnvelopeCreator;
 
     /**
      * Stores the event in the event store and publishes it with the given streamId and version.
@@ -43,12 +45,10 @@ public class NonPublishingEventAppender implements EventAppender {
             if (position == INITIAL_EVENT_VERSION) {
                 streamRepository.insert(streamId);
             }
-            final JsonEnvelope eventWithStreamIdAndVersion = eventFrom(event, streamId, position, eventSourceName);
+            final JsonEnvelope eventWithStreamIdAndVersion = newEnvelopeCreator.toNewEnvelope(event, streamId, position, eventSourceName);
             eventRepository.storeEvent(eventWithStreamIdAndVersion);
-        } catch (StoreEventRequestFailedException e) {
-            throw new EventStreamException(format("Failed to append event to the event store %s", event.metadata().id()), e);
+        } catch (final StoreEventRequestFailedException e) {
+            throw new EventStreamException(format("Failed to append event with id '%s' to the event store", event.metadata().id()), e);
         }
     }
-
-
 }

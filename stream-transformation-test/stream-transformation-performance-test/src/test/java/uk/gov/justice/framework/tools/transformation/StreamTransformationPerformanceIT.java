@@ -5,14 +5,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static uk.gov.justice.framework.tools.transformation.EventLogBuilder.eventLogFrom;
 
-
+import uk.gov.justice.services.common.util.UtcClock;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidPositionException;
 
 import java.sql.SQLException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import liquibase.exception.LiquibaseException;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -23,8 +26,14 @@ public class StreamTransformationPerformanceIT {
 
     private static final Boolean ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY = false;
     private static final int WILDFLY_TIMEOUT_IN_SECONDS = 60;
-    private final DatabaseUtils databaseUtils = new DatabaseUtils();
-    private final SwarmStarterUtil swarmStarterUtil = new SwarmStarterUtil();
+    private SwarmStarterUtil swarmStarterUtil;
+    private DatabaseUtils databaseUtils;
+
+    @Before
+    public void setupDatabase() throws Exception {
+        databaseUtils = new DatabaseUtils();
+        swarmStarterUtil = new SwarmStarterUtil();
+    }
 
     @Ignore("Disabled by default, remove Ignore to run performance test")
     @Test
@@ -56,9 +65,11 @@ public class StreamTransformationPerformanceIT {
             streamIds.add(randomUUID());
         }
 
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
         for (final UUID id : streamIds) {
             for (long logId = 1; logId <= EVENTS_PER_STREAM; logId++) {
-                databaseUtils.getEventLogJdbcRepository().insert(eventLogFrom("sample.events.name", logId, id));
+                databaseUtils.getEventLogJdbcRepository().insert(eventLogFrom("sample.events.name", logId, id, createdAt));
             }
             databaseUtils.getEventStreamJdbcRepository().insert(id);
         }
