@@ -18,7 +18,7 @@ public class StreamAppender {
     private EventSource eventSource;
 
     @Inject
-    private EventPositionClearer eventPositionClearer;
+    private EnvelopeFixer envelopeFixer;
 
     public void appendEventsToStream(
             final UUID streamId,
@@ -28,7 +28,7 @@ public class StreamAppender {
             final EventStream eventStream = eventSource
                     .getStreamById(streamId);
             eventStream
-                    .append(jsonEnvelopeStream.map(eventPositionClearer::clearEventPositioning));
+                    .append(jsonEnvelopeStream.map(envelopeFixer::clearPositionAndGiveNewId));
         } catch (final Exception e) {
             jsonEnvelopeStream.close();
             throw new EventStreamException("Failed to append events to stream", e);

@@ -29,7 +29,6 @@ public class StreamTransformationMoveIT {
 
     private DatabaseUtils databaseUtils;
 
-
     @Before
     public void setUp() throws Exception {
         databaseUtils = new DatabaseUtils();

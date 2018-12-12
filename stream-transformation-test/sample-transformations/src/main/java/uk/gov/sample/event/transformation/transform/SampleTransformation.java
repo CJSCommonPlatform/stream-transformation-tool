@@ -19,6 +19,7 @@ public class SampleTransformation implements EventTransformation {
 
     @Override
     public Stream<JsonEnvelope> apply(final JsonEnvelope event) {
+
         final JsonEnvelope transformedEnvelope = enveloper.withMetadataFrom(event, "sample.events.transformedName").apply(event.payload());
         return Stream.of(transformedEnvelope);
     }
