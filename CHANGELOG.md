@@ -5,6 +5,10 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+## [5.1.0] - 2018-12-12
+
+### Fixed
+- Issue where the creation date in an event to be transformed was being overwritten on transformation by the current date  
 
 ## [5.0.0] - 2018-11-20
 
