@@ -18,10 +18,39 @@ import org.slf4j.Logger;
 public class SwarmStarterUtil {
 
     private static final Logger LOGGER = getLogger(SwarmStarterUtil.class);
+    private String EVENT_TOOL_JAR_LOCATION;
+    private String STREAM_JAR_LOCATION;
+    private String STAND_ALOND_DS_LOCATION;
+    private String MAIN_PROCESS_FILE_PATH;
+
+    public SwarmStarterUtil() throws IOException {
+        getResources();
+    }
 
     public void runCommand(final boolean enableRemoteDebugging, final long timeoutInSeconds) throws IOException {
+        runCommand(enableRemoteDebugging, timeoutInSeconds, 5l, "2048Mb");
+    }
 
-        final String command = createCommandToExecuteTransformationTool(enableRemoteDebugging);
+    public void runCommand(final boolean enableRemoteDebugging, final long timeoutInSeconds, final long streamCountReportingInterval, final String memoryOptions) throws IOException {
+        final String memoryParmeter = format("-DXmx=%s", memoryOptions);
+        final String streamCountReportingIntervalParameter = format("-DstreamCountReportingInterval=%s", streamCountReportingInterval);
+
+        final String command = format("java %s -jar -Dorg.wildfly.swarm.mainProcessFile=%s -Devent.transformation.jar=%s %s -c %s %s %s",
+                debug(enableRemoteDebugging), MAIN_PROCESS_FILE_PATH, STREAM_JAR_LOCATION, EVENT_TOOL_JAR_LOCATION, STAND_ALOND_DS_LOCATION,
+                streamCountReportingIntervalParameter, memoryParmeter);
+
+        startWildfly(timeoutInSeconds, command);
+    }
+
+    private String debug(boolean enableRemoteDebugging) {
+        String debug = "";
+        if (enableRemoteDebugging) {
+            debug = "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005";
+        }
+        return debug;
+    }
+
+    private void startWildfly(long timeoutInSeconds, String command) throws IOException {
         final Process exec = execute(command);
         final BufferedReader reader =
                 new BufferedReader(new InputStreamReader(exec.getInputStream()));
@@ -35,35 +64,8 @@ public class SwarmStarterUtil {
         waitUntilDone(exec, timeoutInSeconds);
     }
 
-    private String createCommandToExecuteTransformationTool(final boolean enableRemoteDebugging) throws IOException {
-        final String eventToolJarLocation = getResource("event-tool*.jar");
-        final String streamJarLocation = getResource("stream-transformations*.jar");
-        final String standaloneDSLocation = getResource("standalone-ds.xml");
-        final String mainProcessFilePath = Paths.get(File.createTempFile("mainProcessFile", "tmp").toURI()).toAbsolutePath().toString();
-
-        String debug = "";
-
-        if (enableRemoteDebugging) {
-            debug = "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005";
-        }
-
-        return commandFrom(debug, mainProcessFilePath, streamJarLocation, eventToolJarLocation, standaloneDSLocation);
-    }
-
-    private String commandFrom(final String debug,
-                               final String mainProcessFilePath,
-                               final String streamJarLocation,
-                               final String eventToolJarLocation,
-                               final String standaloneDSLocation) {
-        return format("java %s -jar -Dorg.wildfly.swarm.mainProcessFile=%s -Devent.transformation.jar=%s %s -c %s",
-                debug,
-                mainProcessFilePath,
-                streamJarLocation,
-                eventToolJarLocation,
-                standaloneDSLocation);
-    }
-
     private String getResource(final String pattern) {
+
         final File dir = new File(this.getClass().getClassLoader().getResource("").getPath());
         final FileFilter fileFilter = new WildcardFileFilter(pattern);
         return dir.listFiles(fileFilter)[0].getAbsolutePath();
@@ -111,5 +113,12 @@ public class SwarmStarterUtil {
         } catch (final IOException e) {
             throw new SwarmStarterException(format("Failed to execute external process '%s'", command), e);
         }
+    }
+
+    private void getResources() throws IOException {
+        EVENT_TOOL_JAR_LOCATION = getResource("event-tool*.jar");
+        STREAM_JAR_LOCATION = getResource("stream-transformations*.jar");
+        STAND_ALOND_DS_LOCATION = getResource("standalone-ds.xml");
+        MAIN_PROCESS_FILE_PATH = Paths.get(File.createTempFile("mainProcessFile", "tmp").toURI()).toAbsolutePath().toString();
     }
 }

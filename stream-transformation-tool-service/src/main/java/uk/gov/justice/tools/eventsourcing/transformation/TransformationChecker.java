@@ -44,9 +44,9 @@ public class TransformationChecker {
 
     @SuppressWarnings({"squid:S2629"})
     private Action noAction(final UUID streamId,
-                            final String errorMessage,
+                            final String message,
                             final List<Action> eventTransformationList) {
-        logger.error(errorMessage, streamId, eventTransformationList.toString());
+        logger.debug(message, streamId, eventTransformationList.toString());
 
         return NO_ACTION;
     }

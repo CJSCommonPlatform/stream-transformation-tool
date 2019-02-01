@@ -28,6 +28,10 @@ public class DatabaseUtils {
         eventStreamJdbcRepository = new TestEventStreamJdbcRepository(dataSource);
     }
 
+    public void dropAndUpdateLiquibase() throws SQLException, LiquibaseException {
+        liquibaseUtil.dropAndUpdate();
+    }
+
     public void resetDatabase() throws SQLException {
         try (final Connection connection = eventLogJdbcRepository.getDataSource().getConnection();
              final PreparedStatement preparedStatement = connection.prepareStatement("delete from event_log")) {

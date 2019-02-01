@@ -30,7 +30,7 @@ public class EventTransformationFoundEventObserver {
     @SuppressWarnings({"squid:S2629"})
     public void register(@Observes final EventTransformationFoundEvent event) throws IllegalAccessException, InstantiationException {
 
-        logger.info(format("Loading Event Transformation %s", event.getClazz().getSimpleName()));
+        logger.debug(format("Loading Event Transformation %s", event.getClazz().getSimpleName()));
 
         eventTransformationRegistry.createTransformations(event);
     }

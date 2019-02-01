@@ -16,6 +16,7 @@ public class LiquibaseUtil {
 
     private TestProperties testProperties = new TestProperties("test.properties");
 
+    private Liquibase liquibase = null;
     public DataSource initEventStoreDb() throws SQLException, LiquibaseException {
 
         final String username = testProperties.value("db.eventstore.userName");
@@ -30,14 +31,16 @@ public class LiquibaseUtil {
 
         final JdbcConnection jdbcConnection = new JdbcConnection(dataSource.getConnection());
 
-        final Liquibase liquibase = new Liquibase(
+        liquibase = new Liquibase(
                 "liquibase/event-store-db-changelog.xml",
                 new ClassLoaderResourceAccessor(),
                 jdbcConnection);
-
-        liquibase.dropAll();
-        liquibase.update("");
-
         return dataSource;
     }
+
+    public void dropAndUpdate() throws SQLException, LiquibaseException {
+        liquibase.dropAll();
+        liquibase.update("");
+    }
+
 }

@@ -6,7 +6,6 @@ import static org.wildfly.swarm.bootstrap.Main.MAIN_PROCESS_FILE;
 
 import uk.gov.justice.event.tool.task.StreamTransformationTask;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.EventRepository;
-import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
 
 import java.io.File;
@@ -15,6 +14,7 @@ import java.util.Deque;
 import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
@@ -25,13 +25,19 @@ import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.enterprise.concurrent.ManagedTaskListener;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
+import org.wildfly.swarm.spi.runtime.annotations.ConfigurationValue;
 
 @Singleton
 @Startup
 public class StartTransformation implements ManagedTaskListener {
 
     private static final String NO_PROCESS_FILE_WARNING = "!!!!! No Swarm Process File specific, application will not auto-shutdown on completion. Please use option '-Dorg.wildfly.swarm.mainProcessFile=/pathTo/aFile' to specify location of process file with read/write permissions !!!!!";
+
+    @Inject
+    @ConfigurationValue("streamCountReportingInterval")
+    private int streamCountReportingInterval;
 
     @Inject
     private Logger logger;
@@ -52,9 +58,15 @@ public class StartTransformation implements ManagedTaskListener {
 
     boolean allTasksCreated = false;
 
+    private StopWatch stopWatch = new StopWatch();
+
+    private AtomicInteger processedStreamsCount = new AtomicInteger(0);
+
     @PostConstruct
     void go() {
         logger.info("-------------- Invoke Event Streams Transformation -------------");
+
+        stopWatch.start();
 
         checkForMainProcessFile();
 
@@ -65,12 +77,18 @@ public class StartTransformation implements ManagedTaskListener {
 
     private void createTransformationTasks(final int pass) {
 
+        if (streamCountReportingInterval == 0) {
+            throw new IllegalArgumentException("Invalid streamCountReportingInterval argument");
+        }
+
         final Stream<UUID> activeStreams = eventRepository.getAllActiveStreamIds();
 
         activeStreams
                 .forEach(streamId -> {
                     final StreamTransformationTask transformationTask = new StreamTransformationTask(streamId, eventStreamTransformationService, this, pass);
                     outstandingTasks.add(executorService.submit(transformationTask));
+                    processedStreamsCount.getAndIncrement();
+                    reportTransformationProgress(pass);
                 });
         activeStreams.close();
 
@@ -79,6 +97,14 @@ public class StartTransformation implements ManagedTaskListener {
         }
 
         allTasksCreated = true;
+    }
+
+    private void reportTransformationProgress(final int pass) {
+        if ((processedStreamsCount.get() != 0 && streamCountReportingInterval != 0)
+                && (processedStreamsCount.get() % streamCountReportingInterval == 0)) {
+            final long time = stopWatch.getTime();
+            logger.info(format("Pass %s - Streams count: %s - time(ms): %s", pass, processedStreamsCount, time));
+        }
     }
 
     public void taskStarting(final Future<?> futureTask, final ManagedExecutorService managedExecutorService, final Object task) {
@@ -127,6 +153,8 @@ public class StartTransformation implements ManagedTaskListener {
     }
 
     private void shutdown() {
+        stopWatch.stop();
+        logger.info("Shutdown Time taken in secs: " + stopWatch.getTime() / 1000);
         logger.info("========== ALL TASKS HAVE BEEN DISPATCHED -- ATTEMPTING SHUTDOWN =================");
 
         final String processFile = System.getProperty(MAIN_PROCESS_FILE);
@@ -153,5 +181,4 @@ public class StartTransformation implements ManagedTaskListener {
             logger.warn(NO_PROCESS_FILE_WARNING);
         }
     }
-
 }

@@ -96,7 +96,7 @@ public class EventStreamTransformationService {
     private void cloneStream(final UUID originalStreamId) {
         try {
             final UUID clonedStreamId = eventSourceTransformation.cloneStream(originalStreamId);
-            logger.info(format("Created backup stream '%s' from stream '%s'", clonedStreamId, originalStreamId));
+            logger.debug(format("Created backup stream '%s' from stream '%s'", clonedStreamId, originalStreamId));
         } catch (final EventStreamException e) {
             logger.error(format("Failed to backup stream %s", originalStreamId), e);
         }

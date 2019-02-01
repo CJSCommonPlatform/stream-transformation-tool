@@ -36,7 +36,7 @@ public class EventTransformationScanner implements Extension {
 
             final int pass = annotatedType.getAnnotation(Transformation.class).pass();
 
-            LOGGER.info("Found 'EventTransformation' class");
+            LOGGER.debug("Found 'EventTransformation' class");
             events.add(new EventTransformationFoundEvent(annotatedType.getJavaClass(), pass));
         }
     }

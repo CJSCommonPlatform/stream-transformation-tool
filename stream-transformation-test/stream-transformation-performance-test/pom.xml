@@ -33,6 +33,21 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <generateTestData>true</generateTestData>
+                        <eventsStreamCount>10</eventsStreamCount>
+                        <eventsPerStreamCount>10</eventsPerStreamCount>
+                        <databaseEventStreamCount>10</databaseEventStreamCount>
+                        <databaseEventLogCount>100</databaseEventLogCount>
+                        <runTest>true</runTest>
+                        <streamCountReportingInterval>2</streamCountReportingInterval>
+                        <generatedTestDataReportingInterval>10</generatedTestDataReportingInterval>
+                        <debug>false</debug>
+                        <memoryOptions>2048</memoryOptions>
+                    </systemPropertyVariables>
+                    <argLine></argLine>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
