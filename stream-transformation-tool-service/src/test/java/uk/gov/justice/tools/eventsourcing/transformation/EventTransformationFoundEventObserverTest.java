@@ -38,7 +38,7 @@ public class EventTransformationFoundEventObserverTest {
 
         eventTransformationFoundEventObserver.register(eventTransformationEvent);
 
-        verify(logger).info("Loading Event Transformation TestTransformation");
+        verify(logger).debug("Loading Event Transformation TestTransformation");
         verify(eventTransformationRegistry).createTransformations(eventTransformationEvent);
     }
 

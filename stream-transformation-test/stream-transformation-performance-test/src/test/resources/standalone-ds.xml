@@ -111,8 +111,8 @@
                             context-service="default"
                             thread-factory="default"
                             hung-task-threshold="60000"
-                            core-threads="1"
-                            max-threads="5"
+                            core-threads="28"
+                            max-threads="35"
                             keepalive-time="5000"
                             queue-length="1000000"
                             reject-policy="RETRY_ABORT"/>
@@ -141,7 +141,7 @@
                     <xa-datasource-property name="LogLevel">0</xa-datasource-property>
                     <xa-pool>
                         <min-pool-size>1</min-pool-size>
-                        <initial-pool-size>20</initial-pool-size>
+                        <initial-pool-size>30</initial-pool-size>
                         <max-pool-size>50</max-pool-size>
                         <allow-multiple-users>true</allow-multiple-users>
                     </xa-pool>

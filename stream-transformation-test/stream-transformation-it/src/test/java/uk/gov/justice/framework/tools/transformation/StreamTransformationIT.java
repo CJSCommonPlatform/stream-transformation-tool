@@ -22,17 +22,21 @@ import org.junit.Test;
 public class StreamTransformationIT {
 
     private static final Boolean ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY = false;
+    private static final long STREAMS_PROCESSED_COUNT_STEP_INFO = 100;
     private static final int WILDFLY_TIMEOUT_IN_SECONDS = 60;
+    private static final String MEMORY_OPTIONS = "2048Mb";
 
     private UUID STREAM_ID = UUID.randomUUID();
 
-    private SwarmStarterUtil swarmStarterUtil = new SwarmStarterUtil();
+    private SwarmStarterUtil swarmStarterUtil;
 
     private DatabaseUtils databaseUtils;
 
     @Before
     public void setUp() throws Exception {
+        swarmStarterUtil = new SwarmStarterUtil();
         databaseUtils = new DatabaseUtils();
+        databaseUtils.dropAndUpdateLiquibase();
     }
 
     @After

@@ -23,15 +23,21 @@ public class StreamTransformationMoveIT {
 
     private static final Boolean ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY = false;
 
+    private static final long STREAMS_PROCESSED_COUNT_STEP_INFO = 100;
+
     private static final int WILDFLY_TIMEOUT_IN_SECONDS = 60;
 
-    private final SwarmStarterUtil swarmStarterUtil = new SwarmStarterUtil();
+    private static final String MEMORY_OPTIONS = "2048Mb";
+
+    private SwarmStarterUtil swarmStarterUtil;
 
     private DatabaseUtils databaseUtils;
 
     @Before
     public void setUp() throws Exception {
+        swarmStarterUtil = new SwarmStarterUtil();
         databaseUtils = new DatabaseUtils();
+        databaseUtils.dropAndUpdateLiquibase();
     }
 
     @After

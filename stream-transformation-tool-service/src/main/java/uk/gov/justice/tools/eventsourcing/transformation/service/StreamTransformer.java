@@ -45,7 +45,7 @@ public class StreamTransformer {
 
             eventSourceTransformation.clearStream(streamId);
 
-            logger.info("Transforming events on stream {}", streamId);
+            logger.debug("Transforming events on stream {}", streamId);
 
             final Stream<JsonEnvelope> transformedEventStream = streamTransformerUtil.transform(events, transformations);
 

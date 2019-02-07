@@ -12,26 +12,32 @@ import static org.mockito.Mockito.when;
 import uk.gov.justice.event.tool.task.StreamTransformationTask;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.EventRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
-import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStreamJdbcRepository;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
 
+import java.lang.reflect.Field;
 import java.util.UUID;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import javax.enterprise.concurrent.ManagedExecutorService;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 
 @RunWith(MockitoJUnitRunner.class)
 public class StartTransformationTest {
+
+    private Field streamsProcessedCountStepInfo;
+    private Field streamsDoneCount;
 
     @Mock
     private ManagedExecutorService executorService;
@@ -60,10 +66,20 @@ public class StartTransformationTest {
     @Mock
     private Logger logger;
 
+    @Mock
+    private StopWatch stopWatch;
+
     @Before
-    public void setup() {
+    public void setup() throws NoSuchFieldException, IllegalAccessException {
         when(passesDeterminer.getPassValue()).thenReturn(1).thenReturn(2);
         when(passesDeterminer.isLastElementInPasses()).thenReturn(true);
+        streamsProcessedCountStepInfo = startTransformation.getClass().getDeclaredField("streamCountReportingInterval");
+        streamsProcessedCountStepInfo.setAccessible(true);
+        streamsProcessedCountStepInfo.set(startTransformation, 10);
+
+        streamsDoneCount = startTransformation.getClass().getDeclaredField("processedStreamsCount");
+        streamsDoneCount.setAccessible(true);
+        streamsDoneCount.set(startTransformation, new AtomicInteger(0));
     }
 
     @Test
@@ -106,7 +122,7 @@ public class StartTransformationTest {
     }
 
     @Test
-    public void shouldRemoveFinishedTaskForAllPasses(){
+    public void shouldRemoveFinishedTaskForAllPasses() {
 
         final UUID streamId_1 = randomUUID();
         final UUID streamId_2 = randomUUID();
@@ -115,7 +131,7 @@ public class StartTransformationTest {
         when(eventRepository.getAllActiveStreamIds())
                 .thenReturn(Stream.of(streamId_1, streamId_2))
                 .thenReturn(Stream.of(streamId_3));
-        
+
         when(passesDeterminer.getPassValue()).thenReturn(1).thenReturn(2);
         when(passesDeterminer.isLastElementInPasses()).thenReturn(false).thenReturn(true);
 
@@ -144,4 +160,83 @@ public class StartTransformationTest {
         assertThat(startTransformation.outstandingTasks.size(), is(0));
     }
 
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowExceptionWhenstreamsProcessedCountStepInfoIsNull() throws Exception {
+        streamsProcessedCountStepInfo.set(startTransformation, null);
+        startTransformation.go();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowExceptionWhenstreamsProcessedCountStepInfoIsZero() throws Exception {
+        streamsProcessedCountStepInfo.set(startTransformation, 0);
+        startTransformation.go();
+    }
+
+    @Test
+    public void shouldNotThrowExceptionWhenstreamsProcessedCountStepInfoIsNotZero() throws Exception {
+        final UUID streamId_1 = randomUUID();
+        final UUID streamId_2 = randomUUID();
+        final UUID streamId_3 = randomUUID();
+
+        when(eventRepository.getAllActiveStreamIds())
+                .thenReturn(Stream.of(streamId_1, streamId_2))
+                .thenReturn(Stream.of(streamId_3));
+
+        when(passesDeterminer.getPassValue()).thenReturn(1).thenReturn(2);
+        when(passesDeterminer.isLastElementInPasses()).thenReturn(false).thenReturn(true);
+
+        final Future future = mock(Future.class);
+        final Future future2 = mock(Future.class);
+        final Future future3 = mock(Future.class);
+        when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(future).thenReturn(future2).thenReturn(future3);
+
+        streamsProcessedCountStepInfo.set(startTransformation, 10);
+        startTransformation.go();
+    }
+
+    @Test
+    public void shouldNotLogOutputBasedOnStreamsProcessedCountStepInfoWhenStreamDoneIsZero() throws IllegalArgumentException, IllegalAccessException {
+        final UUID streamId_1 = randomUUID();
+        final UUID streamId_2 = randomUUID();
+        final UUID streamId_3 = randomUUID();
+
+        when(eventRepository.getAllActiveStreamIds())
+                .thenReturn(Stream.of(streamId_1, streamId_2))
+                .thenReturn(Stream.of(streamId_3));
+
+        when(passesDeterminer.getPassValue()).thenReturn(1).thenReturn(2);
+        when(passesDeterminer.isLastElementInPasses()).thenReturn(false).thenReturn(true);
+
+        final Future future = mock(Future.class);
+        final Future future2 = mock(Future.class);
+        final Future future3 = mock(Future.class);
+        when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(future).thenReturn(future2).thenReturn(future3);
+
+        streamsProcessedCountStepInfo.set(startTransformation, 10);
+        startTransformation.go();
+    }
+
+    @Test
+    public void shouldLogOutputBasedOnStreamsProcessedCountStepInfoWhenStreamDoneIsNotZero() throws IllegalArgumentException, IllegalAccessException {
+        final UUID streamId_1 = randomUUID();
+        final UUID streamId_2 = randomUUID();
+        final UUID streamId_3 = randomUUID();
+        streamsDoneCount.set(startTransformation, new AtomicInteger(2));
+        when(eventRepository.getAllActiveStreamIds())
+                .thenReturn(Stream.of(streamId_1, streamId_2))
+                .thenReturn(Stream.of(streamId_3));
+
+        when(passesDeterminer.getPassValue()).thenReturn(1).thenReturn(2);
+        when(passesDeterminer.isLastElementInPasses()).thenReturn(false).thenReturn(true);
+
+        final Future future = mock(Future.class);
+        final Future future2 = mock(Future.class);
+        final Future future3 = mock(Future.class);
+        when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(future).thenReturn(future2).thenReturn(future3);
+        when(stopWatch.getTime()).thenReturn(12222222l);
+        streamsProcessedCountStepInfo.set(startTransformation, 2);
+        startTransformation.go();
+        verify(logger).info("Pass 1 - Streams count: 4 - time(ms): 12222222");
+    }
 }
