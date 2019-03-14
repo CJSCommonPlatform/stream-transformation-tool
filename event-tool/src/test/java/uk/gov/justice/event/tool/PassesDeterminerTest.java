@@ -37,5 +37,6 @@ public class PassesDeterminerTest {
         assertThat(passesDeterminer.getPassValue(), is(1));
         assertThat(passesDeterminer.getNextPassValue(), is(2));
         assertThat(passesDeterminer.getNextPassValue(), is(3));
+        assertThat(passesDeterminer.passCount(), is(0));
     }
 }

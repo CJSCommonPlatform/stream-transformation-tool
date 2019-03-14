@@ -1,12 +1,15 @@
 package uk.gov.justice.event.tool;
 
+import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import uk.gov.justice.event.tool.task.StreamTransformationTask;
@@ -14,6 +17,7 @@ import uk.gov.justice.services.eventsourcing.repository.jdbc.EventRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
+import uk.gov.justice.tools.eventsourcing.transformation.service.LinkedEventStreamTransformationService;
 
 import java.lang.reflect.Field;
 import java.util.UUID;
@@ -29,7 +33,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 
@@ -47,6 +50,9 @@ public class StartTransformationTest {
 
     @Mock
     private EventStreamTransformationService eventStreamTransformationService;
+
+    @Mock
+    private LinkedEventStreamTransformationService linkedEventStreamTransformationService;
 
     @InjectMocks
     private StartTransformation startTransformation;
@@ -89,12 +95,24 @@ public class StartTransformationTest {
         final UUID streamId_2 = randomUUID();
 
         when(eventRepository.getAllActiveStreamIds()).thenReturn(Stream.of(streamId_1, streamId_2));
-        when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(mock(Future.class));
+        final Future future = mock(Future.class);
+        final Future future2 = mock(Future.class);
+
+        when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(future).thenReturn(future2);
 
         startTransformation.go();
 
         assertThat(startTransformation.outstandingTasks.size(), is(2));
         assertTrue(startTransformation.allTasksCreated);
+
+        when(passesDeterminer.isLastElementInPasses()).thenReturn(true);
+        startTransformation.taskDone(future, null, null, null);
+        startTransformation.taskDone(future2, null, null, null);
+
+        assertThat(startTransformation.outstandingTasks.size(), is(0));
+
+        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
+        verify(linkedEventStreamTransformationService).populateLinkedEvents();
     }
 
     @Test
@@ -117,8 +135,14 @@ public class StartTransformationTest {
         startTransformation.taskAborted(future, null, null, mock(Throwable.class));
         assertThat(startTransformation.outstandingTasks.size(), is(1));
 
+        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
+        verify(linkedEventStreamTransformationService).populateLinkedEvents();
+
         startTransformation.taskDone(future2, null, null, null);
         assertThat(startTransformation.outstandingTasks.size(), is(0));
+
+        verify(linkedEventStreamTransformationService,times(2)).truncateLinkedEvents();
+        verify(linkedEventStreamTransformationService,times(2)).populateLinkedEvents();
     }
 
     @Test
@@ -152,12 +176,16 @@ public class StartTransformationTest {
         assertThat(startTransformation.outstandingTasks.size(), is(2));
 
         startTransformation.taskAborted(future, null, null, mock(Throwable.class));
+
         assertThat(startTransformation.outstandingTasks.size(), is(1));
+        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
+        verify(linkedEventStreamTransformationService).populateLinkedEvents();
 
         startTransformation.taskDone(future2, null, null, null);
 
-        startTransformation.taskDone(future3, null, null, null);
-        assertThat(startTransformation.outstandingTasks.size(), is(0));
+        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
+        verify(linkedEventStreamTransformationService).populateLinkedEvents();
+
     }
 
 
@@ -165,12 +193,18 @@ public class StartTransformationTest {
     public void shouldThrowExceptionWhenstreamsProcessedCountStepInfoIsNull() throws Exception {
         streamsProcessedCountStepInfo.set(startTransformation, null);
         startTransformation.go();
+
+        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
+        verify(linkedEventStreamTransformationService).populateLinkedEvents();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowExceptionWhenstreamsProcessedCountStepInfoIsZero() throws Exception {
         streamsProcessedCountStepInfo.set(startTransformation, 0);
         startTransformation.go();
+
+        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
+        verify(linkedEventStreamTransformationService).populateLinkedEvents();
     }
 
     @Test
@@ -186,35 +220,20 @@ public class StartTransformationTest {
         when(passesDeterminer.getPassValue()).thenReturn(1).thenReturn(2);
         when(passesDeterminer.isLastElementInPasses()).thenReturn(false).thenReturn(true);
 
-        final Future future = mock(Future.class);
+        final Future future1 = mock(Future.class);
         final Future future2 = mock(Future.class);
         final Future future3 = mock(Future.class);
-        when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(future).thenReturn(future2).thenReturn(future3);
+        when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(future1).thenReturn(future2).thenReturn(future3);
 
         streamsProcessedCountStepInfo.set(startTransformation, 10);
         startTransformation.go();
-    }
+        startTransformation.taskDone(future1, null, null, null);
+        startTransformation.taskDone(future2, null, null, null);
+        startTransformation.taskDone(future3, null, null, null);
+        assertThat(startTransformation.outstandingTasks.size(), is(0));
 
-    @Test
-    public void shouldNotLogOutputBasedOnStreamsProcessedCountStepInfoWhenStreamDoneIsZero() throws IllegalArgumentException, IllegalAccessException {
-        final UUID streamId_1 = randomUUID();
-        final UUID streamId_2 = randomUUID();
-        final UUID streamId_3 = randomUUID();
-
-        when(eventRepository.getAllActiveStreamIds())
-                .thenReturn(Stream.of(streamId_1, streamId_2))
-                .thenReturn(Stream.of(streamId_3));
-
-        when(passesDeterminer.getPassValue()).thenReturn(1).thenReturn(2);
-        when(passesDeterminer.isLastElementInPasses()).thenReturn(false).thenReturn(true);
-
-        final Future future = mock(Future.class);
-        final Future future2 = mock(Future.class);
-        final Future future3 = mock(Future.class);
-        when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(future).thenReturn(future2).thenReturn(future3);
-
-        streamsProcessedCountStepInfo.set(startTransformation, 10);
-        startTransformation.go();
+        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
+        verify(linkedEventStreamTransformationService).populateLinkedEvents();
     }
 
     @Test
@@ -230,13 +249,22 @@ public class StartTransformationTest {
         when(passesDeterminer.getPassValue()).thenReturn(1).thenReturn(2);
         when(passesDeterminer.isLastElementInPasses()).thenReturn(false).thenReturn(true);
 
-        final Future future = mock(Future.class);
+        final Future future1 = mock(Future.class);
         final Future future2 = mock(Future.class);
         final Future future3 = mock(Future.class);
-        when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(future).thenReturn(future2).thenReturn(future3);
+        when(executorService.submit(any(StreamTransformationTask.class))).thenReturn(future1).thenReturn(future2).thenReturn(future3);
         when(stopWatch.getTime()).thenReturn(12222222l);
         streamsProcessedCountStepInfo.set(startTransformation, 2);
+
         startTransformation.go();
+
         verify(logger).info("Pass 1 - Streams count: 4 - time(ms): 12222222");
+        startTransformation.taskDone(future1, null, null, null);
+        startTransformation.taskDone(future2, null, null, null);
+        startTransformation.taskDone(future3, null, null, null);
+        assertThat(startTransformation.outstandingTasks.size(), is(0));
+
+        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
+        verify(linkedEventStreamTransformationService).populateLinkedEvents();
     }
 }

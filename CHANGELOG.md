@@ -5,6 +5,9 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+## [5.2.0] - 2019-03-20
+- Add support for linked event synch with event log after transformation
+
 ## [5.1.0] - 2018-12-12
 
 ### Fixed

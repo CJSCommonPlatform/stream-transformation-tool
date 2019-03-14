@@ -7,6 +7,7 @@ import static org.wildfly.swarm.bootstrap.Main.MAIN_PROCESS_FILE;
 import uk.gov.justice.event.tool.task.StreamTransformationTask;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.EventRepository;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
+import uk.gov.justice.tools.eventsourcing.transformation.service.LinkedEventStreamTransformationService;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +55,10 @@ public class StartTransformation implements ManagedTaskListener {
     @Inject
     private PassesDeterminer passesDeterminer;
 
-    Deque<Future<UUID>> outstandingTasks = new LinkedBlockingDeque<>();
+    @Inject
+    private LinkedEventStreamTransformationService linkedEventStreamTransformationService;
+
+    final Deque<Future<UUID>> outstandingTasks = new LinkedBlockingDeque<>();
 
     boolean allTasksCreated = false;
 
@@ -125,6 +129,7 @@ public class StartTransformation implements ManagedTaskListener {
         logger.error(String.format("Aborted Transformation task: '%s'", throwable.getMessage()));
         removeOutstandingTask(futureTask);
         shutDownIfFinished();
+        truncateAndPopulateLinkedEvents();
     }
 
     private void removeOutstandingTask(final Future<?> futureTask) {
@@ -135,6 +140,7 @@ public class StartTransformation implements ManagedTaskListener {
         if (isTaskFinished()) {
             final boolean isLastElementInPasses = passesDeterminer.isLastElementInPasses();
             if (isLastElementInPasses) {
+                truncateAndPopulateLinkedEvents();
                 shutdown();
             } else {
                 createTransformationTasks(passesDeterminer.getNextPassValue());
@@ -174,6 +180,17 @@ public class StartTransformation implements ManagedTaskListener {
                 }
             }
         }
+    }
+
+    private void truncateAndPopulateLinkedEvents() {
+
+        logger.info("-------------- Truncating the Linked Events Log after complete transformation --------------");
+
+        linkedEventStreamTransformationService.truncateLinkedEvents();
+
+        logger.info("-------------- Populating the Linked Events Log  --------------");
+
+        linkedEventStreamTransformationService.populateLinkedEvents();
     }
 
     private void checkForMainProcessFile() {

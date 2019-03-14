@@ -27,4 +27,10 @@ public class PassesDeterminer {
     public boolean isLastElementInPasses() {
         return eventTransformationRegistry.getPasses().size() == passValue.get();
     }
+
+    public int passCount(){
+       return eventTransformationRegistry.getPasses().size();
+    }
 }
+
+
