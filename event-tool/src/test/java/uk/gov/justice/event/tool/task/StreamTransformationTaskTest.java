@@ -2,6 +2,9 @@ package uk.gov.justice.event.tool.task;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.mockito.Matchers.isNotNull;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.verify;
 
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
@@ -43,4 +46,8 @@ public class StreamTransformationTaskTest {
         assertThat(streamTransformationTask.getManagedTaskListener(), is(transformationListener));
     }
 
+    @Test
+    public void shouldReturnExecutionProperties() {
+        assertThat(streamTransformationTask.getExecutionProperties(),  is(nullValue()));
+    }
 }

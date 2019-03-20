@@ -75,7 +75,7 @@ public class EventStreamTransformationService {
 
             if (action.isTransform()) {
                 final Optional<UUID> newStreamId = eventTransformationStreamIdFilter.getEventTransformationStreamId(eventTransformations, jsonEnvelopeList);
-                if (newStreamId.isPresent()) {
+                if (isNewStreamId(newStreamId, originalStreamId)) {
                     streamMover.transformAndMoveStream(originalStreamId, eventTransformations, newStreamId.get());
                 } else {
                     streamTransformer.transformStream(originalStreamId, eventTransformations);
@@ -100,6 +100,11 @@ public class EventStreamTransformationService {
         } catch (final EventStreamException e) {
             logger.error(format("Failed to backup stream %s", originalStreamId), e);
         }
+    }
+
+    private boolean isNewStreamId(final Optional<UUID> newStreamId,
+                                  final UUID originalStreamId) {
+        return newStreamId.isPresent() && !newStreamId.get().equals(originalStreamId);
     }
 
     private Set<EventTransformation> getEventTransformations(final int pass) {

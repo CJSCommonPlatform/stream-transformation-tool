@@ -1,5 +1,6 @@
 package uk.gov.justice.framework.tools.transformation;
 
+import static java.util.Optional.of;
 import static uk.gov.justice.services.test.utils.core.messaging.JsonEnvelopeBuilder.envelope;
 import static uk.gov.justice.services.test.utils.core.messaging.MetadataBuilderFactory.metadataWithRandomUUID;
 
@@ -15,7 +16,6 @@ public class EventLogBuilder {
     private EventLogBuilder() {
 
     }
-
     public static Event eventLogFrom(
             final String eventName,
             final Long sequenceId,
@@ -45,5 +45,38 @@ public class EventLogBuilder {
                 metadata.asJsonObject().toString(),
                 payload,
                 createdAt);
+    }
+
+    public static Event eventLogFrom(
+            final String eventName,
+            final Long sequenceId,
+            final UUID streamId,
+            final ZonedDateTime createdAt,
+            final long eventNumber) {
+        final JsonEnvelope jsonEnvelope = envelope()
+                .with(metadataWithRandomUUID(eventName)
+                        .createdAt(createdAt)
+                        .withVersion(sequenceId)
+                        .withStreamId(streamId)
+                        .withSource("sample")
+                )
+                .withPayloadOf("test", "a string")
+                .build();
+
+        final Metadata metadata = jsonEnvelope.metadata();
+        final UUID id = metadata.id();
+
+        final String name = metadata.name();
+        final String payload = jsonEnvelope.payloadAsJsonObject().toString();
+
+        return new Event(
+                id,
+                streamId,
+                sequenceId,
+                name,
+                metadata.asJsonObject().toString(),
+                payload,
+                createdAt,
+                of(eventNumber));
     }
 }

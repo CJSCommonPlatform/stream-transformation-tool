@@ -22,13 +22,12 @@
 
     <properties>
         <cpp.repo.name>stream-transformation-tool</cpp.repo.name>
-
-        <framework.version>5.0.4</framework.version>
-        <event-store.version>1.0.4</event-store.version>
+        <framework-api.version>3.1.1</framework-api.version>
+        <framework.version>5.1.2</framework.version>
+        <event-store.version>1.1.7</event-store.version>
         <common-bom.version>1.28.0</common-bom.version>
         <utilities.version>1.16.1</utilities.version>
         <test-utils.version>1.18.1</test-utils.version>
-
         <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
         <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>
         <junit-dataprovider.version>1.13.1</junit-dataprovider.version>
