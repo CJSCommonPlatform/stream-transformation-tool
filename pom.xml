@@ -1,7 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -28,7 +25,7 @@
         <common-bom.version>1.28.0</common-bom.version>
         <utilities.version>1.16.1</utilities.version>
         <test-utils.version>1.18.1</test-utils.version>
-        <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
+        <thorntail.version>2.1.0.Final</thorntail.version>
         <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>
         <junit-dataprovider.version>1.13.1</junit-dataprovider.version>
         
@@ -73,9 +70,9 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.wildfly.swarm</groupId>
+                <groupId>io.thorntail</groupId>
                 <artifactId>bom-all</artifactId>
-                <version>${wildfly.swarm.version}</version>
+                <version>${thorntail.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
