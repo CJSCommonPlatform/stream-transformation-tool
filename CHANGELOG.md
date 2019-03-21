@@ -5,6 +5,11 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+## [5.2.1] - 2019-03-21
+### Changed
+- Update event-store to 1.1.8
+- Update utilities to 1.16.2 
+
 ## [5.2.0] - 2019-03-20
 - Add support for linked event synch with event log after transformation
 
