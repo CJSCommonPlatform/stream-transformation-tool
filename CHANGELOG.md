@@ -5,6 +5,9 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+### Changed
+- Update event-store to 1.1.9
+
 ## [5.2.1] - 2019-03-21
 ### Changed
 - Update event-store to 1.1.8
