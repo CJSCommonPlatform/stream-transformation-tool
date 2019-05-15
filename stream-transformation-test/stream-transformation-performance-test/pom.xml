@@ -35,15 +35,15 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <systemPropertyVariables>
-                        <generateTestData>true</generateTestData>
+                        <generateTestData>false</generateTestData>
                         <eventsStreamCount>10</eventsStreamCount>
                         <eventsPerStreamCount>10</eventsPerStreamCount>
-                        <databaseEventStreamCount>10</databaseEventStreamCount>
-                        <databaseEventLogCount>100</databaseEventLogCount>
+                        <databaseEventStreamCount>58995</databaseEventStreamCount>
+                        <databaseEventLogCount>508872</databaseEventLogCount>
                         <runTest>true</runTest>
                         <streamCountReportingInterval>2</streamCountReportingInterval>
                         <generatedTestDataReportingInterval>10</generatedTestDataReportingInterval>
-                        <debug>false</debug>
+                        <debug>true</debug>
                         <memoryOptions>2048</memoryOptions>
                     </systemPropertyVariables>
                     <argLine></argLine>

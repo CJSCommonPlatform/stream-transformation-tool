@@ -40,15 +40,15 @@ public class SwarmStarterUtil {
     private String createCommandToExecuteTransformationTool(final boolean enableRemoteDebugging,
                                                             final String streamCountReportingIntervalParameter,
                                                             final String memoryParmeter) throws IOException {
-        final String eventToolJarLocation = getResource("event-tool*.jar");
-        final String streamJarLocation = getResource("stream-transformations*.jar");
+        final String eventToolJarLocation = getResource("event-tool-5.2.0-SNAPSHOT-thorntail.jar");
+        final String streamJarLocation = getResource("sjp-domain-transformation-defendant-updated-date-1.0.103.jar");
         final String standaloneDSLocation = getResource("standalone-ds.xml");
         final String mainProcessFilePath = Paths.get(File.createTempFile("mainProcessFile", "tmp").toURI()).toAbsolutePath().toString();
 
         String debug = "";
 
         if (enableRemoteDebugging) {
-            debug = "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005";
+            debug = "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5013";
         }
 
         return commandFrom(debug, mainProcessFilePath, streamJarLocation, eventToolJarLocation, standaloneDSLocation, streamCountReportingIntervalParameter, memoryParmeter);

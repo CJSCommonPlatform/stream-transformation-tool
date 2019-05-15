@@ -12,7 +12,7 @@ import org.postgresql.ds.PGSimpleDataSource;
 
 public class LiquibaseUtil {
 
-    private static final String DATABASE_NAME = "frameworkeventstore";
+    private static final String DATABASE_NAME = "sjpeventstore";
 
     private TestProperties testProperties = new TestProperties("test.properties");
 

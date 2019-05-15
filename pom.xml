@@ -21,7 +21,7 @@
         <cpp.repo.name>stream-transformation-tool</cpp.repo.name>
         <framework-api.version>3.1.1</framework-api.version>
         <framework.version>5.1.2</framework.version>
-        <event-store.version>1.1.8</event-store.version>
+        <event-store.version>9.9.9</event-store.version>
         <common-bom.version>1.28.0</common-bom.version>
         <utilities.version>1.16.2</utilities.version>
         <test-utils.version>1.18.1</test-utils.version>
@@ -123,6 +123,7 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 

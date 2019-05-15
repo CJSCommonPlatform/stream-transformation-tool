@@ -132,13 +132,12 @@
                                statistics-enabled="true" use-java-context="true" use-ccm="true">
                     <driver>postgres</driver>
                     <xa-datasource-property name="ServerName">localhost</xa-datasource-property>
-                    <xa-datasource-property name="PortNumber">5432</xa-datasource-property>
-                    <xa-datasource-property name="DatabaseName">frameworkeventstore
-                    </xa-datasource-property>
-                    <xa-datasource-property name="ApplicationName">replay-tool
-                    </xa-datasource-property>
+                    <xa-datasource-property name="PortNumber">5430</xa-datasource-property>
+                    <xa-datasource-property name="DatabaseName">sjpeventstore</xa-datasource-property>
+                    <xa-datasource-property name="ApplicationName">sjp</xa-datasource-property>
                     <xa-datasource-property name="CurrentSchema">public</xa-datasource-property>
                     <xa-datasource-property name="LogLevel">0</xa-datasource-property>
+                    <xa-datasource-property name="autoCommitTxn">true</xa-datasource-property>
                     <xa-pool>
                         <min-pool-size>1</min-pool-size>
                         <initial-pool-size>30</initial-pool-size>
@@ -153,8 +152,8 @@
                         <track-statements>true</track-statements>
                     </statement>
                     <security>
-                        <user-name>framework</user-name>
-                        <password>framework</password>
+                        <user-name>postgres</user-name>
+                        <password>postgresql_su</password>
                     </security>
                     <validation>
                         <exception-sorter
@@ -164,21 +163,6 @@
                     </validation>
                 </xa-datasource>
 
-                <xa-datasource jndi-name="java:jboss/datasources/ExampleDS" pool-name="ExampleDS">
-                    <driver>postgres</driver>
-                    <xa-datasource-property name="URL">
-                        jdbc:postgresql://localhost:5432/frameworkeventstore
-                    </xa-datasource-property>
-                    <xa-pool>
-                        <min-pool-size>3</min-pool-size>
-                        <max-pool-size>20</max-pool-size>
-                        <prefill>true</prefill>
-                    </xa-pool>
-                    <security>
-                        <user-name>framework</user-name>
-                        <password>framework</password>
-                    </security>
-                </xa-datasource>
 
                 <drivers>
                     <driver name="postgres" module="org.postgresql">
