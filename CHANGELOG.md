@@ -4,6 +4,7 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+- Reverting thorntail container related changes and using swarm instead
 
 ### Changed
 - Update event-store to 1.1.9
