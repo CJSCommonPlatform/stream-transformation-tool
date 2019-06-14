@@ -19,12 +19,12 @@
         </dependency>
 
         <dependency>
-            <groupId>io.thorntail</groupId>
+            <groupId>org.wildfly.swarm</groupId>
             <artifactId>spi</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>io.thorntail</groupId>
+            <groupId>org.wildfly.swarm</groupId>
             <artifactId>undertow</artifactId>
         </dependency>
 

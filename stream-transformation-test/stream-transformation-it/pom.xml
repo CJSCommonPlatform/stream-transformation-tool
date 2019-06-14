@@ -114,7 +114,7 @@
                             <groupId>uk.gov.justice</groupId>
                             <version>${project.version}</version>
                             <type>jar</type>
-                            <classifier>thorntail</classifier>
+                            <classifier>swarm</classifier>
                             <overWrite>true</overWrite>
                             <outputDirectory>${project.basedir}/target/test-classes
                             </outputDirectory>
