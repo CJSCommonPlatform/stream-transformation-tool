@@ -110,6 +110,15 @@
                             </outputDirectory>
                         </artifactItem>
                         <artifactItem>
+                            <groupId>uk.gov.justice</groupId>
+                            <artifactId>stream-transformation-tool-anonymise</artifactId>
+                            <version>${project.version}</version>
+                            <type>jar</type>
+                            <overWrite>true</overWrite>
+                            <outputDirectory>${project.basedir}/target/test-classes
+                            </outputDirectory>
+                        </artifactItem>
+                        <artifactItem>
                             <artifactId>event-tool</artifactId>
                             <groupId>uk.gov.justice</groupId>
                             <version>${project.version}</version>

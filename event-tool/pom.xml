@@ -27,6 +27,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>uk.gov.justice</groupId>
+            <artifactId>stream-transformation-tool-anonymise</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!--Wildfly Swarm-->
         <dependency>
             <groupId>org.wildfly.swarm</groupId>

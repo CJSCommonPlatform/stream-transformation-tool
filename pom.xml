@@ -1,4 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -28,7 +31,7 @@
         <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
         <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>
         <junit-dataprovider.version>1.13.1</junit-dataprovider.version>
-        
+
     </properties>
 
     <modules>
@@ -36,6 +39,8 @@
         <module>stream-transformation-tool-api</module>
         <module>stream-transformation-tool-service</module>
         <module>stream-transformation-tool-fraction</module>
+        <module>stream-transformation-tool-anonymise</module>
+        <!-- this module needs to be built last as it copies artefacts from modules above -->
         <module>stream-transformation-test</module>
     </modules>
 

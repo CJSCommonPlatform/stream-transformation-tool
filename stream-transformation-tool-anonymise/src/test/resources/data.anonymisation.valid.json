@@ -1,0 +1,11 @@
+{
+  "events": [
+    {
+      "eventName": "valid-event",
+      "fieldsToBeIgnored": [
+        "attributeAJsonPath",
+        "attributeBJsonPath"
+      ]
+    }
+  ]
+}
