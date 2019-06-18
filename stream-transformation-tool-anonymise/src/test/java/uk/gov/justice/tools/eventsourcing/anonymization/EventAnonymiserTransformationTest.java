@@ -57,7 +57,7 @@ public class EventAnonymiserTransformationTest {
         when(eventAnonymiserService.anonymiseObjectPayload(originalPayload, TEST_EVENT_NAME)).thenReturn(anonymisedPayload);
 
         final JsonEnvelope event = buildEnvelope(originalPayload);
-        Stream<JsonEnvelope> jsonEnvelopeStream = eventAnonymiserTransformation.apply(event);
+        final Stream<JsonEnvelope> jsonEnvelopeStream = eventAnonymiserTransformation.apply(event);
 
         assertThat(jsonEnvelopeStream.findFirst().get().payloadAsJsonObject(), is(anonymisedPayload));
         verify(eventAnonymiserService).anonymiseObjectPayload(originalPayload, TEST_EVENT_NAME);
@@ -72,7 +72,7 @@ public class EventAnonymiserTransformationTest {
     }
 
     private JsonEnvelope buildEnvelope(final JsonObject originalPayload) throws IOException {
-        MetadataBuilder metadataBuilder = metadataBuilderFrom(createObjectBuilder().add("id", randomUUID().toString()).add("name", TEST_EVENT_NAME).build());
+        final MetadataBuilder metadataBuilder = metadataBuilderFrom(createObjectBuilder().add("id", randomUUID().toString()).add("name", TEST_EVENT_NAME).build());
         return envelopeFrom(metadataBuilder.withStreamId(randomUUID()).build(), originalPayload);
     }
 

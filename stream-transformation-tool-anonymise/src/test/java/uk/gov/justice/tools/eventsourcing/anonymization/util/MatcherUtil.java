@@ -15,11 +15,11 @@ public class MatcherUtil {
     private MatcherUtil() {
     }
 
-    public static void assertStringIsAnonymisedButOfSameLength(String actualValue, String expectedValue) {
+    public static void assertStringIsAnonymisedButOfSameLength(final String actualValue, final String expectedValue) {
         assertStringIsAnonymisedButOfSameLength(actualValue, expectedValue, empty());
     }
 
-    public static void assertStringIsAnonymisedButOfSameLength(String actualValue, String expectedValue, Optional<Pattern> optionalPattern) {
+    public static void assertStringIsAnonymisedButOfSameLength(final String actualValue, final String expectedValue, final Optional<Pattern> optionalPattern) {
         assertFalse(actualValue.equalsIgnoreCase(expectedValue));
         assertThat(actualValue.length(), is(expectedValue.length()));
         optionalPattern.ifPresent(op -> assertTrue(op.matcher(actualValue).matches()));

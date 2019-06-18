@@ -10,7 +10,7 @@ public class Events {
     public Events() {
     }
 
-    public Events(List<Event> events) {
+    public Events(final List<Event> events) {
         this.events = events;
     }
 

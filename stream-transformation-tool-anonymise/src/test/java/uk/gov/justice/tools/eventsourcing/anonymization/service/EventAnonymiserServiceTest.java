@@ -94,13 +94,13 @@ public class EventAnonymiserServiceTest {
     }
 
 
-    private JsonObject buildObjectPayload(String payloadFileName) {
-        JsonReader jsonReader = createReader(new StringReader(getFileContentsAsString(payloadFileName)));
+    private JsonObject buildObjectPayload(final String payloadFileName) {
+        final JsonReader jsonReader = createReader(new StringReader(getFileContentsAsString(payloadFileName)));
         return jsonReader.readObject();
     }
 
-    private JsonArray buildArrayPayload(String payloadFileName) {
-        JsonReader jsonReader = createReader(new StringReader(getFileContentsAsString(payloadFileName)));
+    private JsonArray buildArrayPayload(final String payloadFileName) {
+        final JsonReader jsonReader = createReader(new StringReader(getFileContentsAsString(payloadFileName)));
         return jsonReader.readArray();
     }
 }

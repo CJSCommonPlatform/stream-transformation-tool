@@ -25,7 +25,7 @@ public final class FileUtil {
         return new InputStreamReader(fileStream);
     }
 
-    public static InputStream getResourceAsStream(String fileName) {
+    public static InputStream getResourceAsStream(final String fileName) {
         return FileUtil.class.getClassLoader().getResourceAsStream(fileName);
     }
 
@@ -33,7 +33,7 @@ public final class FileUtil {
         return getBufferedReader(getReader(getResourceAsStream(fileName))).lines().collect(Collectors.toList());
     }
 
-    public static List<String> getFilesFromResourceDirectory(String path) {
+    public static List<String> getFilesFromResourceDirectory(final String path) {
         return getFileContentsAsList(path);
     }
 

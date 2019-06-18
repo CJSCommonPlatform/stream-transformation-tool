@@ -12,9 +12,9 @@ public class SchemaValidatorUtil {
     }
 
     public static void validateAgainstSchema(final String schemaFileName, final String jsonString) {
-        String schemaPayload = getFileContentsAsString(schemaFileName);
-        JSONObject rawSchema = new JSONObject(schemaPayload);
-        Schema schema = SchemaLoader.load(rawSchema);
+        final String schemaPayload = getFileContentsAsString(schemaFileName);
+        final JSONObject rawSchema = new JSONObject(schemaPayload);
+        final Schema schema = SchemaLoader.load(rawSchema);
         schema.validate(new JSONObject(jsonString));
     }
 }

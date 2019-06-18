@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 public class SimpleStringGenerator extends Generator<String> {
 
     @Override
-    public String convert(String fieldValue) {
+    public String convert(final String fieldValue) {
         if (null == fieldValue) {
             return null;
         }

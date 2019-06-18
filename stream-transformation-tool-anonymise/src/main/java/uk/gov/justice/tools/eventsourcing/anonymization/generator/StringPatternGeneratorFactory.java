@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 public class StringPatternGeneratorFactory {
 
-    public Generator getGenerator(String value) {
+    public Generator getGenerator(final String value) {
 
         if (valueMatchesPattern(value, UUID_PATTERN)) {
             return new UUIDGenerator();

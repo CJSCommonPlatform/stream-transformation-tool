@@ -41,7 +41,7 @@ public abstract class EventAnonymiserTransformation implements EventTransformati
     @Override
     public Stream<JsonEnvelope> apply(final JsonEnvelope sourceJsonEnvelope) {
 
-        JsonObject transformedPayload = buildTransformedPayload(sourceJsonEnvelope);
+        final JsonObject transformedPayload = buildTransformedPayload(sourceJsonEnvelope);
         final JsonEnvelope transformedEnvelope = envelopeFrom(sourceJsonEnvelope.metadata(), transformedPayload);
         return of(transformedEnvelope);
     }
@@ -51,12 +51,12 @@ public abstract class EventAnonymiserTransformation implements EventTransformati
         // not used
     }
 
-    private JsonObject buildTransformedPayload(JsonEnvelope jsonEnvelope) {
-        String eventName = jsonEnvelope.metadata().name();
-        JsonObject payload = jsonEnvelope.payloadAsJsonObject();
-        LOGGER.info("Original payload: {}", payload);
-        JsonObject transformedPayload = eventAnonymiserService.anonymiseObjectPayload(payload, eventName);
-        LOGGER.info("Transformed payload : {}", transformedPayload);
+    private JsonObject buildTransformedPayload(final JsonEnvelope jsonEnvelope) {
+        final String eventName = jsonEnvelope.metadata().name();
+        final JsonObject payload = jsonEnvelope.payloadAsJsonObject();
+        LOGGER.debug("Original payload: {}", payload);
+        final JsonObject transformedPayload = eventAnonymiserService.anonymiseObjectPayload(payload, eventName);
+        LOGGER.debug("Transformed payload : {}", transformedPayload);
         return transformedPayload;
 
     }

@@ -15,14 +15,14 @@ public class RuleParser {
     private RuleParser() {
     }
 
-    public static Events loadAnonymisationRules(String ruleFileName) {
+    public static Events loadAnonymisationRules(final String ruleFileName) {
 
         try {
             final String ruleFileSchema = "schema/event-anonymisation-schema.json";
             validateAgainstSchema(ruleFileSchema, getFileContentsAsString(ruleFileName));
-            ObjectMapper objectMapper = new ObjectMapper();
+            final ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(getResourceAsStream(ruleFileName), Events.class);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new ValidationException("Error processing json anonymisation rule file: " + ruleFileName, e);
         }
     }

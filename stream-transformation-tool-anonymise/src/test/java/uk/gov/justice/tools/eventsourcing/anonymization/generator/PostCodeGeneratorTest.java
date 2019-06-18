@@ -10,7 +10,7 @@ public class PostCodeGeneratorTest {
 
     @Test
     public void testPostCodeAnonymisation() {
-        PostCodeGenerator generator = new PostCodeGenerator();
+        final PostCodeGenerator generator = new PostCodeGenerator();
         assertStringIsAnonymisedButOfSameLength(generator.convert("M11AE"), "A1AAA", of(POSTCODE_PATTERN));
         assertStringIsAnonymisedButOfSameLength(generator.convert("M1 1AE"), "A1 AAA", of(POSTCODE_PATTERN));
         assertStringIsAnonymisedButOfSameLength(generator.convert("CR05QX"), "A1 AAA", of(POSTCODE_PATTERN));

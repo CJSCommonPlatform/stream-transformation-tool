@@ -12,7 +12,7 @@ public class Event {
     public Event() {
     }
 
-    public Event(String eventName, List<String> fieldsToBeIgnored) {
+    public Event(final String eventName, final List<String> fieldsToBeIgnored) {
         this.eventName = eventName;
         this.fieldsToBeIgnored = fieldsToBeIgnored;
     }
