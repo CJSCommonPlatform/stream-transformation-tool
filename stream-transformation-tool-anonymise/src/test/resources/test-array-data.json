@@ -1,0 +1,18 @@
+[
+  "abc",
+  1,
+  true,
+  {
+    "stringAttributeAnonymise": "abcdef",
+    "stringAttributeDoNotAnonymise": "mnopqr",
+    "attributeStringEmail": "test123@mail.com",
+    "attributeStringNiNumber": "SC208978A"
+  },
+  [
+    1,
+    2,
+    3
+  ],
+  "test2345@mail.com",
+  "SC208979B"
+]

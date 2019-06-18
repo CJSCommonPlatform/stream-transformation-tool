@@ -5,6 +5,7 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 - Reverting thorntail container related changes and using swarm instead
+- Added a module to support anonymisation of events (currently works with only active streams).  Also, list of string patterns used to apply anonymisation will be expanded
 
 ### Changed
 - Update event-store to 1.1.9

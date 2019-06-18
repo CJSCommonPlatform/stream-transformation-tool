@@ -42,6 +42,7 @@ public class SwarmStarterUtil {
                                                             final String memoryParmeter) throws IOException {
         final String eventToolJarLocation = getResource("event-tool*.jar");
         final String streamJarLocation = getResource("stream-transformations*.jar");
+        final String anonymiseJarLocation = getResource("stream-transformation-tool-anonymise*.jar");
         final String standaloneDSLocation = getResource("standalone-ds.xml");
         final String mainProcessFilePath = Paths.get(File.createTempFile("mainProcessFile", "tmp").toURI()).toAbsolutePath().toString();
 
@@ -51,21 +52,23 @@ public class SwarmStarterUtil {
             debug = "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005";
         }
 
-        return commandFrom(debug, mainProcessFilePath, streamJarLocation, eventToolJarLocation, standaloneDSLocation, streamCountReportingIntervalParameter, memoryParmeter);
+        return commandFrom(debug, mainProcessFilePath, streamJarLocation, eventToolJarLocation, anonymiseJarLocation, standaloneDSLocation, streamCountReportingIntervalParameter, memoryParmeter);
     }
 
     private String commandFrom(final String debug,
                                final String mainProcessFilePath,
                                final String streamJarLocation,
                                final String eventToolJarLocation,
+                               final String anonymiseJarLocation,
                                final String standaloneDSLocation,
                                final String streamCountReportingIntervalParameter,
                                final String memoryParmeter) throws IOException {
-        return format("java %s -jar -Dorg.wildfly.swarm.mainProcessFile=%s -Devent.transformation.jar=%s %s -c %s %s %s",
+        return format("java %s -jar -Dorg.wildfly.swarm.mainProcessFile=%s -Devent.transformation.jar=%s %s %s -c %s %s %s",
                 debug,
                 mainProcessFilePath,
                 streamJarLocation,
                 eventToolJarLocation,
+                anonymiseJarLocation,
                 standaloneDSLocation,
                 streamCountReportingIntervalParameter,
                 memoryParmeter);

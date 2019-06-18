@@ -1,0 +1,29 @@
+{
+  "events": [
+    {
+      "eventName": "test-object-event",
+      "fieldsToBeIgnored": [
+        "$.example.attributeString",
+        "$.example.attributeArrayComplex[*].arrayAttributeString"
+      ]
+    },
+    {
+      "eventName": "test-array-event",
+      "fieldsToBeIgnored": [
+        "$.[*].stringAttributeDoNotAnonymise"
+      ]
+    },
+    {
+      "eventName": "test-object-ignore-all-event",
+      "fieldsToBeIgnored": [
+        "$"
+      ]
+    },
+    {
+      "eventName": "test-array-ignore-all-event",
+      "fieldsToBeIgnored": [
+        "$.[*]"
+      ]
+    }
+  ]
+}

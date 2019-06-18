@@ -1,0 +1,12 @@
+{
+  "events": [
+    {
+      "eventName": "invalid-event",
+      "fieldsToBeIgnored": {
+        "attributeA": [
+          "anonymisedString"
+        ]
+      }
+    }
+  ]
+}

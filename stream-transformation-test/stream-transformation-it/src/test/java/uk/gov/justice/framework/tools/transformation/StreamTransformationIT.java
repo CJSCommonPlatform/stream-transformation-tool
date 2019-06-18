@@ -23,9 +23,9 @@ import org.junit.Test;
 public class StreamTransformationIT {
     private static final long STREAM_COUNT_REPORTING_INTERVAL = 10L;
     private static final String MEMORY_OPTIONS_PARAMETER = "2048M";
-
     private static final Boolean ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY = false;
     private static final int WILDFLY_TIMEOUT_IN_SECONDS = 60;
+
     private UUID STREAM_ID = UUID.randomUUID();
 
     private SwarmStarterUtil swarmStarterUtil;
@@ -287,6 +287,8 @@ public class StreamTransformationIT {
             }
         });
     }
+
+
 
     private boolean clonedStreamAvailableAndActive() {
         final Optional<Event> matchingClonedEvent = databaseUtils.getEventLogJdbcRepository().findAll()
