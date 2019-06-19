@@ -4,6 +4,7 @@ import static uk.gov.justice.tools.eventsourcing.anonymization.constants.StringP
 import static uk.gov.justice.tools.eventsourcing.anonymization.constants.StringPattern.DATE_TIME_PATTERN;
 import static uk.gov.justice.tools.eventsourcing.anonymization.constants.StringPattern.EMAIL_PATTERN;
 import static uk.gov.justice.tools.eventsourcing.anonymization.constants.StringPattern.NI_NUMBER_PATTERN;
+import static uk.gov.justice.tools.eventsourcing.anonymization.constants.StringPattern.PHONE_NUMBER_PATTERN;
 import static uk.gov.justice.tools.eventsourcing.anonymization.constants.StringPattern.POSTCODE_PATTERN;
 import static uk.gov.justice.tools.eventsourcing.anonymization.constants.StringPattern.UUID_PATTERN;
 
@@ -35,6 +36,10 @@ public class StringPatternGeneratorFactory {
 
         if (valueMatchesPattern(value, POSTCODE_PATTERN)) {
             return new PostCodeGenerator();
+        }
+
+        if (valueMatchesPattern(value, PHONE_NUMBER_PATTERN)) {
+            return new PhoneNumberGenerator();
         }
 
         return new SimpleStringGenerator();

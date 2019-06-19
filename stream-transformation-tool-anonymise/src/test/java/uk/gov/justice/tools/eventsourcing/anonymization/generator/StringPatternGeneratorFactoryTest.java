@@ -58,4 +58,9 @@ public class StringPatternGeneratorFactoryTest {
         assertThat(factory.getGenerator("SC768978A"), instanceOf(NINumberGenerator.class));
     }
 
+    @Test
+    public void shouldReturnPhoneNumberStringGenerator() {
+        assertThat(factory.getGenerator("0123878732"), instanceOf(PhoneNumberGenerator.class));
+    }
+
 }

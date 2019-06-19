@@ -31,6 +31,7 @@
         <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
         <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>
         <junit-dataprovider.version>1.13.1</junit-dataprovider.version>
+        <mifmif-generex.version>1.0.2</mifmif-generex.version>
 
     </properties>
 
