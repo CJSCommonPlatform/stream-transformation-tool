@@ -2,6 +2,7 @@ package uk.gov.justice.framework.tools.transformation;
 
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
+import static javax.json.Json.createReader;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -18,7 +19,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import javax.json.Json;
 import javax.json.JsonObject;
 
 import org.junit.Before;
@@ -30,9 +30,9 @@ public class StreamAnonymisationTransformationIT {
     private static final long STREAM_COUNT_REPORTING_INTERVAL = 10L;
     private static final String MEMORY_OPTIONS_PARAMETER = "2048M";
     private static final Boolean ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY = false;
+    private static final Boolean PROCESS_ALL_STREAMS = true;
     private static final int WILDFLY_TIMEOUT_IN_SECONDS = 60;
 
-    private static final UUID STREAM_ID = randomUUID();
     private static final String EVENT_TO_ANONYMISE = "sample.transformation.anonymise";
 
     private SwarmStarterUtil swarmStarterUtil;
@@ -48,24 +48,82 @@ public class StreamAnonymisationTransformationIT {
 
 
     @Test
-    public void shouldAnonymiseEventData() throws Exception {
+    public void shouldAnonymiseActiveStreamEventData() throws Exception {
+
+        final UUID activeStreamId = randomUUID();
 
         final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
 
-        databaseUtils.insertEventLogData(EVENT_TO_ANONYMISE, STREAM_ID, 1L, createdAt);
+        databaseUtils.insertEventLogData(EVENT_TO_ANONYMISE, activeStreamId, 1L, createdAt);
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS, STREAM_COUNT_REPORTING_INTERVAL, MEMORY_OPTIONS_PARAMETER);
 
-        final List<Event> events = databaseUtils.getEventLogJdbcRepository().findAll().filter(e -> e.getStreamId().equals(STREAM_ID)).collect(toList());
+        final List<Event> events = databaseUtils.getEventLogJdbcRepository().findAll().filter(e -> e.getStreamId().equals(activeStreamId)).collect(toList());
 
         assertThat(events, hasSize(1));
 
-        final Event event = retrieveEvent(STREAM_ID, EVENT_TO_ANONYMISE);
+        final Event event = retrieveEvent(activeStreamId, EVENT_TO_ANONYMISE);
         assertNotNull(event);
-        JsonObject payload = Json.createReader(new StringReader(event.getPayload())).readObject();
+        JsonObject payload = createReader(new StringReader(event.getPayload())).readObject();
         assertFalse(payload.getString("a string").equalsIgnoreCase("test"));
         assertThat(payload.getString("a string").length(), is("test".length()));
 
+    }
+
+    @Test
+    public void shouldAnonymiseActiveAndInactiveStreamEventDataAsEnvironmentVariableProcessAllStreamsSet() throws Exception {
+
+        final UUID activeStreamId = randomUUID();
+        final UUID inactiveStreamId = randomUUID();
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        databaseUtils.insertEventLogData(EVENT_TO_ANONYMISE, activeStreamId, 1L, createdAt);
+        databaseUtils.insertEventLogData(EVENT_TO_ANONYMISE, inactiveStreamId, 1L, createdAt, false);
+
+        swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, PROCESS_ALL_STREAMS, WILDFLY_TIMEOUT_IN_SECONDS, STREAM_COUNT_REPORTING_INTERVAL, MEMORY_OPTIONS_PARAMETER);
+
+        final List<Event> events = databaseUtils.getEventLogJdbcRepository().findAll().collect(toList());
+        assertThat(events, hasSize(2));
+
+        final Event activeStreamEvent = retrieveEvent(activeStreamId, EVENT_TO_ANONYMISE);
+        assertNotNull(activeStreamEvent);
+        JsonObject activeStreamEventPayload = createReader(new StringReader(activeStreamEvent.getPayload())).readObject();
+        assertFalse(activeStreamEventPayload.getString("a string").equalsIgnoreCase("test"));
+        assertThat(activeStreamEventPayload.getString("a string").length(), is("test".length()));
+
+        final Event inactiveStreamEvent = retrieveEvent(inactiveStreamId, EVENT_TO_ANONYMISE);
+        assertNotNull(inactiveStreamEvent);
+        JsonObject inactiveStreamEventPayload = createReader(new StringReader(inactiveStreamEvent.getPayload())).readObject();
+        assertFalse(inactiveStreamEventPayload.getString("a string").equalsIgnoreCase("test"));
+        assertThat(inactiveStreamEventPayload.getString("a string").length(), is("test".length()));
+
+    }
+
+    @Test
+    public void shouldOnlyAnonymiseActiveStreamEventDataAsEnvironmentVariableProcessAllStreamsNotSet() throws Exception {
+
+        final UUID activeStreamId = randomUUID();
+        final UUID inactiveStreamId = randomUUID();
+        final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
+
+        databaseUtils.insertEventLogData(EVENT_TO_ANONYMISE, activeStreamId, 1L, createdAt);
+        databaseUtils.insertEventLogData(EVENT_TO_ANONYMISE, inactiveStreamId, 1L, createdAt, false);
+
+        swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS, STREAM_COUNT_REPORTING_INTERVAL, MEMORY_OPTIONS_PARAMETER);
+
+        final List<Event> events = databaseUtils.getEventLogJdbcRepository().findAll().collect(toList());
+        assertThat(events, hasSize(2));
+
+        final Event activeStreamEvent = retrieveEvent(activeStreamId, EVENT_TO_ANONYMISE);
+        assertNotNull(activeStreamEvent);
+        JsonObject activeStreamEventPayload = createReader(new StringReader(activeStreamEvent.getPayload())).readObject();
+        assertFalse(activeStreamEventPayload.getString("a string").equalsIgnoreCase("test"));
+        assertThat(activeStreamEventPayload.getString("a string").length(), is("test".length()));
+
+        final Event inactiveStreamEvent = retrieveEvent(inactiveStreamId, EVENT_TO_ANONYMISE);
+        assertNotNull(inactiveStreamEvent);
+        JsonObject inactiveStreamEventPayload = createReader(new StringReader(inactiveStreamEvent.getPayload())).readObject();
+        assertThat(inactiveStreamEventPayload.getString("a string"), is("test"));
     }
 
     private Event retrieveEvent(final UUID streamId, final String eventName) {

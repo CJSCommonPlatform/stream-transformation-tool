@@ -258,6 +258,9 @@ public class StartTransformationTest {
 
         startTransformation.go();
 
+        verify(logger).info("-------------- Invoke Event Streams Transformation -------------");
+        verify(logger).info("-------------- Invocation of Event Streams Transformation Completed --------------");
+        verify(logger).info("Processing active streams");
         verify(logger).info("Pass 1 - Streams count: 4 - time(ms): 12222222");
         startTransformation.taskDone(future1, null, null, null);
         startTransformation.taskDone(future2, null, null, null);

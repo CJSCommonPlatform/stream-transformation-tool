@@ -1,5 +1,6 @@
 package uk.gov.justice.framework.tools.transformation;
 
+import static com.google.common.base.Joiner.on;
 import static java.lang.String.format;
 import static java.lang.Thread.currentThread;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -20,10 +21,16 @@ public class SwarmStarterUtil {
     private static final Logger LOGGER = getLogger(SwarmStarterUtil.class);
 
     public void runCommand(final boolean enableRemoteDebugging, final long timeoutInSeconds, final long streamCountReportingInterval, final String memoryOptions) throws IOException {
+        runCommand(enableRemoteDebugging, false, timeoutInSeconds, streamCountReportingInterval, memoryOptions);
+    }
+
+    public void runCommand(final boolean enableRemoteDebugging, final boolean processAllStreams, final long timeoutInSeconds, final long streamCountReportingInterval, final String memoryOptions) throws IOException {
         final String memoryParmeter = format("-DXmx=%s", memoryOptions);
         final String streamCountReportingIntervalParameter = format("-DstreamCountReportingInterval=%s", streamCountReportingInterval);
+        final String processAllStreamsParameter = format("-DprocessAllStreams=%s", processAllStreams);
 
-        final String command = createCommandToExecuteTransformationTool(enableRemoteDebugging, streamCountReportingIntervalParameter, memoryParmeter);
+        final String command = createCommandToExecuteTransformationTool(enableRemoteDebugging, processAllStreamsParameter, streamCountReportingIntervalParameter, memoryParmeter);
+        LOGGER.info("Executing command: {}", command);
         final Process exec = execute(command);
         final BufferedReader reader =
                 new BufferedReader(new InputStreamReader(exec.getInputStream()));
@@ -38,6 +45,7 @@ public class SwarmStarterUtil {
     }
 
     private String createCommandToExecuteTransformationTool(final boolean enableRemoteDebugging,
+                                                            final String processAllStreamsParameter,
                                                             final String streamCountReportingIntervalParameter,
                                                             final String memoryParmeter) throws IOException {
         final String eventToolJarLocation = getResource("event-tool*.jar");
@@ -52,7 +60,7 @@ public class SwarmStarterUtil {
             debug = "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005";
         }
 
-        return commandFrom(debug, mainProcessFilePath, streamJarLocation, eventToolJarLocation, anonymiseJarLocation, standaloneDSLocation, streamCountReportingIntervalParameter, memoryParmeter);
+        return commandFrom(debug, mainProcessFilePath, streamJarLocation, eventToolJarLocation, anonymiseJarLocation, standaloneDSLocation, streamCountReportingIntervalParameter, memoryParmeter, processAllStreamsParameter);
     }
 
     private String commandFrom(final String debug,
@@ -61,17 +69,15 @@ public class SwarmStarterUtil {
                                final String eventToolJarLocation,
                                final String anonymiseJarLocation,
                                final String standaloneDSLocation,
-                               final String streamCountReportingIntervalParameter,
-                               final String memoryParmeter) throws IOException {
-        return format("java %s -jar -Dorg.wildfly.swarm.mainProcessFile=%s -Devent.transformation.jar=%s %s %s -c %s %s %s",
+                               final String... environmentParameters) throws IOException {
+        final String command = format("java %s -jar -Dorg.wildfly.swarm.mainProcessFile=%s -Devent.transformation.jar=%s %s %s -c %s ",
                 debug,
                 mainProcessFilePath,
                 streamJarLocation,
                 eventToolJarLocation,
                 anonymiseJarLocation,
-                standaloneDSLocation,
-                streamCountReportingIntervalParameter,
-                memoryParmeter);
+                standaloneDSLocation);
+        return command + on(" ").join(environmentParameters);
     }
 
     private String getResource(final String pattern) {
