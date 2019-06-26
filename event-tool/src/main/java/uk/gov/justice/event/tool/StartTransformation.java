@@ -41,6 +41,10 @@ public class StartTransformation implements ManagedTaskListener {
     private int streamCountReportingInterval;
 
     @Inject
+    @ConfigurationValue("processAllStreams")
+    private boolean processAllStreams;
+
+    @Inject
     private Logger logger;
 
     @Resource(name = "event-tool")
@@ -85,7 +89,9 @@ public class StartTransformation implements ManagedTaskListener {
             throw new IllegalArgumentException("Invalid streamCountReportingInterval argument");
         }
 
-        final Stream<UUID> activeStreams = eventRepository.getAllActiveStreamIds();
+        final Stream<UUID> activeStreams = processAllStreams ? eventRepository.getAllStreamIds() : eventRepository.getAllActiveStreamIds();
+
+        logger.info(format("Processing %s streams", processAllStreams ? "all" : "active"));
 
         activeStreams
                 .forEach(streamId -> {
@@ -126,7 +132,7 @@ public class StartTransformation implements ManagedTaskListener {
     }
 
     public void taskAborted(final Future<?> futureTask, final ManagedExecutorService managedExecutorService, final Object task, final Throwable throwable) {
-        logger.error(String.format("Aborted Transformation task: '%s'", throwable.getMessage()));
+        logger.error("Aborted Transformation task", throwable);
         removeOutstandingTask(futureTask);
         shutDownIfFinished();
         truncateAndPopulateLinkedEvents();
