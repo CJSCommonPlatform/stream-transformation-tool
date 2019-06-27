@@ -4,7 +4,11 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [5.3.0] - 2019-06-27
+### Fixed
 - Reverting thorntail container related changes and using swarm instead
+### Added
 - Added a module to support anonymisation of events (currently works with only active streams).  Also, list of string patterns used to apply anonymisation will be expanded
 
 ### Changed
