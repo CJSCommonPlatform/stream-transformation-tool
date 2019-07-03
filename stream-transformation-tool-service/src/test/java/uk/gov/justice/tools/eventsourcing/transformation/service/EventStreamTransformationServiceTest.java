@@ -10,6 +10,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -31,7 +32,6 @@ import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.EventStreamReader;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationStreamIdFilter;
-import uk.gov.justice.tools.eventsourcing.transformation.StreamMover;
 import uk.gov.justice.tools.eventsourcing.transformation.TransformationChecker;
 import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
@@ -68,9 +68,6 @@ public class EventStreamTransformationServiceTest {
     private Logger logger;
 
     @Mock
-    private EventSource eventSource;
-
-    @Mock
     private EventSourceTransformation eventSourceTransformation;
 
     @Mock
@@ -84,6 +81,9 @@ public class EventStreamTransformationServiceTest {
 
     @Mock
     private StreamMover streamMover;
+
+    @Mock
+    private RetryStreamOperator retryStreamOperator;
 
     @Mock
     private StreamRepository streamRepository;
@@ -138,7 +138,7 @@ public class EventStreamTransformationServiceTest {
 
         eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
 
-        final InOrder inOrder = inOrder(eventSourceTransformation, eventStreamReader, eventStream, eventTransformationRegistry, transformationChecker, streamTransformer);
+        final InOrder inOrder = inOrder(eventSourceTransformation, eventStreamReader, eventStream, eventTransformationRegistry, transformationChecker, retryStreamOperator, streamTransformer);
 
         inOrder.verify(eventStreamReader).getStreamBy(STREAM_ID);
 
@@ -147,7 +147,7 @@ public class EventStreamTransformationServiceTest {
         inOrder.verify(transformationChecker).requiresTransformation(listArgumentCaptor.capture(),
                 uuidCaptor.capture(), intArgumentCaptor.capture());
 
-        inOrder.verify(eventSourceTransformation).cloneStream(STREAM_ID);
+        inOrder.verify(retryStreamOperator).cloneWithRetry(STREAM_ID);
 
         inOrder.verify(streamTransformer).transformStream(STREAM_ID, newHashSet(eventTransformation));
 
@@ -298,16 +298,16 @@ public class EventStreamTransformationServiceTest {
         when(eventTransformationStreamIdFilter.getEventTransformationStreamId(eventTransformationArgumentCaptor.capture(),
                 listArgumentCaptor.capture())).thenReturn(empty());
 
-        doThrow(EventStreamException.class).when(eventSourceTransformation).cloneStream(any());
+        doThrow(EventStreamException.class).when(retryStreamOperator).cloneWithRetry(any());
 
         eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
 
-        final InOrder inOrder = inOrder(transformationChecker, streamTransformer);
+        final InOrder inOrder = inOrder(transformationChecker, retryStreamOperator, streamTransformer);
 
         inOrder.verify(transformationChecker).requiresTransformation(listArgumentCaptor.capture(),
                 uuidCaptor.capture(), intArgumentCaptor.capture());
 
-        inOrder.verify(streamTransformer).transformStream(STREAM_ID, newHashSet(eventTransformation));
+        inOrder.verify(streamTransformer, never()).transformStream(STREAM_ID, newHashSet(eventTransformation));
 
         verifyNoMoreInteractions(streamTransformer);
     }

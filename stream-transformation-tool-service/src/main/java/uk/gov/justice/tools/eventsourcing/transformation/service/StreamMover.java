@@ -1,9 +1,11 @@
-package uk.gov.justice.tools.eventsourcing.transformation;
+package uk.gov.justice.tools.eventsourcing.transformation.service;
 
 import static java.lang.String.format;
 
 import uk.gov.justice.services.eventsourcing.source.core.EventSourceTransformation;
 import uk.gov.justice.services.messaging.JsonEnvelope;
+import uk.gov.justice.tools.eventsourcing.transformation.EventStreamReader;
+import uk.gov.justice.tools.eventsourcing.transformation.StreamTransformerUtil;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
 
 import java.util.List;
@@ -26,7 +28,7 @@ public class StreamMover {
     private EventSourceTransformation eventSourceTransformation;
 
     @Inject
-    private StreamAppender streamRepository;
+    private StreamAppender streamAppender;
 
     @Inject
     private StreamTransformerUtil streamTransformerUtil;
@@ -42,11 +44,13 @@ public class StreamMover {
 
             eventSourceTransformation.clearStream(originalStreamId);
 
-            final Stream<JsonEnvelope> filteredMoveEventStream = streamTransformerUtil.transformAndMove(jsonEnvelopeList.stream(), transformations);
-            final Stream<JsonEnvelope> unfilteredMoveEventStream = streamTransformerUtil.filterOriginalEvents(jsonEnvelopeList, transformations);
+            try (final Stream<JsonEnvelope> filteredMoveEventStream = streamTransformerUtil.transformAndMove(jsonEnvelopeList.stream(), transformations)) {
+                streamAppender.appendEventsToStream(newStreamId, filteredMoveEventStream);
+            }
 
-            streamRepository.appendEventsToStream(originalStreamId, unfilteredMoveEventStream);
-            streamRepository.appendEventsToStream(newStreamId, filteredMoveEventStream);
+            try (final Stream<JsonEnvelope> unfilteredMoveEventStream = streamTransformerUtil.filterOriginalEvents(jsonEnvelopeList, transformations)) {
+                streamAppender.appendEventsToStream(originalStreamId, unfilteredMoveEventStream);
+            }
 
         } catch (final Exception e) {
             logger.error(format("Unknown error while moving events on stream %s", originalStreamId), e);
