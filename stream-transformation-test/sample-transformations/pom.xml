@@ -7,7 +7,7 @@
     <parent>
         <artifactId>stream-transformation-test</artifactId>
         <groupId>uk.gov.justice</groupId>
-        <version>5.3.1</version>
+        <version>5.3.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>stream-transformations</artifactId>

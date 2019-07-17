@@ -12,7 +12,7 @@
 
     <artifactId>stream-transformation-tool</artifactId>
     <packaging>pom</packaging>
-    <version>5.3.1</version>
+    <version>5.3.2-SNAPSHOT</version>
 
     <scm>
         <connection>${cpp.scm.connection}</connection>
