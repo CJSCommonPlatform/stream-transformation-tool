@@ -258,7 +258,7 @@ public class StreamTransformationIT {
                 assertThat(linkedEvent.getCreatedAt(), is(createdAt));
                 assertThat(linkedEvent.getName(), is("sample.events.name.pass1.sequence1"));
                 assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getEventNumber().get(), is(8L));
+                assertThat(linkedEvent.getEventNumber().get(), is(9L));
                 assertThat(linkedEvent.getPreviousEventNumber(), is(0L));
             }
 
@@ -274,7 +274,7 @@ public class StreamTransformationIT {
                 assertThat(linkedEvent.getName(), is("sample.events.name.pass1.sequence2"));
                 assertThat(linkedEvent.getCreatedAt(), is(createdAt));
                 assertThat(linkedEvent.getEventNumber().get(), is(10L));
-                assertThat(linkedEvent.getPreviousEventNumber(), is(8L));
+                assertThat(linkedEvent.getPreviousEventNumber(), is(9L));
             }
             if (linkedEvent.getSequenceId() == 2L)
 

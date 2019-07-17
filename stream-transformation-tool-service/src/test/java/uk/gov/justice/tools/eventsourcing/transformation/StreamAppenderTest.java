@@ -2,11 +2,12 @@ package uk.gov.justice.tools.eventsourcing.transformation;
 
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.of;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,8 @@ import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
+import uk.gov.justice.tools.eventsourcing.transformation.service.RetryStreamOperator;
+import uk.gov.justice.tools.eventsourcing.transformation.service.StreamAppender;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,6 +40,9 @@ public class StreamAppenderTest {
 
     @Mock
     private EnvelopeFixer envelopeFixer;
+
+    @Mock
+    private RetryStreamOperator retryStreamOperator;
 
     @InjectMocks
     private StreamAppender streamAppender;
@@ -61,9 +67,9 @@ public class StreamAppenderTest {
         when(envelopeFixer.clearPositionAndGiveNewId(event_1)).thenReturn(clearedEvent_1);
         when(envelopeFixer.clearPositionAndGiveNewId(event_2)).thenReturn(clearedEvent_2);
 
-        streamAppender.appendEventsToStream(streamId, Stream.of(event_1, event_2));
+        streamAppender.appendEventsToStream(streamId, of(event_1, event_2));
 
-        verify(eventStream).append(envelopeStreamCaptor.capture());
+        verify(retryStreamOperator).appendWithRetry(eq(streamId), eq(eventStream), envelopeStreamCaptor.capture());
 
         final List<JsonEnvelope> appendedEvents = envelopeStreamCaptor.getValue().collect(toList());
 
@@ -83,39 +89,17 @@ public class StreamAppenderTest {
         final JsonEnvelope event_2 = mock(JsonEnvelope.class);
 
         final EventStream eventStream = mock(EventStream.class);
-        final Stream<JsonEnvelope> jsonEnvelopeStream = Stream.of(event_1, event_2);
+        final Stream<JsonEnvelope> jsonEnvelopeStream = of(event_1, event_2);
 
         when(eventSource.getStreamById(streamId)).thenReturn(eventStream);
-        doThrow(eventStreamException).when(eventStream).append(any(Stream.class));
-
-
-        final StreamCloseVerifier streamCloseVerifier = new StreamCloseVerifier();
-        jsonEnvelopeStream.onClose(streamCloseVerifier);
-
-        assertThat(streamCloseVerifier.isClosed(), is(false));
-
+        doThrow(eventStreamException).when(retryStreamOperator).appendWithRetry(eq(streamId), eq(eventStream), envelopeStreamCaptor.capture());
 
         try {
             streamAppender.appendEventsToStream(streamId, jsonEnvelopeStream);
             fail();
         } catch (final EventStreamException expected) {
-            assertThat(streamCloseVerifier.isClosed(), is(true));
-            assertThat(expected.getCause(), is(eventStreamException));
-            assertThat(expected.getMessage(), is("Failed to append events to stream"));
-        }
-    }
-
-    private class StreamCloseVerifier implements Runnable {
-
-        private boolean closed = false;
-
-        @Override
-        public void run() {
-            closed = true;
-        }
-
-        public boolean isClosed() {
-            return closed;
+            assertThat(expected, is(eventStreamException));
+            assertThat(expected.getMessage(), is("oops"));
         }
     }
 }

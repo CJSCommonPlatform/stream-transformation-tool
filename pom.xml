@@ -26,7 +26,7 @@
         <framework.version>5.1.2</framework.version>
         <event-store.version>1.1.11</event-store.version>
         <common-bom.version>1.28.0</common-bom.version>
-        <utilities.version>1.16.2</utilities.version>
+        <utilities.version>1.20.0</utilities.version>
         <test-utils.version>1.18.1</test-utils.version>
         <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
         <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>

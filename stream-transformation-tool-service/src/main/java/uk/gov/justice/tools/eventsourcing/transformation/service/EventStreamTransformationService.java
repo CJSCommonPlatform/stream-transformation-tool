@@ -4,12 +4,10 @@ import static java.lang.String.format;
 import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import uk.gov.justice.services.eventsourcing.source.core.EventSourceTransformation;
-import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.EventStreamReader;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationStreamIdFilter;
-import uk.gov.justice.tools.eventsourcing.transformation.StreamMover;
 import uk.gov.justice.tools.eventsourcing.transformation.TransformationChecker;
 import uk.gov.justice.tools.eventsourcing.transformation.api.Action;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
@@ -59,6 +57,9 @@ public class EventStreamTransformationService {
     @Inject
     private EventStreamReader eventStreamReader;
 
+    @Inject
+    private RetryStreamOperator retryStreamOperator;
+
 
     @Transactional(REQUIRES_NEW)
     public UUID transformEventStream(final UUID originalStreamId, final int pass) {
@@ -70,7 +71,7 @@ public class EventStreamTransformationService {
             final Action action = transformationChecker.requiresTransformation(jsonEnvelopeList, originalStreamId, pass);
 
             if (action.isKeepBackup()) {
-                cloneStream(originalStreamId);
+                retryStreamOperator.cloneWithRetry(originalStreamId);
             }
 
             if (action.isTransform()) {
@@ -90,16 +91,6 @@ public class EventStreamTransformationService {
             logger.error(format("Unknown error while moving events on stream %s", originalStreamId), e);
         }
         return originalStreamId;
-    }
-
-    @SuppressWarnings({"squid:S2629"})
-    private void cloneStream(final UUID originalStreamId) {
-        try {
-            final UUID clonedStreamId = eventSourceTransformation.cloneStream(originalStreamId);
-            logger.debug(format("Created backup stream '%s' from stream '%s'", clonedStreamId, originalStreamId));
-        } catch (final EventStreamException e) {
-            logger.error(format("Failed to backup stream %s", originalStreamId), e);
-        }
     }
 
     private boolean isNewStreamId(final Optional<UUID> newStreamId,

@@ -4,6 +4,8 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Retry mechanism when performing stream operations such as append / move or clone
 
 ## [5.3.0] - 2019-06-27
 ### Fixed

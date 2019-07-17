@@ -18,6 +18,8 @@ import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
+import uk.gov.justice.tools.eventsourcing.transformation.service.StreamAppender;
+import uk.gov.justice.tools.eventsourcing.transformation.service.StreamMover;
 
 import java.util.List;
 import java.util.Set;
