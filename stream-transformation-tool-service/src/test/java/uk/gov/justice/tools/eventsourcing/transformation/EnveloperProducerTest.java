@@ -3,7 +3,7 @@ package uk.gov.justice.tools.eventsourcing.transformation;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static uk.gov.justice.services.test.utils.core.reflection.ReflectionUtil.fieldValueAs;
+import static uk.gov.justice.services.test.utils.core.reflection.ReflectionUtil.getValueOfField;
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.tools.eventsourcing.TransformingEnveloper;
@@ -30,7 +30,7 @@ public class EnveloperProducerTest {
 
         assertThat(enveloper, is(instanceOf(TransformingEnveloper.class)));
 
-        assertThat(fieldValueAs(enveloper, "envelopeFactory", EnvelopeFactory.class).isPresent(), is(true));
+        assertThat(getValueOfField(enveloper, "envelopeFactory", EnvelopeFactory.class), is(envelopeFactory));
 
     }
 }

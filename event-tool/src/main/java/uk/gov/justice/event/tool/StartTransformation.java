@@ -7,7 +7,8 @@ import static org.wildfly.swarm.bootstrap.Main.MAIN_PROCESS_FILE;
 import uk.gov.justice.event.tool.task.StreamTransformationTask;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.EventRepository;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
-import uk.gov.justice.tools.eventsourcing.transformation.service.LinkedEventStreamTransformationService;
+import uk.gov.justice.tools.eventsourcing.transformation.service.PrePublishedQueueTruncatorService;
+import uk.gov.justice.tools.eventsourcing.transformation.service.PublishedEventsRebuilderService;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +61,10 @@ public class StartTransformation implements ManagedTaskListener {
     private PassesDeterminer passesDeterminer;
 
     @Inject
-    private LinkedEventStreamTransformationService linkedEventStreamTransformationService;
+    private PublishedEventsRebuilderService publishedEventsRebuilderService;
+
+    @Inject
+    private PrePublishedQueueTruncatorService prePublishedQueueTruncatorService;
 
     final Deque<Future<UUID>> outstandingTasks = new LinkedBlockingDeque<>();
 
@@ -103,6 +107,7 @@ public class StartTransformation implements ManagedTaskListener {
         activeStreams.close();
 
         if (outstandingTasks.isEmpty()) {
+            truncateQueueAndRebuildPublishedEvents();
             shutdown();
         }
 
@@ -134,8 +139,8 @@ public class StartTransformation implements ManagedTaskListener {
     public void taskAborted(final Future<?> futureTask, final ManagedExecutorService managedExecutorService, final Object task, final Throwable throwable) {
         logger.error("Aborted Transformation task", throwable);
         removeOutstandingTask(futureTask);
+        truncateQueueAndRebuildPublishedEvents();
         shutDownIfFinished();
-        truncateAndPopulateLinkedEvents();
     }
 
     private void removeOutstandingTask(final Future<?> futureTask) {
@@ -146,7 +151,7 @@ public class StartTransformation implements ManagedTaskListener {
         if (isTaskFinished()) {
             final boolean isLastElementInPasses = passesDeterminer.isLastElementInPasses();
             if (isLastElementInPasses) {
-                truncateAndPopulateLinkedEvents();
+                truncateQueueAndRebuildPublishedEvents();
                 shutdown();
             } else {
                 createTransformationTasks(passesDeterminer.getNextPassValue());
@@ -188,15 +193,18 @@ public class StartTransformation implements ManagedTaskListener {
         }
     }
 
-    private void truncateAndPopulateLinkedEvents() {
+    private void truncateQueueAndRebuildPublishedEvents() {
 
-        logger.info("-------------- Truncating the Linked Events Log after complete transformation --------------");
+        logger.info("-------------- Truncating pre_publish_queue --------------");
 
-        linkedEventStreamTransformationService.truncateLinkedEvents();
+        prePublishedQueueTruncatorService.truncate();
 
-        logger.info("-------------- Populating the Linked Events Log  --------------");
+        logger.info("-------------- Truncate of pre_publish_queue complete --------------");
+        logger.info("-------------- Rebuilding the Published Events after complete transformation --------------");
 
-        linkedEventStreamTransformationService.populateLinkedEvents();
+        publishedEventsRebuilderService.rebuild();
+
+        logger.info("-------------- Rebuild of the Published Events complete  --------------");
     }
 
     private void checkForMainProcessFile() {

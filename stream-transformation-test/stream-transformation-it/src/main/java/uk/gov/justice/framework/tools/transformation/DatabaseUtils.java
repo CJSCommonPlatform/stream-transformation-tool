@@ -6,6 +6,7 @@ import static uk.gov.justice.framework.tools.transformation.EventLogBuilder.even
 
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.Event;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.exception.InvalidPositionException;
+import uk.gov.justice.services.test.utils.events.EventStoreDataAccess;
 
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
@@ -18,14 +19,14 @@ import liquibase.exception.LiquibaseException;
 
 public class DatabaseUtils {
 
-    private final TestEventLogJdbcRepository eventLogJdbcRepository;
+    private final EventStoreDataAccess eventStoreDataAccess;
     private final TestEventStreamJdbcRepository eventStreamJdbcRepository;
     private final LiquibaseUtil liquibaseUtil = new LiquibaseUtil();
     private final DataSource dataSource;
 
     public DatabaseUtils() throws SQLException, LiquibaseException {
         dataSource = liquibaseUtil.initEventStoreDb();
-        eventLogJdbcRepository = new TestEventLogJdbcRepository(dataSource);
+        eventStoreDataAccess = new EventStoreDataAccess(dataSource);
         eventStreamJdbcRepository = new TestEventStreamJdbcRepository(dataSource);
     }
 
@@ -56,12 +57,12 @@ public class DatabaseUtils {
     public void insertEventLogData(final String eventName, final UUID streamId, final long sequenceId, final ZonedDateTime createdAt, final Optional<Long> eventNumber, boolean streamStatus) throws InvalidPositionException {
         final Event event = eventLogFrom(eventName, sequenceId, streamId, createdAt, eventNumber);
 
-        eventLogJdbcRepository.insert(event);
+        eventStoreDataAccess.insertIntoEventLog(event);
         eventStreamJdbcRepository.insert(streamId, streamStatus);
     }
 
-    public TestEventLogJdbcRepository getEventLogJdbcRepository() {
-        return eventLogJdbcRepository;
+    public EventStoreDataAccess getEventStoreDataAccess() {
+        return eventStoreDataAccess;
     }
 
     public TestEventStreamJdbcRepository getEventStreamJdbcRepository() {

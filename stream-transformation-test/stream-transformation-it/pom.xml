@@ -7,7 +7,7 @@
     <parent>
         <artifactId>stream-transformation-test</artifactId>
         <groupId>uk.gov.justice</groupId>
-        <version>5.3.2-SNAPSHOT</version>
+        <version>6.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>stream-transformation-it</artifactId>
@@ -25,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>uk.gov.justice.event-store</groupId>
-            <artifactId>linked-event-processor</artifactId>
+            <artifactId>published-event-processor</artifactId>
             <version>${event-store.version}</version>
         </dependency>
         <dependency>
@@ -76,7 +76,16 @@
             <type>pom</type>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>uk.gov.justice.event-store</groupId>
+            <artifactId>test-utils-event</artifactId>
+            <version>${event-store.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>uk.gov.justice.utils</groupId>
+            <artifactId>test-utils-core</artifactId>
+            <version>${test-utils.version}</version>
+        </dependency>
 
     </dependencies>
 

@@ -7,7 +7,7 @@ import static org.hamcrest.core.Is.is;
 
 import uk.gov.justice.services.common.util.UtcClock;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.Event;
-import uk.gov.justice.services.eventsourcing.repository.jdbc.event.LinkedEvent;
+import uk.gov.justice.services.eventsourcing.repository.jdbc.event.PublishedEvent;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
 
 import java.time.ZonedDateTime;
@@ -16,34 +16,32 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class StreamTransformationIT {
+
     private static final long STREAM_COUNT_REPORTING_INTERVAL = 10L;
     private static final String MEMORY_OPTIONS_PARAMETER = "2048M";
     private static final Boolean ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY = false;
     private static final int WILDFLY_TIMEOUT_IN_SECONDS = 60;
 
     private UUID STREAM_ID = UUID.randomUUID();
-
     private SwarmStarterUtil swarmStarterUtil;
-
     private DatabaseUtils databaseUtils;
-
-    private TestLinkedEventJdbcRepository linkedEventJdbcRepository;
+    private TestPublishedEventJdbcRepository testPublishedEventJdbcRepository;
 
     @Before
     public void setUp() throws Exception {
         swarmStarterUtil = new SwarmStarterUtil();
         databaseUtils = new DatabaseUtils();
         databaseUtils.dropAndUpdateLiquibase();
-        linkedEventJdbcRepository = new TestLinkedEventJdbcRepository(databaseUtils.getDataSource());
+        testPublishedEventJdbcRepository = new TestPublishedEventJdbcRepository(databaseUtils.getDataSource());
     }
 
     @Test
     public void shouldTransformEventInEventStore() throws Exception {
+
         final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
 
         databaseUtils.insertEventLogData("sample.events.name", STREAM_ID, 1L, createdAt, 1);
@@ -57,32 +55,35 @@ public class StreamTransformationIT {
         assertThat(clonedStreamAvailableAndActive(), is(false));
         assertThat(totalEventCount(), is(5L));
 
-        final long linkedEventsCount = linkedEventJdbcRepository.linkedEventsCount(STREAM_ID);
-        assertThat(linkedEventsCount, is(2L));
+        final long publishedEventsCount = testPublishedEventJdbcRepository.publishedEventsCount(STREAM_ID);
+        assertThat(publishedEventsCount, is(2L));
 
-        final Stream<LinkedEvent> linkedEventStream = linkedEventJdbcRepository.findByStreamIdOrderByPositionAsc(STREAM_ID);
+        final List<PublishedEvent> publishedEvents = testPublishedEventJdbcRepository.findByStreamIdOrderByPositionAsc(STREAM_ID);
 
-        linkedEventStream.forEach(linkedEvent -> {
-            if (linkedEvent.getSequenceId() == 1L) {
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getName(), is(transformedEventName));
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getEventNumber().get(), is(6L));
-                assertThat(linkedEvent.getPreviousEventNumber(), is(0L));
-            }
-            if (linkedEvent.getSequenceId() == 2L) {
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getName(), is(transformedEventName));
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getEventNumber().get(), is(7L));
-                assertThat(linkedEvent.getPreviousEventNumber(), is(6L));
-            }
+        assertThat(publishedEvents.size(), is(2));
 
-        });
+        final PublishedEvent publishedEvent_1 = publishedEvents.get(0);
+        assertThat(publishedEvent_1.getPositionInStream(), is(1L));
+        assertThat(publishedEvent_1.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_1.getName(), is(transformedEventName));
+        assertThat(publishedEvent_1.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_1.getEventNumber(), is(Optional.of(3L)));
+        assertThat(publishedEvent_1.getPreviousEventNumber(), is(0L));
+
+        final PublishedEvent publishedEvent_2 = publishedEvents.get(1);
+        assertThat(publishedEvent_2.getPositionInStream(), is(2L));
+        assertThat(publishedEvent_2.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_2.getName(), is(transformedEventName));
+        assertThat(publishedEvent_2.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_2.getEventNumber(), is(Optional.of(4L)));
+        assertThat(publishedEvent_2.getPreviousEventNumber(), is(3L));
+
+        assertThat(testPublishedEventJdbcRepository.prePublishQueueCount(), is(0L));
     }
 
     @Test
     public void shouldUseTheOriginalCreatedAtDateInTransformation() throws Exception {
+
         final ZonedDateTime createdAt = new UtcClock().now().minusMonths(1);
 
         final String eventName = "sample.events.check-date-not-transformed";
@@ -95,22 +96,22 @@ public class StreamTransformationIT {
         transformedEvents.forEach(event -> assertThat(event.getCreatedAt(), is(createdAt)));
         assertThat(totalEventCount(), is(3L));
 
-        final long linkedEventsCount = linkedEventJdbcRepository.linkedEventsCount(STREAM_ID);
-        assertThat(linkedEventsCount, is(1L));
+        final long publishedEventsCount = testPublishedEventJdbcRepository.publishedEventsCount(STREAM_ID);
+        assertThat(publishedEventsCount, is(1L));
 
-        final Stream<LinkedEvent> linkedEventStream = linkedEventJdbcRepository
-                .findByStreamIdOrderByPositionAsc(STREAM_ID);
+        final List<PublishedEvent> publishedEvents = testPublishedEventJdbcRepository.findByStreamIdOrderByPositionAsc(STREAM_ID);
 
-        linkedEventStream.forEach(linkedEvent -> {
+        assertThat(publishedEvents.size(), is(1));
 
-            if (linkedEvent.getSequenceId() == 1L) {
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getName(), is("sample.events.check-date-not-transformed"));
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getEventNumber().get(), is(4L));
-                assertThat(linkedEvent.getPreviousEventNumber(), is(0L));
-            }
-        });
+        final PublishedEvent publishedEvent_1 = publishedEvents.get(0);
+        assertThat(publishedEvent_1.getPositionInStream(), is(1L));
+        assertThat(publishedEvent_1.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_1.getName(), is("sample.events.check-date-not-transformed"));
+        assertThat(publishedEvent_1.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_1.getEventNumber(), is(Optional.of(2L)));
+        assertThat(publishedEvent_1.getPreviousEventNumber(), is(0L));
+
+        assertThat(testPublishedEventJdbcRepository.prePublishQueueCount(), is(0L));
     }
 
     @Test
@@ -124,10 +125,12 @@ public class StreamTransformationIT {
 
         assertThat(originalEventStreamIsActive(), is(false));
 
-        final long linkedEventsCount = linkedEventJdbcRepository.linkedEventsCount(STREAM_ID);
         assertThat(totalEventCount(), is(1L));
 
-        assertThat(linkedEventsCount, is(0L));
+        final long publishedEventsCount = testPublishedEventJdbcRepository.publishedEventsCount(STREAM_ID);
+        assertThat(publishedEventsCount, is(0L));
+
+        assertThat(testPublishedEventJdbcRepository.prePublishQueueCount(), is(0L));
     }
 
     @Test
@@ -143,11 +146,12 @@ public class StreamTransformationIT {
         assertThat(eventStoreEventIsPresent("sample.event.name.archived.old.release"), is(false));
         assertThat(streamAvailableAndActive(STREAM_ID), is(false));
         assertThat(clonedStreamAvailableAndActive(), is(false));
-        final long linkedEventsCount = linkedEventJdbcRepository.linkedEventsCount(STREAM_ID);
         assertThat(totalEventCount(), is(1L));
 
-        assertThat(linkedEventsCount, is(0L));
+        final long publishedEventsCount = testPublishedEventJdbcRepository.publishedEventsCount(STREAM_ID);
+        assertThat(publishedEventsCount, is(0L));
 
+        assertThat(testPublishedEventJdbcRepository.prePublishQueueCount(), is(0L));
     }
 
     @Test
@@ -164,23 +168,22 @@ public class StreamTransformationIT {
         assertThat(clonedStreamAvailableAndActive(), is(false));
 
         assertThat(totalEventCount(), is(5L));
-        final long linkedEventsCount = linkedEventJdbcRepository.linkedEventsCount(STREAM_ID);
 
-        assertThat(linkedEventsCount, is(1L));
+        final long publishedEventsCount = testPublishedEventJdbcRepository.publishedEventsCount(STREAM_ID);
+        assertThat(publishedEventsCount, is(1L));
 
-        final Stream<LinkedEvent> linkedEventStream = linkedEventJdbcRepository
-                .findByStreamIdOrderByPositionAsc(STREAM_ID);
+        final List<PublishedEvent> publishedEvents = testPublishedEventJdbcRepository.findByStreamIdOrderByPositionAsc(STREAM_ID);
+        assertThat(publishedEvents.size(), is(1));
 
-        linkedEventStream.forEach(linkedEvent -> {
+        final PublishedEvent publishedEvent_1 = publishedEvents.get(0);
+        assertThat(publishedEvent_1.getPositionInStream(), is(1L));
+        assertThat(publishedEvent_1.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_1.getName(), is("sample.events.name.sequence2"));
+        assertThat(publishedEvent_1.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_1.getEventNumber(), is(Optional.of(3L)));
+        assertThat(publishedEvent_1.getPreviousEventNumber(), is(0L));
 
-            if (linkedEvent.getSequenceId() == 1L) {
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getName(), is("sample.events.name.sequence2"));
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getEventNumber().get(), is(7L));
-                assertThat(linkedEvent.getPreviousEventNumber(), is(0L));
-            }
-        });
+        assertThat(testPublishedEventJdbcRepository.prePublishQueueCount(), is(0L));
     }
 
     @Test
@@ -201,28 +204,29 @@ public class StreamTransformationIT {
 
         assertThat(clonedStreamAvailableAndActive(), is(false));
 
-        final long linkedEventsCount = linkedEventJdbcRepository.linkedEventsCount(fromString(localStreamId));
-        assertThat(linkedEventsCount, is(2L));
+        final long publishedEventsCount = testPublishedEventJdbcRepository.publishedEventsCount(fromString(localStreamId));
+        assertThat(publishedEventsCount, is(2L));
 
-        final Stream<LinkedEvent> linkedEventStream = linkedEventJdbcRepository
-                .findByStreamIdOrderByPositionAsc(fromString(localStreamId));
+        final List<PublishedEvent> publishedEvents = testPublishedEventJdbcRepository.findByStreamIdOrderByPositionAsc(fromString(localStreamId));
+        assertThat(publishedEvents.size(), is(2));
 
-        linkedEventStream.forEach(linkedEvent -> {
-            if (linkedEvent.getSequenceId() == 1L) {
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getName(), is("sample.transformation.with.stream.id.transformed"));
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getEventNumber().get(), is(6L));
-                assertThat(linkedEvent.getPreviousEventNumber(), is(0L));
-            }
-            if (linkedEvent.getSequenceId() == 2L) {
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getName(), is("sample.transformation.should.not.transform"));
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getEventNumber().get(), is(7L));
-                assertThat(linkedEvent.getPreviousEventNumber(), is(6L));
-            }
-        });
+        final PublishedEvent publishedEvent_1 = publishedEvents.get(0);
+        assertThat(publishedEvent_1.getPositionInStream(), is(1L));
+        assertThat(publishedEvent_1.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_1.getName(), is("sample.transformation.with.stream.id.transformed"));
+        assertThat(publishedEvent_1.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_1.getEventNumber(), is(Optional.of(3L)));
+        assertThat(publishedEvent_1.getPreviousEventNumber(), is(0L));
+
+        final PublishedEvent publishedEvent_2 = publishedEvents.get(1);
+        assertThat(publishedEvent_2.getPositionInStream(), is(2L));
+        assertThat(publishedEvent_2.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_2.getName(), is("sample.transformation.should.not.transform"));
+        assertThat(publishedEvent_2.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_2.getEventNumber(), is(Optional.of(4L)));
+        assertThat(publishedEvent_2.getPreviousEventNumber(), is(3L));
+
+        assertThat(testPublishedEventJdbcRepository.prePublishQueueCount(), is(0L));
     }
 
     @Test
@@ -240,58 +244,53 @@ public class StreamTransformationIT {
         assertThat(eventStoreTransformedEventPresentAndSequenceCorrect("sample.events.name.pass1.sequence2", fromString(stream2), 1L), is(true));
         assertThat(eventStoreTransformedEventPresentAndSequenceCorrect("sample.events.name.pass1.sequence3", fromString(stream2), 2L), is(true));
 
-        assertThat(eventStoreTransformedEventPresentAndSequenceCorrect("sample.events.name.pass1.sequence1", STREAM_ID ,1L), is(true));
+        assertThat(eventStoreTransformedEventPresentAndSequenceCorrect("sample.events.name.pass1.sequence1", STREAM_ID, 1L), is(true));
 
         assertThat(totalEventCount(), is(3L));
 
-        final long linkedEventsStream1Count = linkedEventJdbcRepository.linkedEventsCount(STREAM_ID);
-        assertThat(linkedEventsStream1Count, is(1L));
+        final long publishedEventsCount_1 = testPublishedEventJdbcRepository.publishedEventsCount(STREAM_ID);
+        assertThat(publishedEventsCount_1, is(1L));
 
-        final long linkedEventsStream2Count = linkedEventJdbcRepository.linkedEventsCount(fromString(stream2));
-        assertThat(linkedEventsStream2Count, is(2L));
+        final long publishedEventsCount_2 = testPublishedEventJdbcRepository.publishedEventsCount(fromString(stream2));
+        assertThat(publishedEventsCount_2, is(2L));
 
-        final Stream<LinkedEvent> linkedEventStream = linkedEventJdbcRepository
-                .findByStreamIdOrderByPositionAsc(STREAM_ID);
+        final List<PublishedEvent> publishedEvents_1 = testPublishedEventJdbcRepository.findByStreamIdOrderByPositionAsc(STREAM_ID);
 
-        linkedEventStream.forEach(linkedEvent -> {
-            if (linkedEvent.getSequenceId() == 1L) {
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getName(), is("sample.events.name.pass1.sequence1"));
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getEventNumber().get(), is(9L));
-                assertThat(linkedEvent.getPreviousEventNumber(), is(0L));
-            }
+        assertThat(publishedEvents_1.size(), is(1));
 
-        });
+        final PublishedEvent publishedEvent_1 = publishedEvents_1.get(0);
+        assertThat(publishedEvent_1.getPositionInStream(), is(1L));
+        assertThat(publishedEvent_1.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_1.getName(), is("sample.events.name.pass1.sequence1"));
+        assertThat(publishedEvent_1.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_1.getEventNumber(), is(Optional.of(1L)));
+        assertThat(publishedEvent_1.getPreviousEventNumber(), is(0L));
 
-        final Stream<LinkedEvent> linkedEventStream2 = linkedEventJdbcRepository
-                .findByStreamIdOrderByPositionAsc(fromString(stream2));
-        linkedEventStream2.forEach(linkedEvent -> {
-            if (linkedEvent.getSequenceId() == 1L)
+        final List<PublishedEvent> publishedEvents_2 = testPublishedEventJdbcRepository.findByStreamIdOrderByPositionAsc(fromString(stream2));
 
-            {
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getName(), is("sample.events.name.pass1.sequence2"));
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getEventNumber().get(), is(10L));
-                assertThat(linkedEvent.getPreviousEventNumber(), is(9L));
-            }
-            if (linkedEvent.getSequenceId() == 2L)
+        assertThat(publishedEvents_2.size(), is(2));
 
-            {
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getName(), is("sample.events.name.pass1.sequence3"));
-                assertThat(linkedEvent.getCreatedAt(), is(createdAt));
-                assertThat(linkedEvent.getEventNumber().get(), is(11L));
-                assertThat(linkedEvent.getPreviousEventNumber(), is(10L));
-            }
-        });
+        final PublishedEvent publishedEvent_2 = publishedEvents_2.get(0);
+        assertThat(publishedEvent_2.getPositionInStream(), is(1L));
+        assertThat(publishedEvent_2.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_2.getName(), is("sample.events.name.pass1.sequence2"));
+        assertThat(publishedEvent_2.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_2.getEventNumber(), is(Optional.of(2L)));
+        assertThat(publishedEvent_2.getPreviousEventNumber(), is(1L));
+
+        final PublishedEvent publishedEvent_3 = publishedEvents_2.get(1);
+        assertThat(publishedEvent_3.getPositionInStream(), is(2L));
+        assertThat(publishedEvent_3.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_3.getName(), is("sample.events.name.pass1.sequence3"));
+        assertThat(publishedEvent_3.getCreatedAt(), is(createdAt));
+        assertThat(publishedEvent_3.getEventNumber(), is(Optional.of(3L)));
+        assertThat(publishedEvent_3.getPreviousEventNumber(), is(2L));
+
+        assertThat(testPublishedEventJdbcRepository.prePublishQueueCount(), is(0L));
     }
 
-
-
     private boolean clonedStreamAvailableAndActive() {
-        final Optional<Event> matchingClonedEvent = databaseUtils.getEventLogJdbcRepository().findAll()
+        final Optional<Event> matchingClonedEvent = databaseUtils.getEventStoreDataAccess().findAllEvents().stream()
                 .filter(event -> event.getName().equals("system.events.cloned"))
                 .findFirst();
         return matchingClonedEvent.isPresent()
@@ -303,41 +302,41 @@ public class StreamTransformationIT {
     }
 
     private boolean streamAvailableAndActive(final UUID streamId) {
-        final Optional<EventStream> matchingEvent = databaseUtils.getEventStreamJdbcRepository().findAll()
+        final Optional<EventStream> matchingEvent = databaseUtils.getEventStreamJdbcRepository().findAll().stream()
                 .filter(eventStream -> eventStream.getStreamId().equals(streamId))
                 .findFirst();
         return matchingEvent.isPresent() && matchingEvent.get().isActive();
     }
 
     private boolean eventStoreTransformedEventPresent(final String transformedEventName) {
-        final Stream<Event> eventLogs = databaseUtils.getEventLogJdbcRepository().findAll();
+        final Stream<Event> eventLogs = databaseUtils.getEventStoreDataAccess().findAllEvents().stream();
         final Optional<Event> event = eventLogs.filter(item -> item.getStreamId().equals(STREAM_ID)).findFirst();
 
         return event.isPresent() && event.get().getName().equals(transformedEventName);
     }
 
     private boolean eventStoreTransformedEventPresentAndSequenceCorrect(final String transformedEventName, final UUID streamId, final long sequence) {
-        final Stream<Event> eventLogs = databaseUtils.getEventLogJdbcRepository().findAll();
+        final Stream<Event> eventLogs = databaseUtils.getEventStoreDataAccess().findAllEvents().stream();
         final Optional<Event> event = eventLogs
                 .filter(item -> item.getStreamId().equals(streamId))
                 .filter(item -> item.getName().equals(transformedEventName))
                 .findFirst();
 
-        return event.isPresent() && event.get().getSequenceId().equals(sequence);
+        return event.isPresent() && event.get().getPositionInStream().equals(sequence);
     }
 
     private boolean eventStoreTransformedEventPresent(final String transformedEventName, final UUID streamId) {
-        final Stream<Event> eventLogs = databaseUtils.getEventLogJdbcRepository().findAll();
+        final Stream<Event> eventLogs = databaseUtils.getEventStoreDataAccess().findAllEvents().stream();
         final Optional<Event> event = eventLogs
                 .filter(item -> item.getStreamId().equals(streamId))
                 .filter(item -> item.getName().equals(transformedEventName))
                 .findFirst();
 
-        return event.isPresent() ;
+        return event.isPresent();
     }
 
     private boolean eventStoreEventIsPresent(final String originalEventName) {
-        final Stream<Event> eventLogs = databaseUtils.getEventLogJdbcRepository().findAll();
+        final Stream<Event> eventLogs = databaseUtils.getEventStoreDataAccess().findAllEvents().stream();
         final Optional<Event> event = eventLogs
                 .filter(item -> item.getName().equals(originalEventName))
                 .filter(item -> item.getStreamId().equals(STREAM_ID))
@@ -347,17 +346,16 @@ public class StreamTransformationIT {
     }
 
     private long totalStreamCount() {
-        return databaseUtils.getEventStreamJdbcRepository().findAll().count();
+        return databaseUtils.getEventStreamJdbcRepository().findAll().size();
     }
 
 
     private long totalEventCount() {
-        return databaseUtils.getEventLogJdbcRepository().findAll().count();
+        return databaseUtils.getEventStoreDataAccess().findAllEvents().size();
     }
 
-
     private List<Event> getTransformedEvents() {
-        final Stream<Event> eventLogs = databaseUtils.getEventLogJdbcRepository().findAll();
+        final Stream<Event> eventLogs = databaseUtils.getEventStoreDataAccess().findAllEvents().stream();
         return eventLogs.filter(item -> item.getStreamId().equals(STREAM_ID)).collect(toList());
     }
 }
