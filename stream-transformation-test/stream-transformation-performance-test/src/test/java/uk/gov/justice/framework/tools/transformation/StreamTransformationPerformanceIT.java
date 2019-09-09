@@ -56,12 +56,12 @@ public class StreamTransformationPerformanceIT {
         final long databaseEventStreamCount = Long.valueOf(getProperty("databaseEventStreamCount"));
         final long databaseEventLogCount = Integer.valueOf(getProperty("databaseEventLogCount"));
 
-        final long beforeEventStreamTransform = databaseUtils.getEventStreamJdbcRepository().findAll().count();
+        final long beforeEventStreamTransform = databaseUtils.getEventStreamJdbcRepository().findAll().size();
 
         assertThat(LINE_BREAK + "Incorrect event stream count please check data!" + LINE_BREAK, beforeEventStreamTransform,
                 is(databaseEventStreamCount));
 
-        final long beforeEventsTransform = databaseUtils.getEventLogJdbcRepository().findAll().count();
+        final long beforeEventsTransform = databaseUtils.getEventStoreDataAccess().findAllEvents().size();
         assertThat(LINE_BREAK + "Incorrect event log count please check data!", beforeEventsTransform, is(databaseEventLogCount));
 
         LOGGER.info("Starting performance test");

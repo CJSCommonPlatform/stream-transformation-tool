@@ -1,6 +1,5 @@
 package uk.gov.justice.event.tool;
 
-import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -9,7 +8,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import uk.gov.justice.event.tool.task.StreamTransformationTask;
@@ -17,7 +15,8 @@ import uk.gov.justice.services.eventsourcing.repository.jdbc.EventRepository;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.eventstream.EventStream;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
 import uk.gov.justice.tools.eventsourcing.transformation.service.EventStreamTransformationService;
-import uk.gov.justice.tools.eventsourcing.transformation.service.LinkedEventStreamTransformationService;
+import uk.gov.justice.tools.eventsourcing.transformation.service.PrePublishedQueueTruncatorService;
+import uk.gov.justice.tools.eventsourcing.transformation.service.PublishedEventsRebuilderService;
 
 import java.lang.reflect.Field;
 import java.util.UUID;
@@ -52,7 +51,7 @@ public class StartTransformationTest {
     private EventStreamTransformationService eventStreamTransformationService;
 
     @Mock
-    private LinkedEventStreamTransformationService linkedEventStreamTransformationService;
+    private PublishedEventsRebuilderService publishedEventsRebuilderService;
 
     @InjectMocks
     private StartTransformation startTransformation;
@@ -68,6 +67,9 @@ public class StartTransformationTest {
 
     @Mock
     private EventTransformationRegistry eventTransformationRegistry;
+
+    @Mock
+    private PrePublishedQueueTruncatorService prePublishedQueueTruncatorService;
 
     @Mock
     private Logger logger;
@@ -111,8 +113,8 @@ public class StartTransformationTest {
 
         assertThat(startTransformation.outstandingTasks.size(), is(0));
 
-        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
-        verify(linkedEventStreamTransformationService).populateLinkedEvents();
+        verify(prePublishedQueueTruncatorService).truncate();
+        verify(publishedEventsRebuilderService).rebuild();
     }
 
     @Test
@@ -135,14 +137,13 @@ public class StartTransformationTest {
         startTransformation.taskAborted(future, null, null, mock(Throwable.class));
         assertThat(startTransformation.outstandingTasks.size(), is(1));
 
-        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
-        verify(linkedEventStreamTransformationService).populateLinkedEvents();
+        verify(publishedEventsRebuilderService).rebuild();
 
         startTransformation.taskDone(future2, null, null, null);
         assertThat(startTransformation.outstandingTasks.size(), is(0));
 
-        verify(linkedEventStreamTransformationService,times(2)).truncateLinkedEvents();
-        verify(linkedEventStreamTransformationService,times(2)).populateLinkedEvents();
+        verify(prePublishedQueueTruncatorService, times(2)).truncate();
+        verify(publishedEventsRebuilderService, times(2)).rebuild();
     }
 
     @Test
@@ -178,13 +179,12 @@ public class StartTransformationTest {
         startTransformation.taskAborted(future, null, null, mock(Throwable.class));
 
         assertThat(startTransformation.outstandingTasks.size(), is(1));
-        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
-        verify(linkedEventStreamTransformationService).populateLinkedEvents();
+        verify(publishedEventsRebuilderService).rebuild();
 
         startTransformation.taskDone(future2, null, null, null);
 
-        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
-        verify(linkedEventStreamTransformationService).populateLinkedEvents();
+        verify(prePublishedQueueTruncatorService).truncate();
+        verify(publishedEventsRebuilderService).rebuild();
 
     }
 
@@ -194,8 +194,8 @@ public class StartTransformationTest {
         streamsProcessedCountStepInfo.set(startTransformation, null);
         startTransformation.go();
 
-        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
-        verify(linkedEventStreamTransformationService).populateLinkedEvents();
+        verify(prePublishedQueueTruncatorService).truncate();
+        verify(publishedEventsRebuilderService).rebuild();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -203,8 +203,8 @@ public class StartTransformationTest {
         streamsProcessedCountStepInfo.set(startTransformation, 0);
         startTransformation.go();
 
-        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
-        verify(linkedEventStreamTransformationService).populateLinkedEvents();
+        verify(prePublishedQueueTruncatorService).truncate();
+        verify(publishedEventsRebuilderService).rebuild();
     }
 
     @Test
@@ -232,8 +232,8 @@ public class StartTransformationTest {
         startTransformation.taskDone(future3, null, null, null);
         assertThat(startTransformation.outstandingTasks.size(), is(0));
 
-        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
-        verify(linkedEventStreamTransformationService).populateLinkedEvents();
+        verify(prePublishedQueueTruncatorService).truncate();
+        verify(publishedEventsRebuilderService).rebuild();
     }
 
     @Test
@@ -267,7 +267,7 @@ public class StartTransformationTest {
         startTransformation.taskDone(future3, null, null, null);
         assertThat(startTransformation.outstandingTasks.size(), is(0));
 
-        verify(linkedEventStreamTransformationService).truncateLinkedEvents();
-        verify(linkedEventStreamTransformationService).populateLinkedEvents();
+        verify(prePublishedQueueTruncatorService).truncate();
+        verify(publishedEventsRebuilderService).rebuild();
     }
 }

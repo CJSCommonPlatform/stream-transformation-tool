@@ -14,10 +14,10 @@ import uk.gov.justice.services.eventsourcing.repository.jdbc.event.Event;
 
 import java.io.StringReader;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import javax.json.JsonObject;
 
@@ -58,7 +58,7 @@ public class StreamAnonymisationTransformationIT {
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS, STREAM_COUNT_REPORTING_INTERVAL, MEMORY_OPTIONS_PARAMETER);
 
-        final List<Event> events = databaseUtils.getEventLogJdbcRepository().findAll().filter(e -> e.getStreamId().equals(activeStreamId)).collect(toList());
+        final List<Event> events = databaseUtils.getEventStoreDataAccess().findAllEvents().stream().filter(e -> e.getStreamId().equals(activeStreamId)).collect(toList());
 
         assertThat(events, hasSize(1));
 
@@ -82,7 +82,7 @@ public class StreamAnonymisationTransformationIT {
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, PROCESS_ALL_STREAMS, WILDFLY_TIMEOUT_IN_SECONDS, STREAM_COUNT_REPORTING_INTERVAL, MEMORY_OPTIONS_PARAMETER);
 
-        final List<Event> events = databaseUtils.getEventLogJdbcRepository().findAll().collect(toList());
+        final List<Event> events = new ArrayList<>(databaseUtils.getEventStoreDataAccess().findAllEvents());
         assertThat(events, hasSize(2));
 
         final Event activeStreamEvent = retrieveEvent(activeStreamId, EVENT_TO_ANONYMISE);
@@ -111,7 +111,7 @@ public class StreamAnonymisationTransformationIT {
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS, STREAM_COUNT_REPORTING_INTERVAL, MEMORY_OPTIONS_PARAMETER);
 
-        final List<Event> events = databaseUtils.getEventLogJdbcRepository().findAll().collect(toList());
+        final List<Event> events = new ArrayList<>(databaseUtils.getEventStoreDataAccess().findAllEvents());
         assertThat(events, hasSize(2));
 
         final Event activeStreamEvent = retrieveEvent(activeStreamId, EVENT_TO_ANONYMISE);
@@ -127,8 +127,8 @@ public class StreamAnonymisationTransformationIT {
     }
 
     private Event retrieveEvent(final UUID streamId, final String eventName) {
-        final Stream<Event> eventLogs = databaseUtils.getEventLogJdbcRepository().findAll();
-        final Optional<Event> event = eventLogs
+        final List<Event> eventLogs = databaseUtils.getEventStoreDataAccess().findAllEvents();
+        final Optional<Event> event = eventLogs.stream()
                 .filter(item -> item.getName().equals(eventName))
                 .filter(item -> item.getStreamId().equals(streamId))
                 .findFirst();

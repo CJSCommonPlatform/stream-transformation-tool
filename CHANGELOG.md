@@ -5,6 +5,18 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+## [6.0.0] - 2019-09-09
+### Changed
+- Upgrade to framework 6
+- Truncate pre_publish_queue table after transformation is complete
+- Rebuild published_event table after transformation is complete
+- Update framework-api to 4.0.1
+- Update framework to 6.0.12
+- Update event-store to 2.0.14
+- Update common-bom to 2.4.0
+- Update utilities to 1.20.2
+- Update test-utils to 1.24.3
+
 ## [5.3.1] - 2019-07-17
 ### Added
 - Retry mechanism when performing stream operations such as append / move or clone

@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * This class by default creates 1000 events with 100 streams with 10 events per stream These can be
  * configured by supplying the right system properties  example as below -DeventStreamSize=1000
  * -DeventsPerStreamSize=10 -DgeneratedTestDataReportingInterval=200
- *
+ * <p>
  * This will create 10000 event log entries and when it runs will report progress for each pass
  * after every 200th event
  */
@@ -63,12 +63,12 @@ public class GenerateTestData {
             int eventCount = 0;
             for (long logId = 1; logId <= eventsPerStreamSize; logId++) {
                 eventCount++;
-                databaseUtils.getEventLogJdbcRepository().insert(eventLogFrom("sample.events.name", logId, id, createdAt));
+                databaseUtils.getEventStoreDataAccess().insertIntoEventLog(eventLogFrom("sample.events.name", logId, id, createdAt));
                 if (eventCount % generatedTestDataReportingInterval == 0) {
                     LOGGER.info(format("%s Events created for streams created %s", eventCount, streamCount));
                 }
             }
-            databaseUtils.getEventStreamJdbcRepository().insert(id);
+            databaseUtils.getEventStreamJdbcRepository().insert(id, true);
         }
     }
 }
