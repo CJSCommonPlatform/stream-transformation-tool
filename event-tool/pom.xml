@@ -116,6 +116,12 @@
             <artifactId>javax.json</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>javax.mail-api</artifactId>
+            <version>${javax.mail.version}</version>
+        </dependency>
+
         <!--Test-->
         <dependency>
             <groupId>org.hamcrest</groupId>

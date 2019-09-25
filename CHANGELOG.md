@@ -5,6 +5,12 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 
 ## [Unreleased]
 
+## [6.0.1] - 2019-09-25
+### Changed
+- Update framework-api to 4.1.0
+- Update framework to 6.0.16
+- Update event-store to 2.0.22
+
 ## [6.0.0] - 2019-09-12
 ### Changed
 - Upgrade to framework 6

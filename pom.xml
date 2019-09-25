@@ -22,9 +22,9 @@
 
     <properties>
         <cpp.repo.name>stream-transformation-tool</cpp.repo.name>
-        <framework-api.version>4.0.1</framework-api.version>
-        <framework.version>6.0.14</framework.version>
-        <event-store.version>2.0.15</event-store.version>
+        <framework-api.version>4.1.0</framework-api.version>
+        <framework.version>6.0.16</framework.version>
+        <event-store.version>2.0.22</event-store.version>
         <common-bom.version>2.4.0</common-bom.version>
         <utilities.version>1.20.2</utilities.version>
         <test-utils.version>1.24.3</test-utils.version>
@@ -33,7 +33,7 @@
         <junit-dataprovider.version>1.13.1</junit-dataprovider.version>
         <slf4j-jboss-logmanager.version>1.0.4.GA</slf4j-jboss-logmanager.version>
         <jboss-logmanager.version>2.1.2.Final</jboss-logmanager.version>
-
+        <javax.mail.version>1.6.2</javax.mail.version>
     </properties>
 
     <modules>
