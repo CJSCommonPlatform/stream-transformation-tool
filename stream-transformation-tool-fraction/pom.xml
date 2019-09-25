@@ -4,7 +4,7 @@
     <parent>
         <artifactId>stream-transformation-tool</artifactId>
         <groupId>uk.gov.justice</groupId>
-        <version>6.1.0-SNAPSHOT</version>
+        <version>6.0.1</version>
     </parent>
 
     <artifactId>stream-transformation-tool-fraction</artifactId>
