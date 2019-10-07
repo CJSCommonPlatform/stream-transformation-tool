@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-
 public class MatcherUtil {
 
     private MatcherUtil() {
@@ -22,6 +21,12 @@ public class MatcherUtil {
     public static void assertStringIsAnonymisedButOfSameLength(final String actualValue, final String expectedValue, final Optional<Pattern> optionalPattern) {
         assertFalse(actualValue.equalsIgnoreCase(expectedValue));
         assertThat(actualValue.length(), is(expectedValue.length()));
+        optionalPattern.ifPresent(op -> assertTrue(op.matcher(actualValue).matches()));
+    }
+
+    public static void assertStringIsAnonymisedButOfLength(final String actualValue, final String expectedValue, final int length, final Optional<Pattern> optionalPattern) {
+        assertFalse(actualValue.equalsIgnoreCase(expectedValue));
+        assertThat(actualValue.length(), is(length));
         optionalPattern.ifPresent(op -> assertTrue(op.matcher(actualValue).matches()));
     }
 }

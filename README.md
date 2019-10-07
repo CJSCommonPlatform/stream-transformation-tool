@@ -15,6 +15,7 @@ The stream-transformation-tool is a tool to support transformations of the event
 * stream-transformation-tool-api - API exposing the externally facing components of the repository
 * stream-transformation-fraction - Swarm fraction for bootstrapping the Swarm Application
 * stream-transformation-service - The internal implementation of the transformation process
+* stream-transformation-tool-anonymise - Java API to anonymise event data through transformation
 
 # How to Build the Event-Tool
 
