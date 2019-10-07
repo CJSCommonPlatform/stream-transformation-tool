@@ -6,6 +6,6 @@ public class EmailGenerator extends Generator<String> {
 
     @Override
     public String convert(final String fieldValue) {
-        return randomAlphanumeric(fieldValue.length() - 9) + "@mail.com";
+        return randomAlphanumeric(5) + "@mail.com";
     }
 }

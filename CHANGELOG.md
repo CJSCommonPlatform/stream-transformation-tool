@@ -4,6 +4,9 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Email address generation
+
 
 ## [6.0.1] - 2019-09-25
 ### Changed
