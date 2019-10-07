@@ -17,6 +17,6 @@ public class EmailGeneratorTest {
         final String anonymisedEmailValue = emailGenerator.convert(emailValue);
         assertTrue(EmailValidator.getInstance().isValid(anonymisedEmailValue));
         assertThat(anonymisedEmailValue, endsWith("@mail.com"));
-        assertThat(anonymisedEmailValue.length(), is(emailValue.length()));
+        assertThat(anonymisedEmailValue.length(), is(14));
     }
 }
