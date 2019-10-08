@@ -6,8 +6,10 @@ import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.UUID.randomUUID;
 import static javax.json.Json.createObjectBuilder;
+import static org.junit.Assert.fail;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -24,7 +26,6 @@ import static uk.gov.justice.tools.eventsourcing.transformation.api.Action.TRANS
 
 import uk.gov.justice.services.core.enveloper.Enveloper;
 import uk.gov.justice.services.eventsourcing.repository.jdbc.event.EventJdbcRepository;
-import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventSourceTransformation;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
@@ -155,7 +156,7 @@ public class EventStreamTransformationServiceTest {
     }
 
     @Test
-    public void shouldTransformStreamOfSingleEventWithStreamMover() {
+    public void shouldTransformStreamOfSingleEventWithStreamMover() throws Exception {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         final Set<EventTransformation> transformations = newHashSet(eventTransformation);
 
@@ -186,7 +187,7 @@ public class EventStreamTransformationServiceTest {
 
 
     @Test
-    public void shouldDeactivateStreamOfSingleEvent() {
+    public void shouldDeactivateStreamOfSingleEvent() throws Exception {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         when(eventStream.read()).thenReturn(Stream.of(event));
         final Set<EventTransformation> eventTransformations = newHashSet(eventTransformation);
@@ -202,7 +203,7 @@ public class EventStreamTransformationServiceTest {
     }
 
     @Test
-    public void shouldTransformAllEventsOnStream() {
+    public void shouldTransformAllEventsOnStream() throws Exception {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         final JsonEnvelope event2 = buildEnvelope(OTHER_EVENT_NAME);
         when(eventStream.read()).thenReturn(Stream.of(event, event2));
@@ -227,7 +228,7 @@ public class EventStreamTransformationServiceTest {
     }
 
     @Test
-    public void shouldNotPerformAnyActionOnTheStreamIfNotIndicated() {
+    public void shouldNotPerformAnyActionOnTheStreamIfNotIndicated() throws Exception {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
 
         when(eventStream.read()).thenReturn(Stream.of(event));
@@ -241,7 +242,7 @@ public class EventStreamTransformationServiceTest {
     }
 
     @Test
-    public void shouldNotPerformAnyActionIfMultipleActionsAreDefinedOnAStream() {
+    public void shouldNotPerformAnyActionIfMultipleActionsAreDefinedOnAStream() throws Exception {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         final JsonEnvelope event2 = buildEnvelope(OTHER_EVENT_NAME);
 
@@ -300,26 +301,30 @@ public class EventStreamTransformationServiceTest {
 
         doThrow(EventStreamException.class).when(retryStreamOperator).cloneWithRetry(any());
 
-        eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
+        try {
+            eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
+            fail();
+        } catch (EventStreamException e) {
 
-        final InOrder inOrder = inOrder(transformationChecker, retryStreamOperator, streamTransformer);
+            final InOrder inOrder = inOrder(transformationChecker, retryStreamOperator, streamTransformer);
 
-        inOrder.verify(transformationChecker).requiresTransformation(listArgumentCaptor.capture(),
-                uuidCaptor.capture(), intArgumentCaptor.capture());
+            inOrder.verify(transformationChecker).requiresTransformation(listArgumentCaptor.capture(),
+                    uuidCaptor.capture(), intArgumentCaptor.capture());
 
-        inOrder.verify(streamTransformer, never()).transformStream(STREAM_ID, newHashSet(eventTransformation));
+            inOrder.verify(streamTransformer, never()).transformStream(STREAM_ID, newHashSet(eventTransformation));
 
-        verifyNoMoreInteractions(streamTransformer);
+            verifyNoMoreInteractions(streamTransformer);
+        }
     }
 
 
     @Test
     public void shouldLogEventStreamException() throws Exception {
         try {
-            doThrow(Exception.class).when(eventTransformationRegistry).getEventTransformationBy(1);
+            doThrow(EventStreamException.class).when(eventTransformationRegistry).getEventTransformationBy(1);
             eventStreamTransformationService.transformEventStream(STREAM_ID, 1);
-        } catch (final Exception expected) {
-            verify(logger).error(format(any(String.class)), expected);
+        } catch (final EventStreamException expected) {
+            verify(logger).error(any(String.class), eq(expected));
         }
     }
 

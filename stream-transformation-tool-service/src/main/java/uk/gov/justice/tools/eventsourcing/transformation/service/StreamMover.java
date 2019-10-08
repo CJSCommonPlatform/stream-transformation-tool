@@ -1,8 +1,7 @@
 package uk.gov.justice.tools.eventsourcing.transformation.service;
 
-import static java.lang.String.format;
-
 import uk.gov.justice.services.eventsourcing.source.core.EventSourceTransformation;
+import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.EventStreamReader;
 import uk.gov.justice.tools.eventsourcing.transformation.StreamTransformerUtil;
@@ -38,23 +37,19 @@ public class StreamMover {
 
     public void transformAndMoveStream(final UUID originalStreamId,
                                        final Set<EventTransformation> transformations,
-                                       final UUID newStreamId) {
-        try {
-            final List<JsonEnvelope> jsonEnvelopeList = eventStreamReader.getStreamBy(originalStreamId);
+                                       final UUID newStreamId) throws EventStreamException {
+        final List<JsonEnvelope> jsonEnvelopeList = eventStreamReader.getStreamBy(originalStreamId);
 
-            eventSourceTransformation.clearStream(originalStreamId);
+        eventSourceTransformation.clearStream(originalStreamId);
 
-            try (final Stream<JsonEnvelope> filteredMoveEventStream = streamTransformerUtil.transformAndMove(jsonEnvelopeList.stream(), transformations)) {
-                streamAppender.appendEventsToStream(newStreamId, filteredMoveEventStream);
-            }
-
-            try (final Stream<JsonEnvelope> unfilteredMoveEventStream = streamTransformerUtil.filterOriginalEvents(jsonEnvelopeList, transformations)) {
-                streamAppender.appendEventsToStream(originalStreamId, unfilteredMoveEventStream);
-            }
-
-        } catch (final Exception e) {
-            logger.error(format("Unknown error while moving events on stream %s", originalStreamId), e);
+        try (final Stream<JsonEnvelope> filteredMoveEventStream = streamTransformerUtil.transformAndMove(jsonEnvelopeList.stream(), transformations)) {
+            streamAppender.appendEventsToStream(newStreamId, filteredMoveEventStream);
         }
+
+        try (final Stream<JsonEnvelope> unfilteredMoveEventStream = streamTransformerUtil.filterOriginalEvents(jsonEnvelopeList, transformations)) {
+            streamAppender.appendEventsToStream(originalStreamId, unfilteredMoveEventStream);
+        }
+
     }
 
 
