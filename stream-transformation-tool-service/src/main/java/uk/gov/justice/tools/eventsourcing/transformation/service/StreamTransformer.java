@@ -1,10 +1,9 @@
 package uk.gov.justice.tools.eventsourcing.transformation.service;
 
-import static java.lang.String.format;
-
 import uk.gov.justice.services.eventsourcing.source.core.EventSource;
 import uk.gov.justice.services.eventsourcing.source.core.EventSourceTransformation;
 import uk.gov.justice.services.eventsourcing.source.core.EventStream;
+import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.StreamTransformerUtil;
 import uk.gov.justice.tools.eventsourcing.transformation.api.EventTransformation;
@@ -39,10 +38,10 @@ public class StreamTransformer {
     private StreamTransformerUtil streamTransformerUtil;
 
     @SuppressWarnings({"squid:S2629"})
-    public void transformStream(final UUID streamId, final Set<EventTransformation> transformations) {
-        try {
-            final EventStream stream = eventSource.getStreamById(streamId);
-            final Stream<JsonEnvelope> events = stream.read();
+    public void transformStream(final UUID streamId, final Set<EventTransformation> transformations) throws EventStreamException {
+        final EventStream stream = eventSource.getStreamById(streamId);
+
+        try (final Stream<JsonEnvelope> events = stream.read()) {
             final List<JsonEnvelope> originalEvents = events.collect(Collectors.toList());
 
             eventSourceTransformation.clearStream(streamId);
@@ -52,14 +51,6 @@ public class StreamTransformer {
             try (Stream<JsonEnvelope> transformedEventStream = streamTransformerUtil.transform(originalEvents.stream(), transformations)) {
                 streamAppender.appendEventsToStream(streamId, transformedEventStream);
             }
-
-            events.close();
-
-        } catch (final Exception e) {
-            logger.error(format("Unknown error while transforming events on stream %s", streamId), e);
         }
-
     }
-
-
 }
