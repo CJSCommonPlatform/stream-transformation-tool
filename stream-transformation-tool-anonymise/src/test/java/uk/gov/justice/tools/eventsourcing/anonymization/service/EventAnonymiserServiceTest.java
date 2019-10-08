@@ -8,6 +8,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static uk.gov.justice.tools.eventsourcing.anonymization.constants.StringPattern.EMAIL_PATTERN;
 import static uk.gov.justice.tools.eventsourcing.anonymization.constants.StringPattern.NI_NUMBER_PATTERN;
 import static uk.gov.justice.tools.eventsourcing.anonymization.util.FileUtil.getFileContentsAsString;
+import static uk.gov.justice.tools.eventsourcing.anonymization.util.MatcherUtil.assertStringIsAnonymisedButOfLength;
 import static uk.gov.justice.tools.eventsourcing.anonymization.util.MatcherUtil.assertStringIsAnonymisedButOfSameLength;
 
 import java.io.StringReader;
@@ -29,7 +30,7 @@ public class EventAnonymiserServiceTest {
         final JsonObject exampleObject = anonymisedPayload.getJsonObject("example");
         assertThat(exampleObject.getString("attributeUUID"), is("9b42e998-158a-4683-8073-8e9453fe6cc9"));
         assertThat(exampleObject.getString("attributeString"), is("Warwick Justice Centre")); // should not anonymise
-        assertStringIsAnonymisedButOfSameLength(exampleObject.getString("attributeStringEmail"), "test123@mail.com", of(EMAIL_PATTERN));
+        assertStringIsAnonymisedButOfLength(exampleObject.getString("attributeStringEmail"), "test123@mail.com", 14, of(EMAIL_PATTERN));
         assertStringIsAnonymisedButOfSameLength(exampleObject.getString("attributeStringNiNumber"), "SC208978A", of(NI_NUMBER_PATTERN));
         assertThat(exampleObject.getString("attributeDate"), is("2017-05-19"));
         assertThat(exampleObject.getJsonArray("attributeArraySimple").getJsonObject(0).getString("arrayAttributeUUID"), is("1905c665-a146-4efc-a01b-d7f035820656"));
@@ -38,7 +39,7 @@ public class EventAnonymiserServiceTest {
         assertThat(complexArray.getInt(1), is(1));
         assertThat(complexArray.getBoolean(2), is(true));
         assertThat(complexArray.getJsonObject(3).getString("arrayAttributeString"), is("abcdef"));
-        assertStringIsAnonymisedButOfSameLength(complexArray.getString(4), "test234@mail.com", of(EMAIL_PATTERN));
+        assertStringIsAnonymisedButOfLength(complexArray.getString(4), "test234@mail.com", 14, of(EMAIL_PATTERN));
         assertStringIsAnonymisedButOfSameLength(complexArray.getString(5), "SC208979B", of(NI_NUMBER_PATTERN));
 
     }
@@ -71,10 +72,10 @@ public class EventAnonymiserServiceTest {
         assertThat(anonymisedJsonArray.getBoolean(2), is(true));
         assertStringIsAnonymisedButOfSameLength(anonymisedJsonArray.getJsonObject(3).getString("stringAttributeAnonymise"), "abcdef");
         assertThat(anonymisedJsonArray.getJsonObject(3).getString("stringAttributeDoNotAnonymise"), is("mnopqr"));
-        assertStringIsAnonymisedButOfSameLength(anonymisedJsonArray.getJsonObject(3).getString("attributeStringEmail"), "test123@mail.com", of(EMAIL_PATTERN));
+        assertStringIsAnonymisedButOfLength(anonymisedJsonArray.getJsonObject(3).getString("attributeStringEmail"), "test123@mail.com", 14, of(EMAIL_PATTERN));
         assertStringIsAnonymisedButOfSameLength(anonymisedJsonArray.getJsonObject(3).getString("attributeStringNiNumber"), "SC208978A", of(NI_NUMBER_PATTERN));
         assertThat(anonymisedJsonArray.getJsonArray(4), is(createArrayBuilder().add(1).add(2).add(3).build()));
-        assertStringIsAnonymisedButOfSameLength(anonymisedJsonArray.getString(5), "test2345@mail.com", of(EMAIL_PATTERN));
+        assertStringIsAnonymisedButOfLength(anonymisedJsonArray.getString(5), "test2345@mail.com", 14, of(EMAIL_PATTERN));
         assertStringIsAnonymisedButOfSameLength(anonymisedJsonArray.getString(6), "SC208979B", of(NI_NUMBER_PATTERN));
     }
 
