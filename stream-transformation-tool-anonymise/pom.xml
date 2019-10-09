@@ -5,7 +5,7 @@
     <parent>
         <artifactId>stream-transformation-tool</artifactId>
         <groupId>uk.gov.justice</groupId>
-        <version>6.1.1-SNAPSHOT</version>
+        <version>6.1.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
