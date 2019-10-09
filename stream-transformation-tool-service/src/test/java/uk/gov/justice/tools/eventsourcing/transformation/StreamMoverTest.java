@@ -105,13 +105,11 @@ public class StreamMoverTest {
         verify(streamAppender, times(2)).appendEventsToStream(streamIdArgumentCaptor.capture(), streamArgumentCaptor.capture());
     }
 
-    @Test
-    public void shouldLogEventStreamException() throws Exception {
+    @Test(expected = EventStreamException.class)
+    public void shouldNotSuppressEventStreamException() throws Exception {
         final Set<EventTransformation> transformations = newHashSet(eventTransformation);
-        doThrow(Exception.class).when(eventSourceTransformation).clearStream(any());
+        doThrow(EventStreamException.class).when(eventSourceTransformation).clearStream(any());
         streamMover.transformAndMoveStream(STREAM_ID, transformations, randomUUID());
-
-        verify(logger).error(anyString(), any(Exception.class));
     }
 
     private JsonEnvelope buildEnvelope(final String eventName) {
