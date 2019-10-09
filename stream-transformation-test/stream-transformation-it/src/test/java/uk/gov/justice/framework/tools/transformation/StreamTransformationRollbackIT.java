@@ -59,7 +59,7 @@ public class StreamTransformationRollbackIT {
 
         swarmStarterUtil.runCommand(ENABLE_REMOTE_DEBUGGING_FOR_WILDFLY, WILDFLY_TIMEOUT_IN_SECONDS, STREAM_COUNT_REPORTING_INTERVAL, MEMORY_OPTIONS_PARAMETER);
 
-        final List<Event> events = databaseUtils.getEventLogJdbcRepository().findAll().filter(e -> e.getStreamId().equals(activeStreamId)).collect(toList());
+        final List<Event> events = databaseUtils.getEventStoreDataAccess().findAllEvents().stream().filter(e -> e.getStreamId().equals(activeStreamId)).collect(toList());
 
         //this should throw an exception when processing stream as the total number of records and max value of sequence Id do not match. Hence, no transformation should have taken plave
         assertThat(events, hasSize(2));
@@ -69,17 +69,17 @@ public class StreamTransformationRollbackIT {
         JsonObject payload1 = createReader(new StringReader(event1.getPayload())).readObject();
         assertTrue(payload1.getString("a string").equalsIgnoreCase("test"));
 
-        final Event event2 = retrieveEvent(activeStreamId, 1l);
+        final Event event2 = retrieveEvent(activeStreamId, 3l);
         assertNotNull(event2);
         JsonObject payload2 = createReader(new StringReader(event2.getPayload())).readObject();
         assertTrue(payload2.getString("a string").equalsIgnoreCase("test"));
 
     }
 
-    private Event retrieveEvent(final UUID streamId, final long sequenceId) {
-        final Stream<Event> eventLogs = databaseUtils.getEventLogJdbcRepository().findAll();
-        final Optional<Event> event = eventLogs
-                .filter(item -> item.getSequenceId().equals(sequenceId))
+    private Event retrieveEvent(final UUID streamId, final long positionInStream) {
+        final List<Event> eventLogs = databaseUtils.getEventStoreDataAccess().findAllEvents();
+        final Optional<Event> event = eventLogs.stream()
+                .filter(item -> item.getPositionInStream().equals(positionInStream))
                 .filter(item -> item.getStreamId().equals(streamId))
                 .findFirst();
 
