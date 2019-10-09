@@ -7,7 +7,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static uk.gov.justice.services.messaging.JsonEnvelope.envelopeFrom;
 import static uk.gov.justice.services.messaging.JsonEnvelope.metadataBuilder;
@@ -83,7 +82,6 @@ public class StreamTransformerTest {
     public void shouldTransformStreamOfSingleEventAndReturnBackupStreamId() throws EventStreamException {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
 
-        given(eventSourceTransformation.cloneStream(STREAM_ID)).willReturn(BACKUP_STREAM_ID);
         given(eventSource.getStreamById(STREAM_ID)).willReturn(eventStream);
         given(eventStream.read()).willReturn(Stream.of(event));
         given(streamTransformerUtil.transform(streamArgumentCaptor.capture(), eventTransformationArgumentCaptor.capture())).willReturn(Stream.of(event));
@@ -102,7 +100,6 @@ public class StreamTransformerTest {
     public void shouldNotTransformEventWhichHasNotBeenIndicatedFor() throws EventStreamException {
         final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
         final JsonEnvelope event2 = buildEnvelope(OTHER_EVENT_NAME);
-        given(eventSourceTransformation.cloneStream(STREAM_ID)).willReturn(BACKUP_STREAM_ID);
         given(eventSource.getStreamById(STREAM_ID)).willReturn(eventStream);
         given(eventStream.read()).willReturn(Stream.of(event, event2));
         given(eventTransformation.actionFor(event)).willReturn(TRANSFORM);
@@ -113,15 +110,15 @@ public class StreamTransformerTest {
         verifyNoMoreInteractions(eventTransformation);
     }
 
-    @Test
-    public void shouldLogEventStreamException() throws Exception {
+    @Test(expected = EventStreamException.class)
+    public void shouldNotSuppressEventStreamException() throws Exception {
         final Set<EventTransformation> transformations = newHashSet(eventTransformation);
-        try {
-            doThrow(Exception.class).when(eventSourceTransformation).cloneStream(any());
-            streamTransformer.transformStream(STREAM_ID, transformations);
-        } catch (final Exception expected) {
-            verify(logger).error(any(String.class), expected);
-        }
+        final JsonEnvelope event = buildEnvelope(SOURCE_EVENT_NAME);
+        final JsonEnvelope event2 = buildEnvelope(OTHER_EVENT_NAME);
+        given(eventSource.getStreamById(STREAM_ID)).willReturn(eventStream);
+        given(eventStream.read()).willReturn(Stream.of(event, event2));
+        doThrow(EventStreamException.class).when(eventSourceTransformation).clearStream(any());
+        streamTransformer.transformStream(STREAM_ID, transformations);
     }
 
     private JsonEnvelope buildEnvelope(final String eventName) {

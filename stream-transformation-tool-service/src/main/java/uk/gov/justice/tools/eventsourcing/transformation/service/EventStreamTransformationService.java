@@ -4,6 +4,8 @@ import static java.lang.String.format;
 import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import uk.gov.justice.services.eventsourcing.source.core.EventSourceTransformation;
+import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
+import uk.gov.justice.services.jdbc.persistence.JdbcRepositoryException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.EventStreamReader;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
@@ -61,10 +63,10 @@ public class EventStreamTransformationService {
     private RetryStreamOperator retryStreamOperator;
 
 
-    @Transactional(REQUIRES_NEW)
-    public UUID transformEventStream(final UUID originalStreamId, final int pass) {
-        try {
+    @Transactional(value = REQUIRES_NEW, rollbackOn = {EventStreamException.class, JdbcRepositoryException.class})
+    public UUID transformEventStream(final UUID originalStreamId, final int pass) throws EventStreamException {
 
+        try {
             final List<JsonEnvelope> jsonEnvelopeList = eventStreamReader.getStreamBy(originalStreamId);
 
             final Set<EventTransformation> eventTransformations = getEventTransformations(pass);
@@ -86,10 +88,11 @@ public class EventStreamTransformationService {
             if (action.isDeactivate()) {
                 streamRepository.deactivateStream(originalStreamId);
             }
-
-        } catch (final Exception e) {
-            logger.error(format("Unknown error while moving events on stream %s", originalStreamId), e);
+        } catch (final EventStreamException | JdbcRepositoryException e) {
+            logger.error(format("Unknown error while transforming events on stream %s", originalStreamId), e);
+            throw e;
         }
+
         return originalStreamId;
     }
 

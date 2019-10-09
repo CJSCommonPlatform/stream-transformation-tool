@@ -4,6 +4,9 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Running out of database connections due to streams not getting closed correctly
+- Database state not rolling back due to exceptions getting suppressed and not propagating correctly
 
 ## [6.1.0] - 2019-10-07
 ### Fixed
