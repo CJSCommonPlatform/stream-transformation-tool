@@ -69,7 +69,7 @@ public class StreamTransformationRollbackIT {
         JsonObject payload1 = createReader(new StringReader(event1.getPayload())).readObject();
         assertTrue(payload1.getString("a string").equalsIgnoreCase("test"));
 
-        final Event event2 = retrieveEvent(activeStreamId, 1l);
+        final Event event2 = retrieveEvent(activeStreamId, 3l);
         assertNotNull(event2);
         JsonObject payload2 = createReader(new StringReader(event2.getPayload())).readObject();
         assertTrue(payload2.getString("a string").equalsIgnoreCase("test"));
