@@ -48,7 +48,7 @@ public class StreamTransformationRollbackIT {
     }
 
     @Test
-    public void shouldAnonymiseActiveStreamEventData() throws Exception {
+    public void shouldNotAnonymiseActiveStreamEventDataAndSuccessfullyRollback() throws Exception {
 
         final UUID activeStreamId = randomUUID();
 
