@@ -31,6 +31,8 @@ public class StringPatternGeneratorFactoryTest {
         assertThat(factory.getGenerator("2016-11-16 11:22:58.319Z"), instanceOf(DateTimeGenerator.class));
         assertThat(factory.getGenerator("2016-11-16 11:22:58Z"), instanceOf(DateTimeGenerator.class));
         assertThat(factory.getGenerator("2016-11-16 11:22:58"), instanceOf(DateTimeGenerator.class));
+        assertThat(factory.getGenerator("2016-11-16T11:22"), instanceOf(DateTimeGenerator.class));
+        assertThat(factory.getGenerator("2016-11-16 11:22"), instanceOf(DateTimeGenerator.class));
     }
 
     @Test
