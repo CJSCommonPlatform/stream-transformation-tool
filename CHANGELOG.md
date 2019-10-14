@@ -4,6 +4,8 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [6.1.2] - 2019-10-14
 ### Fixed
 - Date time pattern to accommodate for missing seconds entry
 
