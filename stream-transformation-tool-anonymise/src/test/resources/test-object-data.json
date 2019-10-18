@@ -1,13 +1,21 @@
 {
+  "exampleArray": [
+    {
+      "attributeIntAsString": "001",
+      "attributeIntAsStringAnonymise": "001"
+    }
+  ],
   "example": {
     "attributeString": "Warwick Justice Centre",
     "attributeStringEmail": "test123@mail.com",
     "attributeStringNiNumber": "SC208978A",
     "attributeDate": "2017-05-19",
     "attributeUUID": "9b42e998-158a-4683-8073-8e9453fe6cc9",
+    "attributeIntAsString": "001",
     "attributeArraySimple": [
       {
-        "arrayAttributeUUID": "1905c665-a146-4efc-a01b-d7f035820656"
+        "arrayAttributeUUID": "1905c665-a146-4efc-a01b-d7f035820656",
+        "arrayAttributeIntAsString": "001"
       }
     ],
     "attributeArrayComplex": [
