@@ -3,7 +3,9 @@
     {
       "eventName": "test-object-event",
       "fieldsToBeIgnored": [
+        "$.exampleArray[*].attributeIntAsString",
         "$.example.attributeString",
+        "$.example.attributeArraySimple[*].arrayAttributeIntAsString",
         "$.example.attributeArrayComplex[*].arrayAttributeString"
       ]
     },

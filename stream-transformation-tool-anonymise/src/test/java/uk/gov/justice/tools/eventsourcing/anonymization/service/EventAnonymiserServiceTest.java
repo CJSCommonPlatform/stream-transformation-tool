@@ -27,6 +27,10 @@ public class EventAnonymiserServiceTest {
     @Test
     public void shouldAnonymiseJsonObjectPayload() {
         final JsonObject anonymisedPayload = service.anonymiseObjectPayload(buildObjectPayload("test-object-data.json"), "test-object-event");
+        final JsonArray exampleArray = anonymisedPayload.getJsonArray("exampleArray");
+        assertThat(exampleArray.getJsonObject(0).getString("attributeIntAsString"), is("001"));
+        assertStringIsAnonymisedButOfSameLength(exampleArray.getJsonObject(0).getString("attributeIntAsStringAnonymise"), "001");
+
         final JsonObject exampleObject = anonymisedPayload.getJsonObject("example");
         assertThat(exampleObject.getString("attributeUUID"), is("9b42e998-158a-4683-8073-8e9453fe6cc9"));
         assertThat(exampleObject.getString("attributeString"), is("Warwick Justice Centre")); // should not anonymise
@@ -34,6 +38,7 @@ public class EventAnonymiserServiceTest {
         assertStringIsAnonymisedButOfSameLength(exampleObject.getString("attributeStringNiNumber"), "SC208978A", of(NI_NUMBER_PATTERN));
         assertThat(exampleObject.getString("attributeDate"), is("2017-05-19"));
         assertThat(exampleObject.getJsonArray("attributeArraySimple").getJsonObject(0).getString("arrayAttributeUUID"), is("1905c665-a146-4efc-a01b-d7f035820656"));
+        assertThat(exampleObject.getJsonArray("attributeArraySimple").getJsonObject(0).getString("arrayAttributeIntAsString"), is("001"));
         final JsonArray complexArray = exampleObject.getJsonArray("attributeArrayComplex");
         assertStringIsAnonymisedButOfSameLength(complexArray.getString(0), "abc");
         assertThat(complexArray.getInt(1), is(1));
