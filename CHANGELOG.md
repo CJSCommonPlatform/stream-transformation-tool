@@ -4,8 +4,15 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [6.4.0] - 2019-11-13
 ### Added
 - Enhanced unit tests for anonymisation module
+
+### Changed
+- Update framework to 6.4.0
+- Update event-stroe to 2.4.0
+- Update utilities to 1.24.3
 
 ## [6.1.2] - 2019-10-14
 ### Fixed
