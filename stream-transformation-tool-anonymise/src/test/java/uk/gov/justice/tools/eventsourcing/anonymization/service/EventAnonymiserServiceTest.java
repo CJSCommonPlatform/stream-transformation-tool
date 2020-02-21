@@ -36,10 +36,9 @@ public class EventAnonymiserServiceTest {
         assertThat(exampleObject.getString("attributeString"), is("Warwick Justice Centre")); // should not anonymise
         assertStringIsAnonymisedButOfLength(exampleObject.getString("attributeStringEmail"), "test123@mail.com", 14, of(EMAIL_PATTERN));
         assertStringIsAnonymisedButOfSameLength(exampleObject.getString("attributeStringNiNumber"), "SC208978A", of(NI_NUMBER_PATTERN));
-        assertThat(exampleObject.getString("attributeDate"), is("2017-01-01"));
+        assertThat(exampleObject.getString("attributeDate"), is("2017-05-19"));
         assertThat(exampleObject.getJsonArray("attributeArraySimple").getJsonObject(0).getString("arrayAttributeUUID"), is("1905c665-a146-4efc-a01b-d7f035820656"));
         assertThat(exampleObject.getJsonArray("attributeArraySimple").getJsonObject(0).getString("arrayAttributeIntAsString"), is("001"));
-
         final JsonArray complexArray = exampleObject.getJsonArray("attributeArrayComplex");
         assertStringIsAnonymisedButOfSameLength(complexArray.getString(0), "abc");
         assertThat(complexArray.getInt(1), is(1));
@@ -58,6 +57,7 @@ public class EventAnonymiserServiceTest {
         assertThat(exampleObject.getString("attributeString"), is("Warwick Justice Centre"));
         assertThat(exampleObject.getString("attributeStringEmail"), is("test123@mail.com"));
         assertThat(exampleObject.getString("attributeStringNiNumber"), is("SC208978A"));
+        assertThat(exampleObject.getString("attributeDate"), is("2017-05-19"));
         assertThat(exampleObject.getJsonArray("attributeArraySimple").getJsonObject(0).getString("arrayAttributeUUID"), is("1905c665-a146-4efc-a01b-d7f035820656"));
         final JsonArray complexArray = exampleObject.getJsonArray("attributeArrayComplex");
         assertThat(complexArray.getString(0), is("abc"));
@@ -82,7 +82,6 @@ public class EventAnonymiserServiceTest {
         assertThat(anonymisedJsonArray.getJsonArray(4), is(createArrayBuilder().add(1).add(2).add(3).build()));
         assertStringIsAnonymisedButOfLength(anonymisedJsonArray.getString(5), "test2345@mail.com", 14, of(EMAIL_PATTERN));
         assertStringIsAnonymisedButOfSameLength(anonymisedJsonArray.getString(6), "SC208979B", of(NI_NUMBER_PATTERN));
-        assertThat(anonymisedJsonArray.getString(7), is("2017-01-01"));
     }
 
     @Test
