@@ -4,11 +4,11 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+
+## [5.3.5] - 2019-10-15
 ### Added
 - Make Day and Month as 01 while anonymising date
-
-## [Unreleased]
-### Added
 - Enhanced unit tests for anonymisation module
 
 ## [5.3.4] - 2019-10-15
