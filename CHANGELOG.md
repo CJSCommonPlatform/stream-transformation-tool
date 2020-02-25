@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file, which follo
 on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [6.4.1] - 2020-02-25
 ### Added
 - Make Day and Month as 01 while anonymising date
 
