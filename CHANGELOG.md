@@ -6,7 +6,7 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 ## [Unreleased]
 
 
-## [5.3.5] - 2019-10-15
+## [5.3.5] - 2020-02-25
 ### Added
 - Make Day and Month as 01 while anonymising date
 - Enhanced unit tests for anonymisation module
