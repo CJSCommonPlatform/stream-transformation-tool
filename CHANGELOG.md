@@ -4,7 +4,7 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
-
+- Gson library available for easier manipulation of json objects for transformation
 
 ## [5.3.5] - 2020-02-25
 ### Added
