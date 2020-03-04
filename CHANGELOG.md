@@ -3,9 +3,13 @@ All notable changes to this project will be documented in this file, which follo
 on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
+## [6.4.3] - 2020-02-04
+### Fixed
+- Surfacing all exception when processing a stream 
+
 ## [6.4.2] - 2020-02-28
 ### Added
-- - Gson library available for easier manipulation of json objects for transformation
+- Gson library available for easier manipulation of json objects for transformation
 
 ## [6.4.1] - 2020-02-25
 ### Added
