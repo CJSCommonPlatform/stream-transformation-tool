@@ -5,7 +5,6 @@ import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import uk.gov.justice.services.eventsourcing.source.core.EventSourceTransformation;
 import uk.gov.justice.services.eventsourcing.source.core.exception.EventStreamException;
-import uk.gov.justice.services.jdbc.persistence.JdbcRepositoryException;
 import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.justice.tools.eventsourcing.transformation.EventStreamReader;
 import uk.gov.justice.tools.eventsourcing.transformation.EventTransformationRegistry;
@@ -62,8 +61,11 @@ public class EventStreamTransformationService {
     @Inject
     private RetryStreamOperator retryStreamOperator;
 
-
-    @Transactional(value = REQUIRES_NEW, rollbackOn = {EventStreamException.class, JdbcRepositoryException.class})
+    /*
+     * The transactional annotation will always rollback for RuntimeException and its subclasses.  So, no need to handle that explicitly.
+     * Only checked exceptions need to be specified
+     */
+    @Transactional(value = REQUIRES_NEW, rollbackOn = {EventStreamException.class})
     public UUID transformEventStream(final UUID originalStreamId, final int pass) throws EventStreamException {
 
         try {
@@ -88,8 +90,8 @@ public class EventStreamTransformationService {
             if (action.isDeactivate()) {
                 streamRepository.deactivateStream(originalStreamId);
             }
-        } catch (final EventStreamException | JdbcRepositoryException e) {
-            logger.error(format("Unknown error while transforming events on stream %s", originalStreamId), e);
+        } catch (final Exception e) {
+            logger.error(format("Error while transforming events on stream %s", originalStreamId), e);
             throw e;
         }
 
