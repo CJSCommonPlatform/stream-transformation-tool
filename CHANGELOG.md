@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file, which follo
 on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
+## [6.4.4] - 2020-03-05
+### Added
+- Json path library added
+
 ## [6.4.3] - 2020-02-04
 ### Fixed
 - Surfacing all exception when processing a stream 
