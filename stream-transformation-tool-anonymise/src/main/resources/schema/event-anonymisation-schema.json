@@ -2,6 +2,15 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
+    "globalAttributes": {
+      "type": "array",
+      "description": "Fields that are considered for all events.  This field does not denote a complete JSON path.  It only identifies the ending of a json path (partial entry)",
+      "items": [
+        {
+          "type": "string"
+        }
+      ]
+    },
     "events": {
       "type": "array",
       "items": [
@@ -23,12 +32,14 @@
           "required": [
             "eventName",
             "fieldsToBeIgnored"
-          ]
+          ],
+          "additionalProperties": false
         }
       ]
     }
   },
   "required": [
     "events"
-  ]
+  ],
+  "additionalProperties": false
 }

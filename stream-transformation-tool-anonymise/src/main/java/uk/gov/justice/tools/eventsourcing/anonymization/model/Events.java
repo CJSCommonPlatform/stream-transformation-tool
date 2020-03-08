@@ -5,13 +5,15 @@ import java.util.List;
 
 public class Events {
 
+    private List<String> globalAttributes;
+
     private List<Event> events;
 
     public Events() {
     }
 
-    public Events(final List<Event> events) {
-        this.events = events;
+    public List<String> getGlobalAttributes() {
+        return globalAttributes;
     }
 
     public List<Event> getEvents() {
