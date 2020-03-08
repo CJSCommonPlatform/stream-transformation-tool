@@ -8,7 +8,7 @@
     <parent>
         <groupId>uk.gov.justice</groupId>
         <artifactId>stream-transformation-tool</artifactId>
-        <version>6.4.5</version>
+        <version>6.4.6-SNAPSHOT</version>
     </parent>
 
     <packaging>war</packaging>
