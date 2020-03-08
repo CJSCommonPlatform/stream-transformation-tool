@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file, which follo
 on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
+## [6.4.5] - 2020-03-08
+### Added
+- Added global whitelisting of attributes when using the anonymisation cartridge.  This will now make it easier to 
+ignore attributes which occur in a repeating or nested manner.  This approach is limited to just data types other 
+than an object or array.  The global attributes are not fully qualified path and just denote the ending of the path
+
 ## [6.4.4] - 2020-03-05
 ### Added
 - Json path library added
