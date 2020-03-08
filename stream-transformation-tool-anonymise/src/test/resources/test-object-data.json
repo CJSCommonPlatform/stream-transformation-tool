@@ -2,7 +2,19 @@
   "exampleArray": [
     {
       "attributeIntAsString": "001",
-      "attributeIntAsStringAnonymise": "001"
+      "attributeIntAsStringAnonymise": "001",
+      "repeatingParentArrayAttribute": [
+        {
+          "repeatingChildAttribute": "child1",
+          "repeatingAttribute" : "test1",
+          "repeatingParentArrayAttribute": [
+            {
+              "repeatingChildAttribute": "child2",
+              "repeatingAttribute" : "test2"
+            }
+          ]
+        }
+      ]
     }
   ],
   "example": {
@@ -27,6 +39,14 @@
       },
       "test234@mail.com",
       "SC208979B"
-    ]
+    ],
+    "repeatingParentObjectAttribute": {
+      "repeatingChildAttribute": "child3",
+      "repeatingAttribute" : "test3",
+      "repeatingParentObjectAttribute": {
+        "repeatingChildAttribute": "child4",
+        "repeatingAttribute" : "test4"
+      }
+    }
   }
 }
