@@ -100,6 +100,23 @@ public class EventAnonymiserServiceTest {
         assertThat(anonymisedJsonArray.getString(6), is("SC208979B"));
     }
 
+    @Test
+    public void shouldNotAnonymiseGloballyWhitelistedAttributes() {
+        final JsonObject anonymisedPayload = service.anonymiseObjectPayload(buildObjectPayload("test-object-data.json"), "test-object-event");
+        final JsonArray exampleArray = anonymisedPayload.getJsonArray("exampleArray");
+        assertThat(exampleArray.getJsonObject(0).getJsonArray("repeatingParentArrayAttribute").getJsonObject(0).getString("repeatingChildAttribute"), is("child1"));
+        assertThat(exampleArray.getJsonObject(0).getJsonArray("repeatingParentArrayAttribute").getJsonObject(0).getString("repeatingAttribute"), is("test1"));
+        assertThat(exampleArray.getJsonObject(0).getJsonArray("repeatingParentArrayAttribute").getJsonObject(0).getJsonArray("repeatingParentArrayAttribute").getJsonObject(0).getString("repeatingChildAttribute"), is("child2"));
+        assertThat(exampleArray.getJsonObject(0).getJsonArray("repeatingParentArrayAttribute").getJsonObject(0).getJsonArray("repeatingParentArrayAttribute").getJsonObject(0).getString("repeatingAttribute"), is("test2"));
+
+        final JsonObject exampleObject = anonymisedPayload.getJsonObject("example");
+        final JsonObject repeatingObject = exampleObject.getJsonObject("repeatingParentObjectAttribute");
+        assertThat(repeatingObject.getString("repeatingChildAttribute"), is("child3"));
+        assertThat(repeatingObject.getString("repeatingAttribute"), is("test3"));
+        assertThat(repeatingObject.getJsonObject("repeatingParentObjectAttribute").getString("repeatingChildAttribute"), is("child4"));
+        assertThat(repeatingObject.getJsonObject("repeatingParentObjectAttribute").getString("repeatingAttribute"), is("test4"));
+    }
+
 
     private JsonObject buildObjectPayload(final String payloadFileName) {
         final JsonReader jsonReader = createReader(new StringReader(getFileContentsAsString(payloadFileName)));
