@@ -4,6 +4,12 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+- Gson library available for easier manipulation of json objects for transformation
+- Surfacing all exception when processing a stream
+- Json path library added
+- Added global whitelisting of attributes when using the anonymisation cartridge.  This will now make it easier to 
+ignore attributes which occur in a repeating or nested manner.  This approach is limited to just data types other 
+than an object or array.  The global attributes are not fully qualified path and just denote the ending of the path
 
 
 ## [5.3.5] - 2020-02-25

@@ -29,6 +29,7 @@ import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,7 +90,8 @@ public class EventAnonymiserService {
             } else {
                 final String pathForField = getPathForField(jsonPath, fieldName);
 
-                final boolean anonymise = !fieldsToIgnore.contains(pathForField);
+                final boolean attributePathWhitelistedGlobally = isAttributePathEndingWithGloballyWhitelistedAttributeValues(pathForField);
+                final boolean anonymise = !attributePathWhitelistedGlobally && !fieldsToIgnore.contains(pathForField);
                 setFieldValueInObject(fieldName, jsonValue, builder, anonymise);
             }
         }
@@ -100,8 +102,7 @@ public class EventAnonymiserService {
     private JsonArrayBuilder processArrayPayload(final JsonArray payload, final JsonArrayBuilder builder, final String jsonPath, final List<String> fieldsToIgnore) {
 
 
-        for (int counter = 0; counter < payload.size(); counter++) {
-            final JsonValue value = payload.get(counter);
+        for (final JsonValue value : payload) {
             final ValueType fieldValueType = value.getValueType();
             final String pathForField = getPathForField(jsonPath, "[*]");
 
@@ -118,7 +119,8 @@ public class EventAnonymiserService {
                     builder.add(value);
                 }
             } else {
-                final boolean anonymise = !fieldsToIgnore.contains(pathForField);
+                final boolean attributePathWhitelistedGlobally = isAttributePathEndingWithGloballyWhitelistedAttributeValues(pathForField);
+                final boolean anonymise = !attributePathWhitelistedGlobally && !fieldsToIgnore.contains(pathForField);
                 setFieldValueInArray(value, builder, anonymise);
             }
         }
@@ -150,6 +152,14 @@ public class EventAnonymiserService {
     private String getTransformedStringValue(final JsonValue value) {
         final String valueAsString = ((JsonString) value).getString();
         return (String) stringPatternGeneratorFactory.getGenerator(valueAsString).convert(valueAsString);
+    }
+
+    private boolean isAttributePathEndingWithGloballyWhitelistedAttributeValues(final String jsonPathForAttribute) {
+        return getAttributesWhitelistedForAllEvents().stream().anyMatch(jsonPathForAttribute::endsWith);
+    }
+
+    private List<String> getAttributesWhitelistedForAllEvents() {
+        return CollectionUtils.isNotEmpty(EVENTS.getGlobalAttributes()) ? EVENTS.getGlobalAttributes() : newArrayList();
     }
 
     private List<String> getFieldsToIgnoreForEvent(final String eventName) {

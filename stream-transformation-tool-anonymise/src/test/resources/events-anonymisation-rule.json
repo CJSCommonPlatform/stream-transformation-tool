@@ -1,4 +1,9 @@
 {
+  "globalAttributes": [
+    "repeatingParentArrayAttribute[*].repeatingChildAttribute",
+    "repeatingParentObjectAttribute.repeatingChildAttribute",
+    "repeatingAttribute"
+  ],
   "events": [
     {
       "eventName": "test-object-event",
