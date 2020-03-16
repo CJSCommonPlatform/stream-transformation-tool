@@ -4,6 +4,9 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [5.3.6] - 2020-03-16
+### Added
 - Gson library available for easier manipulation of json objects for transformation
 - Surfacing all exception when processing a stream
 - Json path library added
