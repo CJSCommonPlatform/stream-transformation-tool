@@ -7,6 +7,6 @@ public class PostCodeGenerator extends Generator<String> {
 
         return fieldValue
                 .replaceAll("[a-zA-Z]", "A")
-                .replaceAll("[1-9]", "1");
+                .replaceAll("[0-9]", "1");
     }
 }
