@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file, which follo
 on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 [Semantic Versioning](http://semver.org/).
 
+## [6.4.6] - 2020-05-19
+### Changed
+- PostCodeGenerator now converts character by character, rather than based on length of inpute value. 
+The advantage is that anonymisation keeps the exact same format of post codes. Alphabetic characters 
+are changed to A, and numeric values are changeed to 1. Spaces persists if existing.
+
 ## [6.4.5] - 2020-03-08
 ### Added
 - Added global whitelisting of attributes when using the anonymisation cartridge.  This will now make it easier to 
