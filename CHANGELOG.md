@@ -9,6 +9,13 @@ on [Keep a CHANGELOG](http://keepachangelog.com/). This project adheres to
 ignore attributes which occur in a repeating or nested manner.  This approach is limited to just data types other 
 than an object or array.  The global attributes are not fully qualified path and just denote the ending of the path
 
+## [7.0.0] - 2020-05-28
+### Added
+- Bumped version to 7.0.0 to match framework version
+- Updated to framework 7.0.4
+- Updated to event-store 7.0.2
+- Updated framework-libraries to 7.0.5 
+
 ## [6.4.4] - 2020-03-05
 ### Added
 - Json path library added
