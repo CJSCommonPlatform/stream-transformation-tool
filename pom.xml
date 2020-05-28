@@ -12,7 +12,7 @@
 
     <artifactId>stream-transformation-tool</artifactId>
     <packaging>pom</packaging>
-    <version>6.4.6-SNAPSHOT</version>
+    <version>7.0.0-SNAPSHOT</version>
 
     <scm>
         <connection>${cpp.scm.connection}</connection>
@@ -22,12 +22,11 @@
 
     <properties>
         <cpp.repo.name>stream-transformation-tool</cpp.repo.name>
-        <framework-api.version>4.1.0</framework-api.version>
-        <framework.version>6.4.0</framework.version>
-        <event-store.version>2.4.0</event-store.version>
-        <common-bom.version>2.4.0</common-bom.version>
-        <utilities.version>1.20.3</utilities.version>
-        <test-utils.version>1.24.3</test-utils.version>
+
+        <framework-libraries.version>7.0.5</framework-libraries.version>
+        <framework.version>7.0.4</framework.version>
+        <event-store.version>7.0.2</event-store.version>
+
         <wildfly.swarm.version>2017.11.0</wildfly.swarm.version>
         <version.swarm.fraction-plugin>77</version.swarm.fraction-plugin>
         <junit-dataprovider.version>1.13.1</junit-dataprovider.version>
@@ -44,16 +43,31 @@
         <module>stream-transformation-tool-service</module>
         <module>stream-transformation-tool-fraction</module>
         <module>stream-transformation-tool-anonymise</module>
-        <!-- this module needs to be built last as it copies artefacts from modules above -->
+        <!-- this module needs to be built last as it copies artifacts from modules above -->
         <module>stream-transformation-test</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>uk.gov.justice.event-store</groupId>
+                <artifactId>event-store-bom</artifactId>
+                <version>${event-store.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+
+            <!-- maybe move to boms -->
+            <dependency>
+                <groupId>uk.gov.justice.utils</groupId>
+                <artifactId>test-utils-logging-simple</artifactId>
+                <type>pom</type>
+                <version>${framework-libraries.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>uk.gov.justice.utils</groupId>
                 <artifactId>test-utils-core</artifactId>
-                <version>${test-utils.version}</version>
+                <version>${framework-libraries.version}</version>
                 <scope>test</scope>
                 <exclusions>
                     <exclusion>
@@ -79,32 +93,6 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.wildfly.swarm</groupId>
-                <artifactId>bom-all</artifactId>
-                <version>${wildfly.swarm.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>uk.gov.justice</groupId>
-                <artifactId>maven-common-bom</artifactId>
-                <version>${common-bom.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>uk.gov.justice.services</groupId>
-                <artifactId>framework-bom</artifactId>
-                <version>${framework.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>uk.gov.justice.utils</groupId>
-                <artifactId>utilities-core</artifactId>
-                <version>${utilities.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>uk.gov.justice.services</groupId>
                 <artifactId>event-repository-liquibase</artifactId>
                 <version>${event-store.version}</version>
@@ -115,10 +103,24 @@
                 <version>${event-store.version}</version>
             </dependency>
             <dependency>
-                <groupId>uk.gov.justice.utils</groupId>
-                <artifactId>test-utils-logging-simple</artifactId>
+                <groupId>uk.gov.justice.event-store</groupId>
+                <artifactId>event-source</artifactId>
+                <version>${event-store.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>uk.gov.justice.framework-api</groupId>
+                <artifactId>framework-api-event-source</artifactId>
+                <version>${framework-libraries.version}</version>
+            </dependency>
+            
+            <!-- end maybe move to boms -->
+
+            <dependency>
+                <groupId>org.wildfly.swarm</groupId>
+                <artifactId>bom-all</artifactId>
+                <version>${wildfly.swarm.version}</version>
+                <scope>import</scope>
                 <type>pom</type>
-                <version>${test-utils.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.tngtech.java</groupId>
@@ -127,11 +129,9 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>uk.gov.justice.event-store</groupId>
-                <artifactId>event-store-bom</artifactId>
-                <version>${event-store.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
+                <groupId>uk.gov.justice</groupId>
+                <artifactId>stream-transformation-tool-api</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
